@@ -150,6 +150,7 @@ CaptureDialog::CaptureDialog(ICaptureContext &ctx, OnCaptureMethod captureCallba
   ui->exePath->setFont(Formatter::PreferredFont());
   ui->workDirPath->setFont(Formatter::PreferredFont());
   ui->cmdline->setFont(Formatter::PreferredFont());
+  ui->blacklist->setFont(Formatter::PreferredFont());
   ui->processList->setFont(Formatter::PreferredFont());
 
   // setup FlowLayout for options group
@@ -211,6 +212,7 @@ CaptureDialog::CaptureDialog(ICaptureContext &ctx, OnCaptureMethod captureCallba
   QObject::connect(ui->exePath, &RDLineEdit::keyPress, this, &CaptureDialog::lineEdit_keyPress);
   QObject::connect(ui->workDirPath, &RDLineEdit::keyPress, this, &CaptureDialog::lineEdit_keyPress);
   QObject::connect(ui->cmdline, &RDLineEdit::keyPress, this, &CaptureDialog::lineEdit_keyPress);
+  QObject::connect(ui->blacklist, &RDLineEdit::keyPress, this, &CaptureDialog::lineEdit_keyPress);
 
   m_AndroidFlags = AndroidFlags::NoFlags;
 
@@ -281,6 +283,19 @@ void CaptureDialog::on_CaptureCallstacks_toggled(bool checked)
   {
     ui->CaptureCallstacksOnlyActions->setChecked(false);
     ui->CaptureCallstacksOnlyActions->setEnabled(false);
+  }
+}
+
+void CaptureDialog::on_HookIntoChildren_toggled(bool checked)
+{
+  if (ui->HookIntoChildren->isChecked())
+  {
+    ui->EnableBlackList->setEnabled(true);
+  }
+  else
+  {
+    ui->EnableBlackList->setChecked(false);
+    ui->EnableBlackList->setEnabled(false);
   }
 }
 
@@ -915,12 +930,14 @@ void CaptureDialog::SetSettings(CaptureSettings settings)
   ui->exePath->setText(settings.executable);
   ui->workDirPath->setText(settings.workingDir);
   ui->cmdline->setText(settings.commandLine);
+  ui->blacklist->setText(settings.blacklist);
 
   SetEnvironmentModifications(settings.environment);
 
   ui->AllowFullscreen->setChecked(settings.options.allowFullscreen);
   ui->AllowVSync->setChecked(settings.options.allowVSync);
   ui->HookIntoChildren->setChecked(settings.options.hookIntoChildren);
+  ui->EnableBlackList->setChecked(settings.options.enableBlacklist);
   ui->CaptureCallstacks->setChecked(settings.options.captureCallstacks);
   ui->CaptureCallstacksOnlyActions->setChecked(settings.options.captureCallstacksOnlyActions);
   ui->APIValidation->setChecked(settings.options.apiValidation);
@@ -933,6 +950,7 @@ void CaptureDialog::SetSettings(CaptureSettings settings)
 
   // force flush this state
   on_CaptureCallstacks_toggled(ui->CaptureCallstacks->isChecked());
+  on_HookIntoChildren_toggled(ui->HookIntoChildren->isChecked());
 
   if(settings.numQueuedFrames > 0)
   {
@@ -964,12 +982,14 @@ CaptureSettings CaptureDialog::Settings()
   ret.executable = ui->exePath->text();
   ret.workingDir = ui->workDirPath->text();
   ret.commandLine = ui->cmdline->text();
+  ret.blacklist = ui->blacklist->text();
 
   ret.environment = m_EnvModifications;
 
   ret.options.allowFullscreen = ui->AllowFullscreen->isChecked();
   ret.options.allowVSync = ui->AllowVSync->isChecked();
   ret.options.hookIntoChildren = ui->HookIntoChildren->isChecked();
+  ret.options.enableBlacklist = ui->EnableBlackList->isChecked();
   ret.options.captureCallstacks = ui->CaptureCallstacks->isChecked();
   ret.options.captureCallstacksOnlyActions = ui->CaptureCallstacksOnlyActions->isChecked();
   ret.options.apiValidation = ui->APIValidation->isChecked();

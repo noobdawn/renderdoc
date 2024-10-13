@@ -44,6 +44,7 @@ int RENDERDOC_CC SetCaptureOptionU32(RENDERDOC_CaptureOption opt, uint32_t val)
     case eRENDERDOC_Option_DelayForDebugger: opts.delayForDebugger = val; break;
     case eRENDERDOC_Option_VerifyBufferAccess: opts.verifyBufferAccess = (val != 0); break;
     case eRENDERDOC_Option_HookIntoChildren: opts.hookIntoChildren = (val != 0); break;
+    case eRENDERDOC_Option_EnableBlacklist: opts.enableBlacklist = (val != 0); break;
     case eRENDERDOC_Option_RefAllResources: opts.refAllResources = (val != 0); break;
     case eRENDERDOC_Option_SaveAllInitials:
       // option is deprecated
@@ -79,6 +80,7 @@ int RENDERDOC_CC SetCaptureOptionF32(RENDERDOC_CaptureOption opt, float val)
       break;
     case eRENDERDOC_Option_DelayForDebugger: opts.delayForDebugger = (uint32_t)val; break;
     case eRENDERDOC_Option_VerifyBufferAccess: opts.verifyBufferAccess = (val != 0.0f); break;
+    case eRENDERDOC_Option_EnableBlacklist: opts.enableBlacklist = (val != 0.0f); break;
     case eRENDERDOC_Option_HookIntoChildren: opts.hookIntoChildren = (val != 0.0f); break;
     case eRENDERDOC_Option_RefAllResources: opts.refAllResources = (val != 0.0f); break;
     case eRENDERDOC_Option_SaveAllInitials:
@@ -117,6 +119,8 @@ uint32_t RENDERDOC_CC GetCaptureOptionU32(RENDERDOC_CaptureOption opt)
       return (RenderDoc::Inst().GetCaptureOptions().verifyBufferAccess ? 1 : 0);
     case eRENDERDOC_Option_HookIntoChildren:
       return (RenderDoc::Inst().GetCaptureOptions().hookIntoChildren ? 1 : 0);
+    case eRENDERDOC_Option_EnableBlacklist:
+      return (RenderDoc::Inst().GetCaptureOptions().enableBlacklist ? 1 : 0);
     case eRENDERDOC_Option_RefAllResources:
       return (RenderDoc::Inst().GetCaptureOptions().refAllResources ? 1 : 0);
     case eRENDERDOC_Option_SaveAllInitials:
@@ -156,6 +160,8 @@ float RENDERDOC_CC GetCaptureOptionF32(RENDERDOC_CaptureOption opt)
       return (RenderDoc::Inst().GetCaptureOptions().verifyBufferAccess ? 1.0f : 0.0f);
     case eRENDERDOC_Option_HookIntoChildren:
       return (RenderDoc::Inst().GetCaptureOptions().hookIntoChildren ? 1.0f : 0.0f);
+    case eRENDERDOC_Option_EnableBlacklist:
+      return (RenderDoc::Inst().GetCaptureOptions().enableBlacklist ? 1.0f : 0.0f);
     case eRENDERDOC_Option_RefAllResources:
       return (RenderDoc::Inst().GetCaptureOptions().refAllResources ? 1.0f : 0.0f);
     case eRENDERDOC_Option_SaveAllInitials:

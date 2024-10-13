@@ -170,6 +170,19 @@ Default - disabled
 )");
   bool hookIntoChildren;
 
+  DOCUMENT(R"(Sometimes attempting to hook child processes can cause some unpredictable 
+obstacles for the child processes, even if those child processes are not the target of
+the hook. Adding a blacklist to manage these completely ignorable child processes 
+can help the program start correctly.
+
+Default - disabled
+
+``True`` - Hooks into spawned child processes which is not in the blacklist.
+
+``False`` - Hooks into all the spawned child processes.
+)");
+  bool enableBlacklist;
+
   DOCUMENT(R"(By default RenderDoc only includes resources in the final logfile necessary
 for that frame, this allows you to override that behaviour.
 

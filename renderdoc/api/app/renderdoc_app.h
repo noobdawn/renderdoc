@@ -228,6 +228,14 @@ typedef enum RENDERDOC_CaptureOption
   //
   // Default - 0 Megabytes
   eRENDERDOC_Option_SoftMemoryLimit = 13,
+
+  // If the process name of the child process is on the blacklist, it will not attempt to hook.
+  //
+  // Default - disabled
+  //
+  // 1 - Hooks into spawned child processes which is not in the blacklist
+  // 0 - Hooks into all the spawned child processes
+  eRENDERDOC_Option_EnableBlacklist = 14,
 } RENDERDOC_CaptureOption;
 
 // Sets an option that controls how RenderDoc behaves on capture.

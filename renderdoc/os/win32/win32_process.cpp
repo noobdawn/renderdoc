@@ -838,6 +838,10 @@ rdcpair<RDResult, uint32_t> Process::InjectIntoProcess(uint32_t pid,
     rdcstr debugLogfile = RDCGETLOGFILE();
     rdcwstr wdebugLogfile = StringFormat::UTF82Wide(debugLogfile);
 
+    //_snwprintf_s(
+    //    paramsAlloc, 2047, 2047,
+    //    L"\"%ls\" capaltbit --pid=%u --capfile=\"%ls\" --debuglog=\"%ls\" --capopts=\"%hs\" --capbl=\"%hs\"",
+    //    renderdocPath, pid, wcapturefile.c_str(), wdebugLogfile.c_str(), optstr.c_str(), optstr.c_str());
     _snwprintf_s(
         paramsAlloc, 2047, 2047,
         L"\"%ls\" capaltbit --pid=%u --capfile=\"%ls\" --debuglog=\"%ls\" --capopts=\"%hs\"",

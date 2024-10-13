@@ -916,6 +916,7 @@ private:
   std::string debuglog;
   uint32_t pid;
   std::string capfile;
+  std::string blacklist;
 
 public:
   CapAltBitCommand() : Command() {}
@@ -925,6 +926,7 @@ public:
     parser.add<std::string>("capfile", 0, "");
     parser.add<std::string>("debuglog", 0, "");
     parser.add<std::string>("capopts", 0, "");
+    //parser.add<std::string>("capbl", 0, "");
     parser.stop_at_rest(true);
   }
   virtual const char *Description() { return "Internal use only!"; }
@@ -1012,6 +1014,7 @@ public:
     debuglog = parser.get<std::string>("debuglog");
     pid = parser.get<uint32_t>("pid");
     capfile = parser.get<std::string>("capfile");
+    //blacklist = parser.get<std::string>("capbl");
 
     return true;
   }

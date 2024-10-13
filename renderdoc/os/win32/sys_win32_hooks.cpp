@@ -329,6 +329,13 @@ private:
     if(!RenderDoc::Inst().GetCaptureOptions().hookIntoChildren)
       return false;
 
+    // if process name is in the blacklist
+    rdcarray<rdcstr> blacklist = {};
+    if (RenderDoc::Inst().GetCaptureOptions().enableBlacklist)
+    {
+
+    }
+
     bool inject = true;
 
     // sanity check to make sure we're not going to go into an infinity loop injecting into
@@ -337,16 +344,17 @@ private:
     {
       rdcstr app = strlower(StringFormat::Wide2UTF8(lpApplicationName));
 
-      if(app.contains("renderdoccmd.exe") || app.contains("qrenderdoc.exe"))
+      if(app.contains("renderdoccmd.exe") || app.contains("qrenderdoc.exe") || app.contains("steamwebhelper.exe"))
       {
         inject = false;
       }
+
     }
     if(lpCommandLine)
     {
       rdcstr cmd = strlower(StringFormat::Wide2UTF8(lpCommandLine));
 
-      if(cmd.contains("renderdoccmd.exe") || cmd.contains("qrenderdoc.exe"))
+      if(cmd.contains("renderdoccmd.exe") || cmd.contains("qrenderdoc.exe") || cmd.contains("steamwebhelper.exe"))
       {
         inject = false;
       }

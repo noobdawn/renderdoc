@@ -103,6 +103,7 @@ private slots:
   void on_toggleGlobal_clicked();
 
   void on_CaptureCallstacks_toggled(bool checked);
+  void on_HookIntoChildren_toggled(bool checked);
 
   // manual slots
   void vulkanLayerWarn_mouseClick();
