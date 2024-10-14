@@ -93,7 +93,8 @@ public:
   RemoteHost CurrentRemote() { return m_RemoteHost; }
   ExecuteResult ExecuteAndInject(const rdcstr &exe, const rdcstr &workingDir, const rdcstr &cmdLine,
                                  const rdcarray<EnvironmentModification> &env,
-                                 const rdcstr &capturefile, CaptureOptions opts);
+                                 const rdcstr &capturefile, CaptureOptions opts,
+                                 const rdcstr &blacklist);
 
   rdcarray<rdcstr> GetRemoteSupport();
   void GetHomeFolder(bool synchronous, DirectoryBrowseCallback cb);

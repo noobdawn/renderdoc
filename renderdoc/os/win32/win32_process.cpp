@@ -1138,7 +1138,7 @@ uint32_t Process::LaunchScript(const rdcstr &script, const rdcstr &workingDir,
 rdcpair<RDResult, uint32_t> Process::LaunchAndInjectIntoProcess(
     const rdcstr &app, const rdcstr &workingDir, const rdcstr &cmdLine,
     const rdcarray<EnvironmentModification> &env, const rdcstr &capturefile,
-    const CaptureOptions &opts, bool waitForExit)
+    const CaptureOptions &opts, const rdcstr &blacklist, bool waitForExit)
 {
   void *func =
       GetProcAddress(GetModuleHandleA(STRINGIZE(RDOC_BASE_NAME) ".dll"), "INTERNAL_SetCaptureFile");
@@ -1163,7 +1163,7 @@ rdcpair<RDResult, uint32_t> Process::LaunchAndInjectIntoProcess(
   }
 
   rdcpair<RDResult, uint32_t> ret =
-      InjectIntoProcess(pi.dwProcessId, {}, capturefile, opts, "steamwebhelper.exe", false);
+      InjectIntoProcess(pi.dwProcessId, {}, capturefile, opts, blacklist, false);
 
   CloseHandle(pi.hProcess);
   ResumeThread(pi.hThread);

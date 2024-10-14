@@ -401,18 +401,19 @@ void ReplayManager::ReopenCaptureFile(const QString &path)
 ExecuteResult ReplayManager::ExecuteAndInject(const rdcstr &exe, const rdcstr &workingDir,
                                               const rdcstr &cmdLine,
                                               const rdcarray<EnvironmentModification> &env,
-                                              const rdcstr &capturefile, CaptureOptions opts)
+                                              const rdcstr &capturefile, CaptureOptions opts,
+                                              const rdcstr &blacklist)
 {
   ExecuteResult ret;
 
   if(m_Remote)
   {
     QMutexLocker autolock(&m_RemoteLock);
-    ret = m_Remote->ExecuteAndInject(exe, workingDir, cmdLine, env, opts);
+    ret = m_Remote->ExecuteAndInject(exe, workingDir, cmdLine, env, opts, "");
   }
   else
   {
-    ret = RENDERDOC_ExecuteAndInject(exe, workingDir, cmdLine, env, capturefile, opts, false);
+    ret = RENDERDOC_ExecuteAndInject(exe, workingDir, cmdLine, env, capturefile, opts, blacklist, false);
   }
 
   return ret;

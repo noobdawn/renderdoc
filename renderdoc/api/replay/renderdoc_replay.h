@@ -1417,7 +1417,7 @@ This happens on the remote system, so all paths are relative to the remote files
   virtual ExecuteResult ExecuteAndInject(const rdcstr &app, const rdcstr &workingDir,
                                          const rdcstr &cmdLine,
                                          const rdcarray<EnvironmentModification> &env,
-                                         const CaptureOptions &opts) = 0;
+                                         const CaptureOptions &opts, const rdcstr &blacklist) = 0;
 
   DOCUMENT(R"(Take ownership over a capture file.
 
@@ -2017,7 +2017,7 @@ DOCUMENT(R"(Launch an application and inject into it to allow capturing.
 extern "C" RENDERDOC_API ExecuteResult RENDERDOC_CC
 RENDERDOC_ExecuteAndInject(const rdcstr &app, const rdcstr &workingDir, const rdcstr &cmdLine,
                            const rdcarray<EnvironmentModification> &env, const rdcstr &capturefile,
-                           const CaptureOptions &opts, bool waitForExit);
+                           const CaptureOptions &opts, const rdcstr &blacklist, bool waitForExit);
 
 DOCUMENT(R"(Where supported by operating system and permissions, inject into a running process.
 
@@ -2033,8 +2033,8 @@ DOCUMENT(R"(Where supported by operating system and permissions, inject into a r
 :rtype: ExecuteResult
 )");
 extern "C" RENDERDOC_API ExecuteResult RENDERDOC_CC
-RENDERDOC_InjectIntoProcess(uint32_t pid, const rdcarray<EnvironmentModification> &env,
-                            const rdcstr &capturefile, const CaptureOptions &opts, bool waitForExit);
+RENDERDOC_InjectIntoProcess(uint32_t pid, const rdcarray<EnvironmentModification> &env, const rdcstr &capturefile,
+    const CaptureOptions &opts, const rdcstr &blacklist, bool waitForExit);
 
 DOCUMENT(R"(When debugging RenderDoc it can be useful to capture itself by doing a side-build with a
 temporary name. This function checks to see if a given self-hosted DLL is available.

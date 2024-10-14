@@ -45,6 +45,7 @@ class CaptureDialog : public QFrame, public ICaptureDialog
 public:
   typedef std::function<void(const QString &exe, const QString &workingDir, const QString &cmdLine,
                              const rdcarray<EnvironmentModification> &env, CaptureOptions opts,
+                             const rdcstr &blacklist,
                              std::function<void(LiveCapture *)> callback)>
       OnCaptureMethod;
   typedef std::function<void(uint32_t PID, const rdcarray<EnvironmentModification> &env, const QString &name,

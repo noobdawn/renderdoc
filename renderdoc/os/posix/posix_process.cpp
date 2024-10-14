@@ -909,7 +909,7 @@ void ResetHookingEnvVars()
 rdcpair<RDResult, uint32_t> Process::LaunchAndInjectIntoProcess(
     const rdcstr &app, const rdcstr &workingDir, const rdcstr &cmdLine,
     const rdcarray<EnvironmentModification> &envList, const rdcstr &capturefile,
-    const CaptureOptions &opts, bool waitForExit)
+    const CaptureOptions &opts, const rdcstr &blacklist, bool waitForExit)
 {
   if(app.empty())
   {

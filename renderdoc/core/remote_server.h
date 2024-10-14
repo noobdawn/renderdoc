@@ -62,7 +62,7 @@ public:
   virtual ExecuteResult ExecuteAndInject(const rdcstr &app, const rdcstr &workingDir,
                                          const rdcstr &cmdline,
                                          const rdcarray<EnvironmentModification> &env,
-                                         const CaptureOptions &opts);
+                                         const CaptureOptions &opts, const rdcstr &blacklist);
 
   virtual void CopyCaptureFromRemote(const rdcstr &remotepath, const rdcstr &localpath,
                                      RENDERDOC_ProgressCallback progress);

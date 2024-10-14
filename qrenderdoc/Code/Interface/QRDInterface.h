@@ -1453,7 +1453,8 @@ This happens either locally, or on the remote server, depending on whether a con
   virtual ExecuteResult ExecuteAndInject(const rdcstr &exe, const rdcstr &workingDir,
                                          const rdcstr &cmdLine,
                                          const rdcarray<EnvironmentModification> &env,
-                                         const rdcstr &capturefile, CaptureOptions opts) = 0;
+                                         const rdcstr &capturefile, CaptureOptions opts,
+                                         const rdcstr &blacklist) = 0;
 
   DOCUMENT(R"(Retrieve a list of drivers that the current remote server supports.
 

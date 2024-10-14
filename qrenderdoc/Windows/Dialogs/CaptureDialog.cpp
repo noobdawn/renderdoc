@@ -1269,7 +1269,7 @@ void CaptureDialog::TriggerCapture()
       }
     }
 
-    m_CaptureCallback(exe, workingDir, cmdLine, Settings().environment, Settings().options,
+    m_CaptureCallback(exe, workingDir, cmdLine, Settings().environment, Settings().options, Settings().blacklist,
                       [this](LiveCapture *live) {
                         if(ui->queueFrameCap->isChecked())
                           live->QueueCapture((int)ui->queuedFrame->value(),

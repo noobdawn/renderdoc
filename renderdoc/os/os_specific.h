@@ -82,7 +82,7 @@ rdcpair<RDResult, uint32_t> LaunchAndInjectIntoProcess(const rdcstr &app, const 
                                                        const rdcstr &cmdLine,
                                                        const rdcarray<EnvironmentModification> &env,
                                                        const rdcstr &capturefile,
-                                                       const CaptureOptions &opts, bool waitForExit);
+                                                       const CaptureOptions &opts, const rdcstr &blacklist, bool waitForExit);
 bool IsModuleLoaded(const rdcstr &module);
 void *LoadModule(const rdcstr &module);
 void *GetFunctionAddress(void *module, const rdcstr &function);
