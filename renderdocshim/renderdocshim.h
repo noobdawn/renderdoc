@@ -28,6 +28,7 @@ struct ShimData
   wchar_t rdocpath[2048];
   char debuglog[2048];
   char capfile[2048];
+  char blacklist[2048];
 
   unsigned char opts[512];
 };

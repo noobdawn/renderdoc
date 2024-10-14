@@ -472,7 +472,9 @@ public:
   void EnableVendorExtensions(VendorExtensions ext);
 
   void SetCaptureOptions(const CaptureOptions &opts);
+  void SetBlacklist(const rdcstr &blacklist) { m_Blacklist = blacklist; }
   const CaptureOptions &GetCaptureOptions() const { return m_Options; }
+  const rdcstr &GetBlacklist() const { return m_Blacklist; }
   void RecreateCrashHandler();
   void UnloadCrashHandler();
   void RegisterMemoryRegion(void *mem, size_t size);
@@ -643,6 +645,7 @@ private:
   rdcstr m_CaptureTitle;
   rdcstr m_CurrentLogFile;
   CaptureOptions m_Options;
+  rdcstr m_Blacklist;
   uint32_t m_Overlay;
 
   rdcarray<uint32_t> m_QueuedFrameCaptures;

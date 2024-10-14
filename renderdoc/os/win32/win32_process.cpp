@@ -204,6 +204,12 @@ extern "C" __declspec(dllexport) void __cdecl INTERNAL_SetCaptureOptions(Capture
     RenderDoc::Inst().SetCaptureOptions(*opts);
 }
 
+extern "C" __declspec(dllexport) void __cdecl INTERNAL_SetBlacklist(const char *blacklist)
+{
+  if(blacklist)
+    RenderDoc::Inst().SetBlacklist(blacklist);
+}
+
 extern "C" __declspec(dllexport) void __cdecl INTERNAL_SetCaptureFile(const char *capfile)
 {
   if(capfile)
@@ -574,7 +580,7 @@ static PROCESS_INFORMATION RunProcess(const rdcstr &app, const rdcstr &workingDi
 rdcpair<RDResult, uint32_t> Process::InjectIntoProcess(uint32_t pid,
                                                        const rdcarray<EnvironmentModification> &env,
                                                        const rdcstr &capturefile,
-                                                       const CaptureOptions &opts, bool waitForExit)
+                                                       const CaptureOptions &opts, const rdcstr &blacklist, bool waitForExit)
 {
   rdcwstr wcapturefile = StringFormat::UTF82Wide(capturefile);
 
@@ -838,14 +844,11 @@ rdcpair<RDResult, uint32_t> Process::InjectIntoProcess(uint32_t pid,
     rdcstr debugLogfile = RDCGETLOGFILE();
     rdcwstr wdebugLogfile = StringFormat::UTF82Wide(debugLogfile);
 
-    //_snwprintf_s(
-    //    paramsAlloc, 2047, 2047,
-    //    L"\"%ls\" capaltbit --pid=%u --capfile=\"%ls\" --debuglog=\"%ls\" --capopts=\"%hs\" --capbl=\"%hs\"",
-    //    renderdocPath, pid, wcapturefile.c_str(), wdebugLogfile.c_str(), optstr.c_str(), optstr.c_str());
+
     _snwprintf_s(
         paramsAlloc, 2047, 2047,
-        L"\"%ls\" capaltbit --pid=%u --capfile=\"%ls\" --debuglog=\"%ls\" --capopts=\"%hs\"",
-        renderdocPath, pid, wcapturefile.c_str(), wdebugLogfile.c_str(), optstr.c_str());
+        L"\"%ls\" capaltbit --pid=%u --capfile=\"%ls\" --debuglog=\"%ls\" --capopts=\"%hs\" --capbl=\"%hs\"",
+                 renderdocPath, pid, wcapturefile.c_str(), wdebugLogfile.c_str(), optstr.c_str(), blacklist.c_str());
 
     RDCDEBUG("params %ls", paramsAlloc);
 
@@ -1009,6 +1012,9 @@ rdcpair<RDResult, uint32_t> Process::InjectIntoProcess(uint32_t pid,
     InjectFunctionCall(hProcess, loc, "INTERNAL_GetTargetControlIdent", &result.second,
                        sizeof(result.second));
 
+    InjectFunctionCall(hProcess, loc, "INTERNAL_SetBlacklist", (void *)blacklist.c_str(),
+                       blacklist.size() + 1);
+
     if(!env.empty())
     {
       for(const EnvironmentModification &e : env)
@@ -1156,7 +1162,8 @@ rdcpair<RDResult, uint32_t> Process::LaunchAndInjectIntoProcess(
     return {result, 0};
   }
 
-  rdcpair<RDResult, uint32_t> ret = InjectIntoProcess(pi.dwProcessId, {}, capturefile, opts, false);
+  rdcpair<RDResult, uint32_t> ret =
+      InjectIntoProcess(pi.dwProcessId, {}, capturefile, opts, "steamwebhelper.exe", false);
 
   CloseHandle(pi.hProcess);
   ResumeThread(pi.hThread);

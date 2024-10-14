@@ -301,7 +301,7 @@ private:
       // inherit logfile and capture options
       rdcpair<RDResult, uint32_t> res = Process::InjectIntoProcess(
           lpProcessInformation->dwProcessId, {}, RenderDoc::Inst().GetCaptureFileTemplate(),
-          RenderDoc::Inst().GetCaptureOptions(), false);
+          RenderDoc::Inst().GetCaptureOptions(), RenderDoc::Inst().GetBlacklist(), false);
 
       if(res.first == ResultCode::Succeeded)
         RenderDoc::Inst().AddChildProcess((uint32_t)lpProcessInformation->dwProcessId, res.second);
@@ -330,10 +330,17 @@ private:
       return false;
 
     // if process name is in the blacklist
-    rdcarray<rdcstr> blacklist = {};
+    rdcarray<rdcstr> blacklist = {"renderdoccmd.exe", "qrenderdoc.exe"};
     if (RenderDoc::Inst().GetCaptureOptions().enableBlacklist)
     {
-
+      rdcstr blackstr = RenderDoc::Inst().GetBlacklist();
+      rdcarray<rdcstr> customList;
+      split(blackstr, customList, ';');
+      for(const rdcstr &black : customList)
+      {
+        if(!black.empty())
+          blacklist.push_back(black);
+      }
     }
 
     bool inject = true;
@@ -343,20 +350,26 @@ private:
     if(lpApplicationName)
     {
       rdcstr app = strlower(StringFormat::Wide2UTF8(lpApplicationName));
-
-      if(app.contains("renderdoccmd.exe") || app.contains("qrenderdoc.exe") || app.contains("steamwebhelper.exe"))
+      for(const rdcstr &black : blacklist)
       {
-        inject = false;
+        if(app.contains(black))
+        {
+          inject = false;
+          break;
+        }
       }
 
     }
     if(lpCommandLine)
     {
       rdcstr cmd = strlower(StringFormat::Wide2UTF8(lpCommandLine));
-
-      if(cmd.contains("renderdoccmd.exe") || cmd.contains("qrenderdoc.exe") || cmd.contains("steamwebhelper.exe"))
+      for(const rdcstr &black : blacklist)
       {
-        inject = false;
+        if(cmd.contains(black))
+        {
+          inject = false;
+          break;
+        }
       }
     }
 
