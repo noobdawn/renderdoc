@@ -340,8 +340,8 @@ private:
       split(blackstr, customList, ';');
       for(const rdcstr &black : customList)
       {
-        if(!black.empty())
-          blacklist.push_back(black);
+        if(!black.trimmed().empty())
+          blacklist.push_back(strlower(black.trimmed()));
       }
     }
     for(const rdcstr &black : blacklist)
