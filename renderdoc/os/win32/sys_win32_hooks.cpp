@@ -329,9 +329,11 @@ private:
     if(!RenderDoc::Inst().GetCaptureOptions().hookIntoChildren)
       return false;
 
+
+
     // if process name is in the blacklist
     rdcarray<rdcstr> blacklist = {"renderdoccmd.exe", "qrenderdoc.exe"};
-    if (RenderDoc::Inst().GetCaptureOptions().enableBlacklist)
+    if(RenderDoc::Inst().GetCaptureOptions().enableBlacklist)
     {
       rdcstr blackstr = RenderDoc::Inst().GetBlacklist();
       rdcarray<rdcstr> customList;
@@ -341,6 +343,10 @@ private:
         if(!black.empty())
           blacklist.push_back(black);
       }
+    }
+    for(const rdcstr &black : blacklist)
+    {
+      RDCDEBUG("Blacklist: %s", black.c_str());
     }
 
     bool inject = true;
@@ -354,6 +360,7 @@ private:
       {
         if(app.contains(black))
         {
+          RDCDEBUG("%s contains %s(blacklist)", app.c_str(), black.c_str());
           inject = false;
           break;
         }
@@ -367,6 +374,7 @@ private:
       {
         if(cmd.contains(black))
         {
+          RDCDEBUG("%s contains %s(blacklist)", cmd.c_str(), black.c_str());
           inject = false;
           break;
         }

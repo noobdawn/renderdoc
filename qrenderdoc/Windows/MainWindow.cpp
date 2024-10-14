@@ -729,7 +729,7 @@ void MainWindow::OnInjectTrigger(uint32_t PID, const rdcarray<EnvironmentModific
   LambdaThread *th = new LambdaThread([this, PID, env, name, opts, callback]() {
     QString capturefile = m_Ctx.TempCaptureFilename(name);
 
-    ExecuteResult ret = RENDERDOC_InjectIntoProcess(PID, env, capturefile, opts, "steamwebhelper.exe", false);
+    ExecuteResult ret = RENDERDOC_InjectIntoProcess(PID, env, capturefile, opts, "", false);
 
     GUIInvoke::call(this, [this, PID, ret, callback]() {
       if(ret.result.code != ResultCode::Succeeded)
