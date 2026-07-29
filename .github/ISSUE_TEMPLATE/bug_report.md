@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Report a bug or problem encountered while using RenderDoc
+about: Report a bug or problem encountered while using NoobDawn
 ---
 <!--
 ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️ 
@@ -8,7 +8,7 @@ If you do not follow the guidelines, or do not use the template below, your issu
 ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️ 
 
 The template below shows what you need to include in a good bug report, and you MUST use it. More information in the docs:
-https://github.com/baldurk/renderdoc/blob/v1.x/docs/CONTRIBUTING/Filing-Issues.md
+https://github.com/baldurk/noobdawn/blob/v1.x/docs/CONTRIBUTING/Filing-Issues.md
 
 It is *expressly* forbidden to ask for help with capturing copyrighted programs that you did not create and do not have the source code for.
 
@@ -34,7 +34,7 @@ I'm happy to help, but you have to ensure I fully understand what you want and h
 
 <!-- if you are running a nightly build, list the date or commit hash for the version -->
 
-* RenderDoc version: XXX
+* NoobDawn version: XXX
 * Operating System: XXX
 * Graphics API: XXX
 

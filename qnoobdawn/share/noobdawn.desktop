@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=NoobDawn
+Comment=A stand-alone graphics API debugger
+GenericName=Graphics Debugger
+Exec=qnoobdawn %f
+Icon=application-x-noobdawn-capture
+Terminal=false
+Type=Application
+X-MultipleArgs=false
+Categories=Development;
+StartupNotify=true
+MimeType=application/x-noobdawn-capture;

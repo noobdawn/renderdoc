@@ -1,9 +1,9 @@
 How do I import or export a capture?
 ====================================
 
-RenderDoc capture files are in an opaque format containing all of the data needed to construct every API object used in a capture, and then replay the captured frame.
+NoobDawn capture files are in an opaque format containing all of the data needed to construct every API object used in a capture, and then replay the captured frame.
 
-The data is known internally as *structured data* and it can be examined in memory while a capture is opened, and exported to an external file in another format. Similarly, if the external file format contains the full set of data required then it can be imported as a RenderDoc capture.
+The data is known internally as *structured data* and it can be examined in memory while a capture is opened, and exported to an external file in another format. Similarly, if the external file format contains the full set of data required then it can be imported as a NoobDawn capture.
 
 In-capture access
 -----------------
@@ -15,7 +15,7 @@ First we obtain the :py:class:`APIEvent` that we want to examine, as the last ev
    .. highlight:: python
    .. code:: python
 
-       event = pyrenderdoc.GetAction(111).events[-1]
+       event = pynoobdawn.GetAction(111).events[-1]
        print("event %d is at chunk %d" % (event.eventId, event.chunkIndex))
 
    .. highlight:: none
@@ -30,7 +30,7 @@ Once we have the chunk, we can examine its members:
    .. highlight:: python
    .. code:: python
 
-       chunk = pyrenderdoc.GetStructuredFile().chunks[event.chunkIndex]
+       chunk = pynoobdawn.GetStructuredFile().chunks[event.chunkIndex]
 
        print("We have chunk '%s'" % chunk.name)
 
@@ -50,11 +50,11 @@ From here we can drill down even further to iterate into struct members, arrays,
 Import/Export to file
 ---------------------
 
-RenderDoc offers several built-in file formats for export. Not all of these export the full set of data that can then be re-imported, some only export a certain subset.
+NoobDawn offers several built-in file formats for export. Not all of these export the full set of data that can then be re-imported, some only export a certain subset.
 
 One format that shows the full set of data is the XML exporter. There are two options - XML only, which is quick to export as it writes only the structured data, and XML+ZIP which is slower as it also exports the large buffers of data with things like texture and buffer contents.
 
-The XML+ZIP format contains all of the data needed to construct a RenderDoc capture, and so it can also be imported from a file and loaded as a capture.
+The XML+ZIP format contains all of the data needed to construct a NoobDawn capture, and so it can also be imported from a file and loaded as a capture.
 
 An example of the above function call exported as XML is here below:
 

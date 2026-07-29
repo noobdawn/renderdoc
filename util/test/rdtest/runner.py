@@ -9,7 +9,7 @@ import threading
 import queue
 import datetime
 import time
-import renderdoc as rd
+import noobdawn as rd
 from . import util
 from . import testcase
 from .logging import log
@@ -223,7 +223,7 @@ def run_tests(test_include: str, test_exclude: str, in_process: bool, slow_tests
     if plat == 'nt' or 'Windows' in platform.platform():
         plat = 'win32'
 
-    log.header("Tests running for RenderDoc Version {} ({})".format(rd.GetVersionString(), rd.GetCommitHash()))
+    log.header("Tests running for NoobDawn Version {} ({})".format(rd.GetVersionString(), rd.GetCommitHash()))
     log.header("On {}".format(platform.platform()))
 
     log.comment("plat={} git={}".format(platform.platform(), rd.GetCommitHash()))
@@ -268,7 +268,7 @@ def run_tests(test_include: str, test_exclude: str, in_process: bool, slow_tests
                         if os.path.exists(args[i]):
                             args[i] = str(Path(args[i]).resolve())
 
-                    if 'renderdoccmd' in sys.executable:
+                    if 'noobdawncmd' in sys.executable:
                         args = ['vulkanlayer', '--register', '--system']
 
                     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, ' '.join(args), None, 1)
@@ -284,7 +284,7 @@ def run_tests(test_include: str, test_exclude: str, in_process: bool, slow_tests
                 log.print("Couldn't register vulkan layer properly, might need admin rights")
                 sys.exit(1)
 
-    os.environ['RENDERDOC_DEMOS_DATA'] = util.get_data_path('demos')
+    os.environ['NOOBDAWN_DEMOS_DATA'] = util.get_data_path('demos')
 
     testcase.TestCase.set_test_list(fetch_tests())
 
@@ -373,14 +373,14 @@ def run_tests(test_include: str, test_exclude: str, in_process: bool, slow_tests
 
         logfile = server.retrieve_latest_server_log(util.get_tmp_dir())
         if logfile is not None and os.path.exists(logfile):
-            log.inline_file('Replay RenderDoc log', logfile)
+            log.inline_file('Replay NoobDawn log', logfile)
 
         # Do not inline this, as it is usually massive
         server.retrieve_comms_log()
 
     logfile = rd.GetLogFile()
     if os.path.exists(logfile):
-        log.inline_file('{} RenderDoc log'.format("Host" if server is not None else ""), logfile)
+        log.inline_file('{} NoobDawn log'.format("Host" if server is not None else ""), logfile)
 
     log.comment("total={} fail={} skip={} time={}".format(len(testcases), len(failedcases), len(skippedcases), int(duration.total_seconds())))
     log.header("Tests complete summary: {} passed out of {} run from {} total in {}"
@@ -417,13 +417,13 @@ def launch_remote_server():
     # Add parameter to run the remote server itself
     args.append('--internal_remote_server')
 
-    # if we're running from renderdoccmd, invoke it properly
-    if 'renderdoccmd' in sys.executable:
+    # if we're running from noobdawncmd, invoke it properly
+    if 'noobdawncmd' in sys.executable:
         # run_tests.py
-        # --renderdoc
-        # <renderdoc_path>
-        # --pyrenderdoc
-        # <pyrenderdoc_path>
+        # --noobdawn
+        # <noobdawn_path>
+        # --pynoobdawn
+        # <pynoobdawn_path>
         del args[1:6]
         args.insert(1, 'test')
         args.insert(2, 'functional')
@@ -470,7 +470,7 @@ def internal_run_test(test_name):
                                                           None)
 
             if logfile is not None and os.path.exists(logfile):
-                log.inline_file('{} RenderDoc log'.format("Test" if server is not None else ""), logfile)
+                log.inline_file('{} NoobDawn log'.format("Test" if server is not None else ""), logfile)
 
             log.end_test(test_name, print_footer=False)
 

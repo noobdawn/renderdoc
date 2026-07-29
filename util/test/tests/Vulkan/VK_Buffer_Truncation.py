@@ -1,5 +1,5 @@
 import rdtest
-import renderdoc as rd
+import noobdawn as rd
 
 
 class VK_Buffer_Truncation(rdtest.Buffer_Truncation):

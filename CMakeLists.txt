@@ -93,23 +93,23 @@ if(CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
     message(FATAL_ERROR "In-source builds not allowed")
 endif()
 
-# version setting variables. See renderdoc/api/replay/version.h
+# version setting variables. See noobdawn/api/replay/version.h
 
-set(BUILD_VERSION_HASH "" CACHE STRING "The current git commit hash. See renderdoc/replay/version.cpp")
-option(BUILD_VERSION_STABLE "If this is a stable build. See RENDERDOC_STABLE_BUILD in renderdoc/api/replay/version.h" OFF)
-set(BUILD_VERSION_DIST_NAME "" CACHE STRING "The name of the distribution. See DISTRIBUTION_NAME in renderdoc/api/replay/version.h")
-set(BUILD_VERSION_DIST_VER "" CACHE STRING "The distribution-specific version number. See DISTRIBUTION_VERSION in renderdoc/api/replay/version.h")
-set(BUILD_VERSION_DIST_CONTACT "" CACHE STRING "The URL or email to contact with issues. See DISTRIBUTION_CONTACT in renderdoc/api/replay/version.h")
-set(RENDERDOC_PLUGINS_PATH "" CACHE STRING "Path to RenderDoc plugins folder after installation of RenderDoc (either absolute or relative to binary)")
-set(RENDERDOC_APK_PATH "" CACHE STRING "Path to RenderDoc .apk files after installation of RenderDoc on host (either absolute or relative to binary)")
+set(BUILD_VERSION_HASH "" CACHE STRING "The current git commit hash. See noobdawn/replay/version.cpp")
+option(BUILD_VERSION_STABLE "If this is a stable build. See NOOBDAWN_STABLE_BUILD in noobdawn/api/replay/version.h" OFF)
+set(BUILD_VERSION_DIST_NAME "" CACHE STRING "The name of the distribution. See DISTRIBUTION_NAME in noobdawn/api/replay/version.h")
+set(BUILD_VERSION_DIST_VER "" CACHE STRING "The distribution-specific version number. See DISTRIBUTION_VERSION in noobdawn/api/replay/version.h")
+set(BUILD_VERSION_DIST_CONTACT "" CACHE STRING "The URL or email to contact with issues. See DISTRIBUTION_CONTACT in noobdawn/api/replay/version.h")
+set(NOOBDAWN_PLUGINS_PATH "" CACHE STRING "Path to NoobDawn plugins folder after installation of NoobDawn (either absolute or relative to binary)")
+set(NOOBDAWN_APK_PATH "" CACHE STRING "Path to NoobDawn .apk files after installation of NoobDawn on host (either absolute or relative to binary)")
 
 set(LIB_SUFFIX "" CACHE STRING "Suffix for 'lib' folder in target directory structure. E.g. set to '64' to use /usr/local/lib64 instead of /usr/local/lib.")
-set(LIB_SUBFOLDER "" CACHE STRING "Subfolder under the 'lib' folder in target directory structure. E.g. set to 'renderdoc' to use /usr/local/lib/renderdoc instead of /usr/local/lib.")
-set(VULKAN_JSON_SUFFIX "" CACHE STRING "Suffix for the vulkan implicit_layer json file. E.g. set to '.x86_64' to use renderdoc_capture.x86_64.json instead of renderdoc_capture.json")
+set(LIB_SUBFOLDER "" CACHE STRING "Subfolder under the 'lib' folder in target directory structure. E.g. set to 'noobdawn' to use /usr/local/lib/noobdawn instead of /usr/local/lib.")
+set(VULKAN_JSON_SUFFIX "" CACHE STRING "Suffix for the vulkan implicit_layer json file. E.g. set to '.x86_64' to use noobdawn_capture.x86_64.json instead of noobdawn_capture.json")
 
 option(INTERNAL_SELF_CAPTURE "Internal option: enable self-capture" OFF)
 
-set(RDOC_BASE_NAME "renderdoc")
+set(RDOC_BASE_NAME "noobdawn")
 if(INTERNAL_SELF_CAPTURE)
     set(RDOC_BASE_NAME "rdocself")
     add_definitions(-DRDOC_SELFCAPTURE_LIMITEDAPI=1)
@@ -118,20 +118,20 @@ string(TOUPPER ${RDOC_BASE_NAME} RDOC_BASE_NAME_UPPER)
 add_definitions(-DRDOC_BASE_NAME=${RDOC_BASE_NAME})
 
 if(NOT LIB_SUFFIX STREQUAL "")
-    add_definitions(-DRENDERDOC_LIB_SUFFIX=${LIB_SUFFIX})
+    add_definitions(-DNOOBDAWN_LIB_SUFFIX=${LIB_SUFFIX})
 endif()
 
 set(LIB_SUBFOLDER_TRAIL_SLASH "")
 
 if(NOT LIB_SUBFOLDER STREQUAL "")
-    add_definitions(-DRENDERDOC_LIB_SUBFOLDER=${LIB_SUBFOLDER})
+    add_definitions(-DNOOBDAWN_LIB_SUBFOLDER=${LIB_SUBFOLDER})
     set(LIB_SUBFOLDER_TRAIL_SLASH "${LIB_SUBFOLDER}/")
 endif()
 
-add_definitions(-DRENDERDOC_VULKAN_JSON_SUFFIX=${VULKAN_JSON_SUFFIX})
+add_definitions(-DNOOBDAWN_VULKAN_JSON_SUFFIX=${VULKAN_JSON_SUFFIX})
 
 if(BUILD_VERSION_STABLE)
-    add_definitions(-DRENDERDOC_STABLE_BUILD=1)
+    add_definitions(-DNOOBDAWN_STABLE_BUILD=1)
 endif()
 
 if(NOT BUILD_VERSION_DIST_NAME STREQUAL "")
@@ -146,14 +146,14 @@ if(NOT BUILD_VERSION_DIST_CONTACT STREQUAL "")
     add_definitions(-DDISTRIBUTION_CONTACT="${BUILD_VERSION_DIST_CONTACT}")
 endif()
 
-if(NOT RENDERDOC_PLUGINS_PATH STREQUAL "")
-    message(STATUS "Detected custom path to RenderDoc plugins: ${RENDERDOC_PLUGINS_PATH}")
-    add_definitions(-DRENDERDOC_PLUGINS_PATH="${RENDERDOC_PLUGINS_PATH}")
+if(NOT NOOBDAWN_PLUGINS_PATH STREQUAL "")
+    message(STATUS "Detected custom path to NoobDawn plugins: ${NOOBDAWN_PLUGINS_PATH}")
+    add_definitions(-DNOOBDAWN_PLUGINS_PATH="${NOOBDAWN_PLUGINS_PATH}")
 endif()
 
-if(NOT RENDERDOC_APK_PATH STREQUAL "")
-    message(STATUS "Detected custom path to RenderDocCmd.apk: ${RENDERDOC_APK_PATH}")
-    add_definitions(-DRENDERDOC_APK_PATH="${RENDERDOC_APK_PATH}")
+if(NOT NOOBDAWN_APK_PATH STREQUAL "")
+    message(STATUS "Detected custom path to NoobDawnCmd.apk: ${NOOBDAWN_APK_PATH}")
+    add_definitions(-DNOOBDAWN_APK_PATH="${NOOBDAWN_APK_PATH}")
 endif()
 
 function(get_git_hash _git_hash)
@@ -198,16 +198,16 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/.git/HEAD")
     endif()
 endif()
 
-project(RenderDoc CXX C)
+project(NoobDawn CXX C)
 
 option(ENABLE_GL "Enable GL driver" ON)
 option(ENABLE_GLES "Enable GL ES driver" ON)
 option(ENABLE_EGL "Enable EGL" ON)
 option(ENABLE_VULKAN "Enable Vulkan driver" ON)
 option(ENABLE_METAL "Enable Metal driver" OFF)
-option(ENABLE_RENDERDOCCMD "Enable renderdoccmd" ON)
-option(ENABLE_QRENDERDOC "Enable qrenderdoc" ON)
-option(ENABLE_PYRENDERDOC "Enable renderdoc python modules" ON)
+option(ENABLE_NOOBDAWNCMD "Enable noobdawncmd" ON)
+option(ENABLE_QNOOBDAWN "Enable qnoobdawn" ON)
+option(ENABLE_PYNOOBDAWN "Enable noobdawn python modules" ON)
 
 option(ENABLE_XLIB "Enable xlib windowing support" ON)
 option(ENABLE_XCB "Enable xcb windowing support" ON)
@@ -249,28 +249,28 @@ if(ENABLE_UNSUPPORTED_EXPERIMENTAL_POSSIBLY_BROKEN_WAYLAND)
 endif()
 
 if(WIN32)
-    message(FATAL_ERROR "CMake is not needed on Windows, just open and build renderdoc.sln")
+    message(FATAL_ERROR "CMake is not needed on Windows, just open and build noobdawn.sln")
 endif()
 
 message(STATUS "Calculating version")
 
-file(READ ${CMAKE_SOURCE_DIR}/renderdoc/api/replay/version.h VERSION_CONTENTS)
+file(READ ${CMAKE_SOURCE_DIR}/noobdawn/api/replay/version.h VERSION_CONTENTS)
 
 string(REGEX MATCH "_MAJOR [0-9]+" MAJOR_VERSION_LINE "${VERSION_CONTENTS}")
-string(REGEX MATCH "[0-9]+" RENDERDOC_VERSION_MAJOR "${MAJOR_VERSION_LINE}")
+string(REGEX MATCH "[0-9]+" NOOBDAWN_VERSION_MAJOR "${MAJOR_VERSION_LINE}")
 
 string(REGEX MATCH "_MINOR [0-9]+" MINOR_VERSION_LINE "${VERSION_CONTENTS}")
-string(REGEX MATCH "[0-9]+" RENDERDOC_VERSION_MINOR "${MINOR_VERSION_LINE}")
+string(REGEX MATCH "[0-9]+" NOOBDAWN_VERSION_MINOR "${MINOR_VERSION_LINE}")
 
-set(RENDERDOC_VERSION "${RENDERDOC_VERSION_MAJOR}.${RENDERDOC_VERSION_MINOR}")
+set(NOOBDAWN_VERSION "${NOOBDAWN_VERSION_MAJOR}.${NOOBDAWN_VERSION_MINOR}")
 
-message(STATUS "Building RenderDoc version ${RENDERDOC_VERSION}")
+message(STATUS "Building NoobDawn version ${NOOBDAWN_VERSION}")
 
-if(RENDERDOC_VERSION_MAJOR STREQUAL "")
+if(NOOBDAWN_VERSION_MAJOR STREQUAL "")
     message(FATAL_ERROR "Couldn't calculate major version")
 endif()
 
-if(RENDERDOC_VERSION_MINOR STREQUAL "")
+if(NOOBDAWN_VERSION_MINOR STREQUAL "")
     message(FATAL_ERROR "Couldn't calculate minor version")
 endif()
 
@@ -285,9 +285,9 @@ if(INTERNAL_SELF_CAPTURE)
     set(ENABLE_GLES OFF CACHE BOOL "" FORCE)
     set(ENABLE_EGL OFF CACHE BOOL "" FORCE)
     
-    message(STATUS "Disabling qrenderdoc & python modules for self-capture")
-    set(ENABLE_QRENDERDOC OFF CACHE BOOL "" FORCE)
-    set(ENABLE_PYRENDERDOC OFF CACHE BOOL "" FORCE)
+    message(STATUS "Disabling qnoobdawn & python modules for self-capture")
+    set(ENABLE_QNOOBDAWN OFF CACHE BOOL "" FORCE)
+    set(ENABLE_PYNOOBDAWN OFF CACHE BOOL "" FORCE)
 endif()
 
 if(ANDROID)
@@ -299,12 +299,12 @@ if(ANDROID)
     set(ENABLE_EGL ON CACHE BOOL "" FORCE)
 
     # Android doesn't support the Qt UI for obvious reasons
-    message(STATUS "Disabling qrenderdoc for android build")
-    set(ENABLE_QRENDERDOC OFF CACHE BOOL "" FORCE)
+    message(STATUS "Disabling qnoobdawn for android build")
+    set(ENABLE_QNOOBDAWN OFF CACHE BOOL "" FORCE)
 
     # Android also doesn't support the python modules
-    message(STATUS "Disabling renderdoc python modules for android build")
-    set(ENABLE_PYRENDERDOC OFF CACHE BOOL "" FORCE)
+    message(STATUS "Disabling noobdawn python modules for android build")
+    set(ENABLE_PYNOOBDAWN OFF CACHE BOOL "" FORCE)
 
     message(STATUS "Using Android ABI ${ANDROID_ABI}")
     message(STATUS "Using Android native API level ${ANDROID_NATIVE_API_LEVEL}")
@@ -327,23 +327,23 @@ if(APPLE)
 endif()
 
 if(ENABLE_GL)
-    add_definitions(-DRENDERDOC_SUPPORT_GL)
+    add_definitions(-DNOOBDAWN_SUPPORT_GL)
 endif()
 
 if(ENABLE_GLES)
-    add_definitions(-DRENDERDOC_SUPPORT_GLES)
+    add_definitions(-DNOOBDAWN_SUPPORT_GLES)
 endif()
 
 if(ENABLE_EGL)
-    add_definitions(-DRENDERDOC_SUPPORT_EGL)
+    add_definitions(-DNOOBDAWN_SUPPORT_EGL)
 endif()
 
 if(ENABLE_VULKAN)
-    add_definitions(-DRENDERDOC_SUPPORT_VULKAN)
+    add_definitions(-DNOOBDAWN_SUPPORT_VULKAN)
 endif()
 
 if(ENABLE_METAL)
-    add_definitions(-DRENDERDOC_SUPPORT_METAL)
+    add_definitions(-DNOOBDAWN_SUPPORT_METAL)
 endif()
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" cmake_build_type_lower)
@@ -354,7 +354,7 @@ if(cmake_build_type_lower STREQUAL "release" OR
    cmake_build_type_lower STREQUAL "relwithdebinfo" OR
    cmake_build_type_lower STREQUAL "minsizerel")
     add_definitions(-DRELEASE)
-    message(STATUS "Building RenderDoc in Release mode: ${CMAKE_BUILD_TYPE}")
+    message(STATUS "Building NoobDawn in Release mode: ${CMAKE_BUILD_TYPE}")
     set(RELEASE_MODE 1)
 endif()
 
@@ -464,31 +464,31 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 if(ANDROID)
-    add_definitions(-DRENDERDOC_PLATFORM_ANDROID)
+    add_definitions(-DNOOBDAWN_PLATFORM_ANDROID)
 elseif(APPLE)
-    add_definitions(-DRENDERDOC_PLATFORM_APPLE)
+    add_definitions(-DNOOBDAWN_PLATFORM_APPLE)
 elseif(UNIX)
-    add_definitions(-DRENDERDOC_PLATFORM_LINUX)
+    add_definitions(-DNOOBDAWN_PLATFORM_LINUX)
 
     if(ENABLE_XLIB)
-        add_definitions(-DRENDERDOC_WINDOWING_XLIB)
+        add_definitions(-DNOOBDAWN_WINDOWING_XLIB)
     endif()
 
     if(ENABLE_XCB)
-        add_definitions(-DRENDERDOC_WINDOWING_XCB)
+        add_definitions(-DNOOBDAWN_WINDOWING_XCB)
     endif()
 
     if(ENABLE_UNSUPPORTED_EXPERIMENTAL_POSSIBLY_BROKEN_WAYLAND)
-        add_definitions(-DRENDERDOC_WINDOWING_WAYLAND)
+        add_definitions(-DNOOBDAWN_WINDOWING_WAYLAND)
     endif()
 endif()
 
-add_subdirectory(renderdoc)
+add_subdirectory(noobdawn)
 
-# these variables are handled within the CMakeLists.txt in qrenderdoc,
+# these variables are handled within the CMakeLists.txt in qnoobdawn,
 # but we need to add it if either is enabled since the swig bindings
 # are handled in common
-if(ENABLE_QRENDERDOC OR ENABLE_PYRENDERDOC)
+if(ENABLE_QNOOBDAWN OR ENABLE_PYNOOBDAWN)
     # Make sure Python 3 is found
     set(Python_ADDITIONAL_VERSIONS 3.18 3.17 3.16 3.15 3.14 3.13 3.12 3.11 3.10 3.9 3.8 3.7 3.6 3.5 3.4)
     if(NOT ${CMAKE_VERSION} VERSION_LESS "3.12")
@@ -510,16 +510,16 @@ if(ENABLE_QRENDERDOC OR ENABLE_PYRENDERDOC)
         message(FATAL_ERROR "We require ${PYTHON_EXECUTABLE}-config or ${PYTHON_EXECUTABLE}.${PYTHON_VERSION_MINOR}-config to build swig, please install the python dev package for your system.")
     endif()
 
-    add_subdirectory(qrenderdoc)
+    add_subdirectory(qnoobdawn)
 endif()
 
-if(ENABLE_RENDERDOCCMD)
-    add_subdirectory(renderdoccmd)
+if(ENABLE_NOOBDAWNCMD)
+    add_subdirectory(noobdawncmd)
 endif()
 
 # install documentation files
-install (FILES util/LINUX_DIST_README DESTINATION share/doc/renderdoc RENAME README)
-install (FILES LICENSE.md DESTINATION share/doc/renderdoc)
+install (FILES util/LINUX_DIST_README DESTINATION share/doc/noobdawn RENAME README)
+install (FILES LICENSE.md DESTINATION share/doc/noobdawn)
 
 message(STATUS "Enabled APIs:")
 if(ENABLE_GL)

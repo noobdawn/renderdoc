@@ -1,7 +1,7 @@
 How do I control the replay?
 ============================
 
-RenderDoc works by capturing a frame and all resources used in it, and then replaying them with introspection and analysis of the replayed commands.
+NoobDawn works by capturing a frame and all resources used in it, and then replaying them with introspection and analysis of the replayed commands.
 
 The default replay works well for the large majority of cases, but there are some fine controls that can be useful. This page details how to change those options.
 
@@ -18,13 +18,13 @@ Replay options
 
   | :guilabel:`Use API Validation on replay` Default: ``Disabled``
 
-Normally RenderDoc enables API validation during capture and saves any messages seen. That is the most reliable way to get API validation messages as there is a minimum of other work going on.
+Normally NoobDawn enables API validation during capture and saves any messages seen. That is the most reliable way to get API validation messages as there is a minimum of other work going on.
 
 However if the capture was made without API validation enabled, this option allows you to instead get API validation messages from the first load of the capture. These will be visible in the :doc:`../window/debug_messages` window.
 
 .. note::
 
-  Due to the heavier amount of analysis work happening during replay it is possible that some different or false-positive validation messages may come through. The best solution is always to use API validation on your program without RenderDoc running at all, since RenderDoc doesn't handle all invalid API use, but if that is not possible you should prefer to enable validation at capture time.
+  Due to the heavier amount of analysis work happening during replay it is possible that some different or false-positive validation messages may come through. The best solution is always to use API validation on your program without NoobDawn running at all, since NoobDawn doesn't handle all invalid API use, but if that is not possible you should prefer to enable validation at capture time.
 
 .. _gpu-selection-override:
 
@@ -32,7 +32,7 @@ However if the capture was made without API validation enabled, this option allo
 
   | :guilabel:`GPU Selection Override` Default: ``Default GPU selection``
 
-By default RenderDoc will try to select the closest GPU on replay to the one used in the capture. When the :guilabel:`Default GPU selection` entry is selected this algorithm is left to behave as normal.
+By default NoobDawn will try to select the closest GPU on replay to the one used in the capture. When the :guilabel:`Default GPU selection` entry is selected this algorithm is left to behave as normal.
 
 The other entries in the list are the unique GPUs available on the system, together with the APIs they are available on. Some GPUs - such as the virtual WARP GPU for D3D - may not be available on all APIs.
 
@@ -42,9 +42,9 @@ If the overridden GPU is not available for a given capture, then the default sel
 
   | :guilabel:`Replay optimisation level` Default: ``Balanced``
 
-RenderDoc's replay contains some trade-offs between correctness and performance. This selection allows you to choose how far along that scale to go.
+NoobDawn's replay contains some trade-offs between correctness and performance. This selection allows you to choose how far along that scale to go.
 
-:guilabel:`No Optimisation` will disable all optimisations, which may be useful for isolating RenderDoc bugs.
+:guilabel:`No Optimisation` will disable all optimisations, which may be useful for isolating NoobDawn bugs.
 
 :guilabel:`Conservative` will make some optimisations which should be invisible and undetectable to the user.
 

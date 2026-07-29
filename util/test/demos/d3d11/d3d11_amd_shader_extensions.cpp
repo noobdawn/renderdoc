@@ -96,15 +96,15 @@ void main(uint3 threadID : SV_DispatchThreadID)
 
     if(!agsLib)
     {
-      // try in plugins folder next to renderdoc.dll
-      HMODULE rdocmod = GetModuleHandleA("renderdoc.dll");
+      // try in plugins folder next to noobdawn.dll
+      HMODULE rdocmod = GetModuleHandleA("noobdawn.dll");
       char path[MAX_PATH + 1] = {};
 
       if(rdocmod)
       {
         GetModuleFileNameA(rdocmod, path, MAX_PATH);
         std::string tmp = path;
-        tmp.resize(tmp.size() - (sizeof("/renderdoc.dll") - 1));
+        tmp.resize(tmp.size() - (sizeof("/noobdawn.dll") - 1));
 
         agsLib = LoadLibraryA((tmp + "/plugins/amd/ags/" + agsname).c_str());
       }
@@ -178,8 +178,8 @@ void main(uint3 threadID : SV_DispatchThreadID)
 
       extCreate.uavSlot = 7;
       extCreate.crossfireMode = AGS_CROSSFIRE_MODE_DISABLE;
-      extCreate.pAppName = L"RenderDoc demos";
-      extCreate.pEngineName = L"RenderDoc demos";
+      extCreate.pAppName = L"NoobDawn demos";
+      extCreate.pEngineName = L"NoobDawn demos";
 
       AGSReturnCode agsret =
           dyn_agsDriverExtensionsDX11_CreateDevice(ags, &devCreate, &extCreate, &ret);

@@ -1,4 +1,4 @@
-import renderdoc as rd
+import noobdawn as rd
 import struct
 import rdtest
 
@@ -272,6 +272,6 @@ class Subgroup_Zoo(rdtest.TestCase):
         if overallFailed:
             raise rdtest.TestFailureException("Some tests were not as expected")
 
-        self.check_renderdoc_log_asserts()
+        self.check_noobdawn_log_asserts()
 
         rdtest.log.success("All tests matched")

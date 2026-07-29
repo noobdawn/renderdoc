@@ -1,0 +1,48 @@
+{
+  "file_format_version" : "1.1.2",
+  "layer" : {
+    "name": "@VULKAN_LAYER_NAME@",
+    "type": "GLOBAL",
+    "library_path": "@VULKAN_LAYER_MODULE_PATH@",
+    "api_version": "1.4.324",
+    "implementation_version": "@NOOBDAWN_VERSION_MINOR@",
+    "description": "Debugging capture layer for NoobDawn",
+    "functions": {
+      "vkGetInstanceProcAddr": "VK_LAYER_NOOBDAWN_CaptureGetInstanceProcAddr",
+      "vkGetDeviceProcAddr": "VK_LAYER_NOOBDAWN_CaptureGetDeviceProcAddr",
+      "vkNegotiateLoaderLayerInterfaceVersion": "VK_LAYER_NOOBDAWN_CaptureNegotiateLoaderLayerInterfaceVersion"
+    },
+    "pre_instance_functions": {
+      "vkEnumerateInstanceExtensionProperties": "VK_LAYER_NOOBDAWN_CaptureEnumerateInstanceExtensionProperties"
+    },
+    "instance_extensions": [
+      {
+        "name": "VK_EXT_debug_utils",
+        "spec_version": "1"
+      }
+    ],
+    "device_extensions": [
+      {
+        "name": "VK_EXT_debug_marker",
+        "spec_version": "4",
+        "entrypoints": ["vkDebugMarkerSetObjectTagEXT",
+                        "vkDebugMarkerSetObjectNameEXT",
+                        "vkCmdDebugMarkerBeginEXT",
+                        "vkCmdDebugMarkerEndEXT",
+                        "vkCmdDebugMarkerInsertEXT"
+                       ]
+      },
+      {
+        "name": "VK_EXT_tooling_info",
+        "spec_version": "1",
+        "entrypoints": ["vkGetPhysicalDeviceToolPropertiesEXT"]
+      }
+    ],
+    "enable_environment": {
+      "@VULKAN_ENABLE_VAR@": "1"
+    },
+    "disable_environment": {
+      "DISABLE_VULKAN_NOOBDAWN_CAPTURE_@NOOBDAWN_VERSION_MAJOR@_@NOOBDAWN_VERSION_MINOR@": "1"
+    }
+  }
+}

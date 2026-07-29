@@ -8,11 +8,11 @@ On Windows there are no dependencies - you can always compile the latest version
 
 ## Linux
 
-RenderDoc only supports building on 64-bit x86 linux. 32-Bit x86 and any ARM/other platforms are not supported.
+NoobDawn only supports building on 64-bit x86 linux. 32-Bit x86 and any ARM/other platforms are not supported.
 
-Requirements for the core library and renderdoccmd are `libx11`, `libxcb`, `libxcb-keysyms` and `libGL`. The exact are packages for these vary by distribution.
+Requirements for the core library and noobdawncmd are `libx11`, `libxcb`, `libxcb-keysyms` and `libGL`. The exact are packages for these vary by distribution.
 
-For qrenderdoc you need Qt5 >= 5.6 along with the 'svg' and 'x11extras' packages. You also need `python3-dev` for the python integration, and `bison`, `autoconf`, `automake` and `libpcre3-dev` for building the custom SWIG tool for generating bindings.
+For qnoobdawn you need Qt5 >= 5.6 along with the 'svg' and 'x11extras' packages. You also need `python3-dev` for the python integration, and `bison`, `autoconf`, `automake` and `libpcre3-dev` for building the custom SWIG tool for generating bindings.
 
 On any distribution if you find qmake isn't available under its default name, or if `qmake -v` lists a Qt4 version, make sure you have qtchooser installed in your package manager and use it to select Qt5. This might be done by exporting `QT_SELECT=qt5`, but check with your distribution for details.
 
@@ -100,7 +100,7 @@ brew link qt5 --force
 
 To build for Android, you must download components of the Android SDK, the Android NDK, and Java Development Kit.
 
-RenderDoc is currently known to build with NDK 14b, SDK tools 3859397, SDK build-tools 26.0.1, SDK platform android-23, Java 8 (also known as 1.8). If you use different versions of any of these it is up to you to ensure you have compatible versions of all as otherwise build failures may occur as versions of some components may not be compatible with different (even newer) versions of other components.
+NoobDawn is currently known to build with NDK 14b, SDK tools 3859397, SDK build-tools 26.0.1, SDK platform android-23, Java 8 (also known as 1.8). If you use different versions of any of these it is up to you to ensure you have compatible versions of all as otherwise build failures may occur as versions of some components may not be compatible with different (even newer) versions of other components.
 
 If you've already got the tools required, simply set the following three environment variables:
 

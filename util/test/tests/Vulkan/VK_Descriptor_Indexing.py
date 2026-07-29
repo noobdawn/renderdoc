@@ -1,6 +1,6 @@
 import rdtest
 import struct
-import renderdoc as rd
+import noobdawn as rd
 
 
 class VK_Descriptor_Indexing(rdtest.TestCase):

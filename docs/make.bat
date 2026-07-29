@@ -123,14 +123,14 @@ if "%1" == "htmlhelp" (
 	%SPHINXBUILD% -b htmlhelp -t htmlhelp %ALLSPHINXOPTS% %BUILDDIR%/htmlhelp
 	if errorlevel 1 exit /b 1
 	REM Copy handwritten index file to output, overwriting auto-generated one
-	copy renderdoc.hhk %BUILDDIR%\htmlhelp\
+	copy noobdawn.hhk %BUILDDIR%\htmlhelp\
 	REM Copy introduction page over index.html
 	copy %BUILDDIR%\htmlhelp\introduction.html %BUILDDIR%\htmlhelp\index.html
 	REM Filter out the auto-generated TOC to remove anchor links and root index.html
-	type %BUILDDIR%\htmlhelp\renderdoc.hhc | python remove_lines.py ".html#" | python remove_lines.py "\"index.html\"" > %BUILDDIR%\htmlhelp\tmp
-	move %BUILDDIR%\htmlhelp\tmp %BUILDDIR%\htmlhelp\renderdoc.hhc
+	type %BUILDDIR%\htmlhelp\noobdawn.hhc | python remove_lines.py ".html#" | python remove_lines.py "\"index.html\"" > %BUILDDIR%\htmlhelp\tmp
+	move %BUILDDIR%\htmlhelp\tmp %BUILDDIR%\htmlhelp\noobdawn.hhc
        if NOT "%HHCBUILD%" == "" (
-               "%HHCBUILD%" %BUILDDIR%\htmlhelp\renderdoc.hhp
+               "%HHCBUILD%" %BUILDDIR%\htmlhelp\noobdawn.hhp
                echo.Build finished.
                goto end
        )
@@ -149,9 +149,9 @@ if "%1" == "qthelp" (
 	echo.
 	echo.Build finished; now you can run "qcollectiongenerator" with the ^
 .qhcp project file in %BUILDDIR%/qthelp, like this:
-	echo.^> qcollectiongenerator %BUILDDIR%\qthelp\RenderDoc.qhcp
+	echo.^> qcollectiongenerator %BUILDDIR%\qthelp\NoobDawn.qhcp
 	echo.To view the help file:
-	echo.^> assistant -collectionFile %BUILDDIR%\qthelp\RenderDoc.ghc
+	echo.^> assistant -collectionFile %BUILDDIR%\qthelp\NoobDawn.ghc
 	goto end
 )
 

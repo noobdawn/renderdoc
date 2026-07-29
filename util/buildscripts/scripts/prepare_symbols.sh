@@ -31,7 +31,7 @@ SRCSRV: ini ------------------------------------------------
 VERSION=2
 VERCTRL=http
 SRCSRV: variables ------------------------------------------
-HTTP_ALIAS=https://raw.githubusercontent.com/baldurk/renderdoc/$GITTAG/
+HTTP_ALIAS=https://raw.githubusercontent.com/baldurk/noobdawn/$GITTAG/
 HTTP_EXTRACT_TARGET=%HTTP_ALIAS%%var2%
 SRCSRVTRG=%HTTP_EXTRACT_TARGET%
 SRCSRV: source files ---------------------------------------
@@ -93,7 +93,7 @@ for ARCH in Win32 x64; do
 	done
 
 	if [ -d "${TMPSTORE}" ]; then
-		MSYS2_ARG_CONV_EXCL="*" "${BUILD_ROOT}"/support/symstore.exe add /s "$(native_path "${SYMSTORE}")" /compress /r /f "$(native_path "${TMPSTORE}")" /t RenderDoc /v $GITTAG
+		MSYS2_ARG_CONV_EXCL="*" "${BUILD_ROOT}"/support/symstore.exe add /s "$(native_path "${SYMSTORE}")" /compress /r /f "$(native_path "${TMPSTORE}")" /t NoobDawn /v $GITTAG
 	fi
 
 done

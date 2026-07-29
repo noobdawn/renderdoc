@@ -6,15 +6,15 @@ This page details how to set up a custom shader for visualisation. This can be u
 Introduction
 ------------
 
-The basic process of setting up the custom shader involves writing a shader file that will be compiled and used by RenderDoc. Note that you can use any language that is either natively accepted by the graphics API used, or any language that can be compiled to an accepted shader.
+The basic process of setting up the custom shader involves writing a shader file that will be compiled and used by NoobDawn. Note that you can use any language that is either natively accepted by the graphics API used, or any language that can be compiled to an accepted shader.
 
 For example on D3D11 or D3D12, hlsl is the only language usable by default. On OpenGL only glsl can be used, but on Vulkan you can use glsl or use hlsl as long as a compiler is available.
 
-There are several special global helpers that can be declared and used, which will be implemented and return values by RenderDoc. In addition there are automatic macros that can be used to bind resources and still write shaders which work on different APIs with different bindings.
+There are several special global helpers that can be declared and used, which will be implemented and return values by NoobDawn. In addition there are automatic macros that can be used to bind resources and still write shaders which work on different APIs with different bindings.
 
 Your pixel shader defines an operation that transforms the raw value from the input texture into a value that will then be displayed by the texture viewer. The usual texture viewer controls for range adaption and channels will still be available on the resulting texture.
 
-To set up your shader, it's recommended that you use the UI defined in the documentation for the :doc:`../window/texture_viewer`, but you can manually create a ``.hlsl`` or ``.glsl`` file in the application storage directory ( ``%APPDATA%/qrenderdoc/`` on windows or ``~/.local/share/qrenderdoc`` elsewhere). The file must contain an entry point ``main()`` that returns ``float4``, and uses any of the below inputs. These shaders are loaded when RenderDoc loads a capture, and RenderDoc watches for any changes to the files (either externally or in the shader editor in RenderDoc) and automatically reloads them.
+To set up your shader, it's recommended that you use the UI defined in the documentation for the :doc:`../window/texture_viewer`, but you can manually create a ``.hlsl`` or ``.glsl`` file in the application storage directory ( ``%APPDATA%/qnoobdawn/`` on windows or ``~/.local/share/qnoobdawn`` elsewhere). The file must contain an entry point ``main()`` that returns ``float4``, and uses any of the below inputs. These shaders are loaded when NoobDawn loads a capture, and NoobDawn watches for any changes to the files (either externally or in the shader editor in NoobDawn) and automatically reloads them.
 
 .. note::
 
@@ -26,7 +26,7 @@ To set up your shader, it's recommended that you use the UI defined in the docum
 
 .. note::
 
-  See the custom shader templates available in the  `contrib repository <https://github.com/baldurk/renderdoc-contrib/tree/main/baldurk/custom-shader-templates>`__ for complete examples.
+  See the custom shader templates available in the  `contrib repository <https://github.com/baldurk/noobdawn-contrib/tree/main/baldurk/custom-shader-templates>`__ for complete examples.
 
 Predefined inputs
 -----------------
@@ -333,7 +333,7 @@ These resources are bound sparsely with the appropriate type for the current tex
 
 When a cubemap texture is bound, it is bound both to the 2D Array as well as the Cube Array. If a depth-stencil texture has both components, the relevant depth and stencil resources will both be bound at once.
 
-To determine which resource to sample from you can use the ``RENDERDOC_TexType`` variable above.
+To determine which resource to sample from you can use the ``NOOBDAWN_TexType`` variable above.
 
 Usually the float textures are used, but for unsigned and signed integer formats, the relevant integer resources are used.
 

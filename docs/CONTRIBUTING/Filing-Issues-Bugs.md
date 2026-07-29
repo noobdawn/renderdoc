@@ -10,9 +10,9 @@ When filing a bug please click 'Get started' next to the 'Bug report' entry. Thi
 
 You can't provide too much information, and it's quite common to provide too little information. The more information you can provide the better I can determine the bug.
 
-Avoid the temptation to guess or assume what the problem is based on what you're seeing, unless you have dived into the code to find out. It's probably not the case that RenderDoc crashes if you read a texture in a pixel shader. Most graphics programs do that! It's probably something more specific than that which is hard to identify without debugging. It's fine not to know what the problem is because that's my job! Just give as much information as possible.
+Avoid the temptation to guess or assume what the problem is based on what you're seeing, unless you have dived into the code to find out. It's probably not the case that NoobDawn crashes if you read a texture in a pixel shader. Most graphics programs do that! It's probably something more specific than that which is hard to identify without debugging. It's fine not to know what the problem is because that's my job! Just give as much information as possible.
 
-If you have time, testing the latest nightly build of RenderDoc is a good idea since the bug you're reporting may have been fixed already. It's also a good idea to update your graphics drivers as some problems are caused by out of date drivers. If the problem you're seeing is new and wasn't present in an older version of RenderDoc, it would be extremely helpful to know approximately when the problem started. You can download any historical nightly build to test with.
+If you have time, testing the latest nightly build of NoobDawn is a good idea since the bug you're reporting may have been fixed already. It's also a good idea to update your graphics drivers as some problems are caused by out of date drivers. If the problem you're seeing is new and wasn't present in an older version of NoobDawn, it would be extremely helpful to know approximately when the problem started. You can download any historical nightly build to test with.
 
 If you really want to go in-depth there is a lot of writing online about how to make good bug reports! The classic that covers a lot is [Asking smart questions](http://www.catb.org/esr/faqs/smart-questions.html).
 
@@ -36,7 +36,7 @@ Be sure that your repro steps really are steps that anyone can follow. Most of t
 
 Github has a file size limit for uploaded files. In most cases your capture or application will be too large, so you can use a free online service such as dropbox, google drive, mega, or others to share your files.
 
-If you want to share your capture or application privately then please [email me](mailto:baldurk@baldurk.org?subject=RenderDoc%20bug) with it.
+If you want to share your capture or application privately then please [email me](mailto:baldurk@baldurk.org?subject=NoobDawn%20bug) with it.
 
 When you have no problems sharing these, please do so as soon as you open your issue. If you open the issue without any reproducing materials, then in many cases I'll have to reply to ask for them anyway!
 
@@ -44,8 +44,8 @@ If you cannot share your capture or application even privately, then that's unde
 
 # Environment
 
-Please update the environment section for at least the three items present, the RenderDoc version you are using, your OS, and the graphics API(s) that you are seeing the bug on.
+Please update the environment section for at least the three items present, the NoobDawn version you are using, your OS, and the graphics API(s) that you are seeing the bug on.
 
-For the RenderDoc version if you're using a nightly build include the date or commit hash for that nightly build, since the v1.X number is not unique.
+For the NoobDawn version if you're using a nightly build include the date or commit hash for that nightly build, since the v1.X number is not unique.
 
 Giving more details here such as your GPU and driver version can't hurt, but you must include the three above since this gives important information about where the problem might be.

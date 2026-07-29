@@ -1,5 +1,5 @@
 import rdtest
-import renderdoc as rd
+import noobdawn as rd
 
 
 class GL_CBuffer_Zoo(rdtest.TestCase):

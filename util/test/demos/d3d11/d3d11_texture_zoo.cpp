@@ -450,7 +450,7 @@ int4 main(float4 pos : SV_Position, uint samp : SV_SampleIndex) : SV_Target0
 
     SetDebugName(test.res, MakeName(test) + " " + test.fmt.name);
 
-    // discard the resource when possible, this makes renderdoc treat it as dirty
+    // discard the resource when possible, this makes noobdawn treat it as dirty
     if(ctx1)
       ctx1->DiscardResource(test.res);
 

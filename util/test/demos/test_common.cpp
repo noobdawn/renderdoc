@@ -572,7 +572,7 @@ void GraphicsTest::Prepare(int argc, char **argv)
 
   prepared = true;
 
-  dataRoot = GetEnvVar("RENDERDOC_DEMOS_DATA");
+  dataRoot = GetEnvVar("NOOBDAWN_DEMOS_DATA");
 
   if(dataRoot.empty())
     dataRoot = GetCWD() + "/data/demos/";
@@ -625,31 +625,31 @@ void GraphicsTest::Prepare(int argc, char **argv)
     }
   }
 
-  pRENDERDOC_GetAPI RENDERDOC_GetAPI = NULL;
+  pNOOBDAWN_GetAPI NOOBDAWN_GetAPI = NULL;
 
 #if defined(WIN32)
-  HMODULE mod = GetModuleHandleA("renderdoc.dll");
+  HMODULE mod = GetModuleHandleA("noobdawn.dll");
   if(mod)
-    RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)GetProcAddress(mod, "RENDERDOC_GetAPI");
+    NOOBDAWN_GetAPI = (pNOOBDAWN_GetAPI)GetProcAddress(mod, "NOOBDAWN_GetAPI");
 #elif defined(ANDROID)
-  void *mod = dlopen("libVkLayer_GLES_RenderDoc.so", RTLD_NOW | RTLD_NOLOAD);
+  void *mod = dlopen("libVkLayer_GLES_NoobDawn.so", RTLD_NOW | RTLD_NOLOAD);
   if(mod)
-    RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)dlsym(mod, "RENDERDOC_GetAPI");
+    NOOBDAWN_GetAPI = (pNOOBDAWN_GetAPI)dlsym(mod, "NOOBDAWN_GetAPI");
 #elif defined(__linux__)
-  void *mod = dlopen("librenderdoc.so", RTLD_NOW | RTLD_NOLOAD);
+  void *mod = dlopen("libnoobdawn.so", RTLD_NOW | RTLD_NOLOAD);
   if(mod)
-    RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)dlsym(mod, "RENDERDOC_GetAPI");
+    NOOBDAWN_GetAPI = (pNOOBDAWN_GetAPI)dlsym(mod, "NOOBDAWN_GetAPI");
 #elif defined(__APPLE__)
-  void *mod = dlopen("librenderdoc.dylib", RTLD_NOW | RTLD_NOLOAD);
+  void *mod = dlopen("libnoobdawn.dylib", RTLD_NOW | RTLD_NOLOAD);
   if(mod)
-    RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)dlsym(mod, "RENDERDOC_GetAPI");
+    NOOBDAWN_GetAPI = (pNOOBDAWN_GetAPI)dlsym(mod, "NOOBDAWN_GetAPI");
 #else
 #error UNKNOWN PLATFORM
 #endif
 
-  if(RENDERDOC_GetAPI)
+  if(NOOBDAWN_GetAPI)
   {
-    int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_7_0, (void **)&rdoc);
+    int ret = NOOBDAWN_GetAPI(eNOOBDAWN_API_Version_1_7_0, (void **)&rdoc);
 
     if(ret != 1)
       rdoc = NULL;

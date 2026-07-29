@@ -85,7 +85,7 @@ v2f main(uint vid : SV_VertexID)
         uavParam(D3D12_SHADER_VISIBILITY_VERTEX, 0, 1),
     });
 
-    // 105202922 is the magic space renderdoc tries to use to avoid collisions
+    // 105202922 is the magic space noobdawn tries to use to avoid collisions
     ID3D12RootSignaturePtr collidesig = MakeSig({
         uavParam(D3D12_SHADER_VISIBILITY_ALL, 105202922, 0),
         uavParam(D3D12_SHADER_VISIBILITY_VERTEX, 105202922, 1),

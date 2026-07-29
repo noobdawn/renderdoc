@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="qnoobdawn.i" />
+    <CustomBuild Include="noobdawn.i" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pynoobdawn_stub.cpp" />
+    <ClCompile Include="qnoobdawn_stub.cpp" />
+    <ClCompile Include="$(IntDir)generated\qnoobdawn_module_python.cxx" />
+    <ClCompile Include="$(IntDir)generated\noobdawn_module_python.cxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Interface">
+      <UniqueIdentifier>{c9305133-414c-4dfd-930b-7856901d3b1c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Interface\PersistantConfig.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Interface\QRDInterface.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Interface\RemoteHost.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

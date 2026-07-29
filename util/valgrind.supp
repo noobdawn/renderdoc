@@ -416,7 +416,7 @@
   match-leak-kinds: reachable
   fun:_Znwm
   ...
-  fun:_Z15rdclog_filenamePKc
+  fun:_Z15nbdlog_filenamePKc
 }
 {
   GlobalLogfileString3
@@ -424,21 +424,21 @@
   match-leak-kinds: reachable
   fun:malloc
   ...
-  fun:_Z15rdclog_filenamePKc
+  fun:_Z15nbdlog_filenamePKc
 }
 {
   GlobalLogfileLock
   Memcheck:Leak
   match-leak-kinds: reachable
   fun:_Znwm
-  fun:_Z13rdclog_directlj7LogTypePKcS1_jS1_z
+  fun:_Z13nbdlog_directlj7LogTypePKcS1_jS1_z
 }
 {
   GlobalLogfileLock2
   Memcheck:Leak
   match-leak-kinds: reachable
   fun:_Znwm
-  fun:_Z15rdclogprint_int7LogTypePKcS1_
+  fun:_Z15nbdlogprint_int7LogTypePKcS1_
 }
 {
   LoadVulkanModule
@@ -453,5 +453,5 @@
 	Memcheck:Leak
   match-leak-kinds: all
   ...
-  fun:_ZN9RenderDoc13ProcessConfigEv
+  fun:_ZN9NoobDawn13ProcessConfigEv
 }

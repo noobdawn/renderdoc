@@ -1,7 +1,7 @@
 
 import sys
 import subprocess
-import renderdoc as rd
+import noobdawn as rd
 from . import util
 from .logging import log
 from pathlib import Path
@@ -43,7 +43,7 @@ class RemoteServer(ABC):
         pass
 
     @abstractmethod
-    def get_renderdoc_path(self):
+    def get_noobdawn_path(self):
         pass
 
     @abstractmethod
@@ -104,7 +104,7 @@ class RemoteServer(ABC):
     
 class AndroidRemoteServer(RemoteServer):
     # Android app IDs for the server
-    ADRD_SERVER_APP64 = 'org.renderdoc.renderdoccmd.arm64'
+    ADRD_SERVER_APP64 = 'org.noobdawn.noobdawncmd.arm64'
     CONNECTION_RETRY_COUNT = 3
 
     def __init__(self, device) -> None:
@@ -241,8 +241,8 @@ class AndroidRemoteServer(RemoteServer):
                        check=True)
         return self._base_path + util.get_current_test() + '/' + name
 
-    def get_renderdoc_path(self):
-        return self._data_path + '/' + AndroidRemoteServer.ADRD_SERVER_APP64 + '/files/RenderDoc/'
+    def get_noobdawn_path(self):
+        return self._data_path + '/' + AndroidRemoteServer.ADRD_SERVER_APP64 + '/files/NoobDawn/'
 
     def run_demos(self, args: [str], timeout=10):
         raw = subprocess.run(['adb', '-s', self.device, 'shell', 'echo', '$EPOCHREALTIME'],
@@ -251,7 +251,7 @@ class AndroidRemoteServer(RemoteServer):
         # Run the command, blocking
         proc = subprocess.run(['adb', '-s', self.device,
                                'shell', 'am', 'start', '-W', '-n', f'{util.get_android_demo_app_name()}/.Loader',
-                               '-e', 'demos', 'RenderDoc', '-e', 'rd_demos'] + args,
+                               '-e', 'demos', 'NoobDawn', '-e', 'rd_demos'] + args,
                               check=True, stdout=subprocess.DEVNULL)
         # Extract the log data
         raw = subprocess.run(['adb', '-s', self.device, 'shell',
@@ -279,7 +279,7 @@ class AndroidRemoteServer(RemoteServer):
 
     def inject_and_run_exe(self, cmdline, envmods, opts):
         package_and_activity = f"{util.get_android_demo_app_name()}/.Loader"
-        args = "-e demos RenderDoc -e rd_demos \'\"" + cmdline + "\"\'"
+        args = "-e demos NoobDawn -e rd_demos \'\"" + cmdline + "\"\'"
 
         log.print("Running package:'{}' cmd:'{}' with env:'{}'".format(
             package_and_activity, cmdline, envmods))
@@ -305,8 +305,8 @@ class AndroidRemoteServer(RemoteServer):
         if not self.is_connected():
             return None
 
-        src = self._base_path + '/RenderDoc'
-        raw = subprocess.run(['adb', '-s', self.device, 'shell', f'cd {src}; ls -t RenderDoc_* | head -1'],
+        src = self._base_path + '/NoobDawn'
+        raw = subprocess.run(['adb', '-s', self.device, 'shell', f'cd {src}; ls -t NoobDawn_* | head -1'],
                              check=True, stdout=subprocess.PIPE, timeout=timeout).stdout
         latestlog = str(raw, 'utf-8').strip()
         if not latestlog:
@@ -326,8 +326,8 @@ class AndroidRemoteServer(RemoteServer):
         if not self.is_connected():
             return None
 
-        src = self.get_renderdoc_path()
-        raw = subprocess.run(['adb', '-s', self.device, 'shell', f'cd {src}; ls -t RenderDoc_* | head -1'],
+        src = self.get_noobdawn_path()
+        raw = subprocess.run(['adb', '-s', self.device, 'shell', f'cd {src}; ls -t NoobDawn_* | head -1'],
                              check=True, stdout=subprocess.PIPE, timeout=timeout).stdout
         latestlog = str(raw, 'utf-8').strip()
         if not latestlog:
@@ -347,14 +347,14 @@ class AndroidRemoteServer(RemoteServer):
         if not self.is_connected():
             return None
 
-        src = self.get_renderdoc_path() + "RemoteServer_Server.log"
+        src = self.get_noobdawn_path() + "RemoteServer_Server.log"
         if not self.path_exists(src):
             log.print(f"Cannot find server comms log '{src}'")
             return None
 
         os.makedirs(util.get_tmp_dir(), exist_ok=True)
 
-        dst = os.path.join(util.get_tmp_dir(), 'RenderDoc_Server.log')
+        dst = os.path.join(util.get_tmp_dir(), 'NoobDawn_Server.log')
         log.print("Copying remote server comms log from '{}' to '{}'".format(src, dst))
         self.CopyCaptureFromRemote(src, dst, None)
 

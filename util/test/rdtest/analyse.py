@@ -1,11 +1,11 @@
 import struct
 from typing import List
 from typing import Tuple
-import renderdoc
+import noobdawn
 from . import util
 
 # Alias for convenience - we need to import as-is so types don't get confused
-rd = renderdoc
+rd = noobdawn
 
 
 def open_capture(filename="", cap: rd.CaptureFile=None, opts: rd.ReplayOptions=None):
@@ -16,7 +16,7 @@ def open_capture(filename="", cap: rd.CaptureFile=None, opts: rd.ReplayOptions=N
     :param cap: The capture file to use, or ``None`` if a filename is given.
     :param opts: The replay options to use, or ``None`` to use the default options.
     :return: A replay controller for the capture
-    :rtype: renderdoc.ReplayController
+    :rtype: noobdawn.ReplayController
     """
 
     if opts is None:

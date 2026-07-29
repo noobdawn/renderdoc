@@ -23,7 +23,7 @@ The set of counters to be sampled can be saved and loaded to a configuration fil
 Counter Results
 ---------------
 
-When clicking :guilabel:`Sample Counters` in the counter selection dialog above, RenderDoc will then iterate over every event and fetch all of the data for the selected counters, and display it in a large table.
+When clicking :guilabel:`Sample Counters` in the counter selection dialog above, NoobDawn will then iterate over every event and fetch all of the data for the selected counters, and display it in a large table.
 
 .. figure:: ../imgs/Screenshots/counter_view.png
 
@@ -38,12 +38,12 @@ Clicking the |save| button lets you save the results of the counters as CSV.
 Hardware Counters
 -----------------
 
-RenderDoc ships with support for AMD's GPA library, which will allow access to AMD's hardware counters when running with a supported AMD GPU.
+NoobDawn ships with support for AMD's GPA library, which will allow access to AMD's hardware counters when running with a supported AMD GPU.
 
-RenderDoc also has support for nVidia's NvPerfKit library, but it does not ship as the library's license forbids redistribution. To enable support, place the ``NvPmApi.Core.dll`` file into either ``plugins/nv/counters/x64`` for 64-bit RenderDoc builds and ``plugins/nv/counters/x86`` for 32-bit RenderDoc builds.
+NoobDawn also has support for nVidia's NvPerfKit library, but it does not ship as the library's license forbids redistribution. To enable support, place the ``NvPmApi.Core.dll`` file into either ``plugins/nv/counters/x64`` for 64-bit NoobDawn builds and ``plugins/nv/counters/x86`` for 32-bit NoobDawn builds.
 
-Similarly RenderDoc has support for nVidia's Nsight Perf SDK, but this library's license also forbids redistribution. To enable support, follow these steps:
+Similarly NoobDawn has support for nVidia's Nsight Perf SDK, but this library's license also forbids redistribution. To enable support, follow these steps:
 
 #. Download the Nsight Perf SDK from: `https://developer.nvidia.com/nsight-perf-sdk <https://developer.nvidia.com/nsight-perf-sdk>`_.
 #. Extract the contents
-#. On windows copy ``nvperf_grfx_host.dll`` and on linux copy ``libnvperf_grfx_host.*`` to the plugins folder in ``renderdoc/plugins/nv`` in your user directory.
+#. On windows copy ``nvperf_grfx_host.dll`` and on linux copy ``libnvperf_grfx_host.*`` to the plugins folder in ``noobdawn/plugins/nv`` in your user directory.

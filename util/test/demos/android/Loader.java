@@ -1,4 +1,4 @@
-package @RENDERDOC_ANDROID_PACKAGE_NAME@;
+package @NOOBDAWN_ANDROID_PACKAGE_NAME@;
 import android.os.Build;
 import android.app.Activity;
 import android.view.WindowManager;

@@ -25,15 +25,15 @@ else:
 sys.path.insert(0, os.path.abspath(binpath + 'Development/pymodules'))
 sys.path.insert(0, os.path.abspath(binpath + 'Release/pymodules'))
 
-# Add the build paths to PATH so renderdoc.dll can be located
+# Add the build paths to PATH so noobdawn.dll can be located
 os.environ["PATH"] = os.path.abspath(binpath + 'Development/') + os.pathsep + os.environ["PATH"]
 os.environ["PATH"] = os.path.abspath(binpath + 'Release/') + os.pathsep + os.environ["PATH"]
 
 # path to module libraries for linux
 sys.path.insert(0, os.path.abspath('../build/lib'))
 
-import renderdoc as rd
-import qrenderdoc as qrd
+import noobdawn as rd
+import qnoobdawn as qrd
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-p', '--path', help="Add a path to interface files to search (can be used multiple times)", action='append')
@@ -43,7 +43,7 @@ parser.add_argument('-v', '--verbose',
                     help="Run verbosely", action="store_true")
 args = parser.parse_args()
 
-paths = ['../renderdoc/api/replay', '../qrenderdoc/Code/Interface']
+paths = ['../noobdawn/api/replay', '../qnoobdawn/Code/Interface']
 if args.path is not None:
     paths += args.path
 
@@ -73,7 +73,7 @@ def make_c_type(ret: str, pattern: bool, typelist: List[str]):
     orig_type = ret
 
     # strip namespace
-    if ret[0:10] == 'renderdoc.':
+    if ret[0:10] == 'noobdawn.':
         ret = ret[10:]
 
     # Handle pipelines that are renamed
@@ -89,7 +89,7 @@ def make_c_type(ret: str, pattern: bool, typelist: List[str]):
     if ret in ['bool', 'void']:
         pass
     elif ret == 'str':
-        ret = '(const )?rdc(inflexible)?str ?[&*]?' if pattern else 'rdcstr'
+        ret = '(const )?nbd(inflexible)?str ?[&*]?' if pattern else 'nbdstr'
     elif ret == 'int':
         ret = '(u?int[163264]{2}|size)_t' if pattern else 'int' # ambiguous
     elif ret == 'float':
@@ -97,14 +97,14 @@ def make_c_type(ret: str, pattern: bool, typelist: List[str]):
     elif ret == 'bytes':
         ret = '(const )?bytebuf ?[&*]?' if pattern else 'bytebuf'
     elif ret == 'List[Tuple[str,str]]': # special case
-        ret = 'rdcstrpairs'
+        ret = 'nbdstrpairs'
     elif ret == 'Tuple[str,str]': # special case
-        ret = 'rdcstrpair'
+        ret = 'nbdstrpair'
     elif ret[0:9] == 'Callable[':
         ret = '(std::function<void\(\)>|[A-Za-z_]+Callback)' if pattern else 'std::function/NamedCallback'
     elif ret[0:5] == 'List[':
         inner = make_c_type(ret[5:-1], pattern, typelist)
-        ret = '(const )?rdcarray<{}> ?[&*]?'.format(inner) if pattern else 'rdcarray<{}>'.format(inner)
+        ret = '(const )?nbdarray<{}> ?[&*]?'.format(inner) if pattern else 'nbdarray<{}>'.format(inner)
     elif ret[0:6] == 'Tuple[':
         inners = [make_c_type(i.strip(), pattern, typelist) for i in ret[6:-1].split(',')]
         if pattern:
@@ -116,12 +116,12 @@ def make_c_type(ret: str, pattern: bool, typelist: List[str]):
 
         if tuple_len > 2 and len(list(set(inners))) == 1:
             inner = inners[0]
-            ret = '(const )?rdcfixedarray<{}, {}> ?[&*]?'.format(inner, tuple_len) if pattern else 'rdcfixedarray<{}, {}>'.format(inner, tuple_len)
+            ret = '(const )?nbdfixedarray<{}, {}> ?[&*]?'.format(inner, tuple_len) if pattern else 'nbdfixedarray<{}, {}>'.format(inner, tuple_len)
         else:
-            ret = '(const )?rdcpair<{}> ?[&*]?'.format(inner) if pattern else 'rdcpair<{}>'.format(inner)
+            ret = '(const )?nbdpair<{}> ?[&*]?'.format(inner) if pattern else 'nbdpair<{}>'.format(inner)
     elif pattern:
         if ret[-8:] == 'Callback':
-            ret = '(RENDERDOC_)?{}'.format(ret)
+            ret = '(NOOBDAWN_)?{}'.format(ret)
         else:
             if orig_type not in typelist:
                 typelist.append(orig_type)
@@ -166,7 +166,7 @@ def check_function(parent_name, objname, obj, source, global_func, typelist):
 
     global_pattern = ''
     if global_func:
-        global_pattern = '(RENDERDOC_CC\s*RENDERDOC_)?'
+        global_pattern = '(NOOBDAWN_CC\s*NOOBDAWN_)?'
 
     pattern = '(?s){} ?{}{}\(\s*{}\)'.format(make_c_type(ret, True, typelist), global_pattern, objname, funcargs[0])
     clean = '{} {}({})'.format(make_c_type(ret, False, typelist), objname, funcargs[1])
@@ -174,7 +174,7 @@ def check_function(parent_name, objname, obj, source, global_func, typelist):
     match = re.search(pattern, source, re.MULTILINE | re.DOTALL)
 
     pattern2 = None
-    # global functions returning strings can't return an rdcstr, they have to return const char *
+    # global functions returning strings can't return an nbdstr, they have to return const char *
     if match is None and ret == 'str':
         pattern2 = '(?s)const char \*{}{}\(\s*{}\)'.format(global_pattern, objname, funcargs[0])
         match = re.search(pattern2, source, re.MULTILINE | re.DOTALL)
@@ -221,9 +221,9 @@ def check_used_types(objname, module, used_types):
                 parent_name = t[0:idx]
                 if parent_name in dir(parent):
                     parent = parent.__dict__[parent_name]
-                elif parent_name == 'renderdoc':
+                elif parent_name == 'noobdawn':
                     parent = rd
-                elif parent_name == 'qrenderdoc':
+                elif parent_name == 'qnoobdawn':
                     parent = qrd
                 t = t[idx+1:]
                 continue
@@ -231,16 +231,16 @@ def check_used_types(objname, module, used_types):
             count += 1
             print("Error {:3} in {}: Unrecognised reference {}".format(count, objname, type_name))
             if type_name in dir(rd):
-                print("  - Maybe missing namespace to refer to renderdoc.{}?".format(type_name))
+                print("  - Maybe missing namespace to refer to noobdawn.{}?".format(type_name))
             break
 
-check_mods = ['renderdoc', 'qrenderdoc']
+check_mods = ['noobdawn', 'qnoobdawn']
 for mod_name in check_mods:
     mod = sys.modules[mod_name]
     if args.verbose:
         print("===== Checks for {} =====".format(mod_name))
     for objname in dir(mod):
-        if re.search('__|SWIG|ResourceId_Null|rdcarray_of|Structured.*List', objname):
+        if re.search('__|SWIG|ResourceId_Null|nbdarray_of|Structured.*List', objname):
             continue
 
         # skip some functions that have special bindings and won't be easily found
@@ -299,9 +299,9 @@ for mod_name in check_mods:
                 pass
 
             # a couple of manual cases that need parameters
-            if qualname == 'renderdoc.SDObject' and instance is None:
+            if qualname == 'noobdawn.SDObject' and instance is None:
                 instance = obj("", "")
-            if qualname == 'renderdoc.SDChunk' and instance is None:
+            if qualname == 'noobdawn.SDChunk' and instance is None:
                 instance = obj("")
 
             instance_warned = False
@@ -343,9 +343,9 @@ for mod_name in check_mods:
                     if type(value).__module__ != mod_name:
                         type_name = type(value).__module__ + '.' + type_name
 
-                    type_name = re.sub('(.*)rdcarray_of_(.*)', 'List[\\1\\2]', type_name)
-                    type_name = re.sub('(renderdoc\.)?u?int[163264]{2}_t', 'int', type_name)
-                    type_name = re.sub('(renderdoc\.)?rdcstr', 'str', type_name)
+                    type_name = re.sub('(.*)nbdarray_of_(.*)', 'List[\\1\\2]', type_name)
+                    type_name = re.sub('(noobdawn\.)?u?int[163264]{2}_t', 'int', type_name)
+                    type_name = re.sub('(noobdawn\.)?nbdstr', 'str', type_name)
                     type_name = re.sub('Pipe_', '', type_name)
                     type_name = re.sub('StructuredBufferList', 'List[bytes]', type_name)
                     type_name = re.sub('StructuredObjectList', 'List[SDObject]', type_name)

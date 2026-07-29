@@ -14,8 +14,8 @@ from rdtest.remoteserver import RemoteServer, AndroidRemoteServer
 
 
 # Android app IDs for the demos
-ADRD_DEMO_APP32 = 'renderdoc.org.demos.arm32'
-ADRD_DEMO_APP64 = 'renderdoc.org.demos.arm64'
+ADRD_DEMO_APP32 = 'noobdawn.org.demos.arm32'
+ADRD_DEMO_APP64 = 'noobdawn.org.demos.arm64'
 
 
 def _timestr():

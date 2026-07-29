@@ -1,17 +1,17 @@
 <?xml version='1.0' encoding='windows-1252'?>
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
-  <Product Name='RenderDoc' Id='*' UpgradeCode='D320753C-4B18-4905-A752-E68959943E7D'
-    Language='1033' Codepage='1252' Version='$(env.RENDERDOC_VERSION).0' Manufacturer='Baldur Karlsson'>
+  <Product Name='NoobDawn' Id='*' UpgradeCode='D320753C-4B18-4905-A752-E68959943E7D'
+    Language='1033' Codepage='1252' Version='$(env.NOOBDAWN_VERSION).0' Manufacturer='Baldur Karlsson'>
 
-    <Package Id='*' Keywords='Installer' Description="Installer for RenderDoc"
-      Comments='RenderDoc Homepage is http://renderdoc.org/' Manufacturer='Baldur Karlsson'
+    <Package Id='*' Keywords='Installer' Description="Installer for NoobDawn"
+      Comments='NoobDawn Homepage is http://noobdawn.org/' Manufacturer='Baldur Karlsson'
       InstallerVersion='301' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
 
     <UI> 
-      <Error Id="25000">Please use the 64-bit installer - the 64-bit version of RenderDoc fully supports capturing 32-bit programs.</Error>
+      <Error Id="25000">Please use the 64-bit installer - the 64-bit version of NoobDawn fully supports capturing 32-bit programs.</Error>
     </UI> 
 
-    <Property Id="MajorMinorVersion">$(env.RENDERDOC_VERSION)</Property>
+    <Property Id="MajorMinorVersion">$(env.NOOBDAWN_VERSION)</Property>
 
     <Property Id="REINSTALLMODE" Value="amus"/> 
 
@@ -29,82 +29,82 @@
       <UpgradeVersion Minimum="0.18.0"
         IncludeMinimum="yes"
         IncludeMaximum="yes"
-        Maximum="$(env.RENDERDOC_VERSION).0"
+        Maximum="$(env.NOOBDAWN_VERSION).0"
         Property="OLDERVERSIONBEINGUPGRADED" />
-      <UpgradeVersion OnlyDetect="yes" Property="NEWERVERSIONDETECTED" Minimum="$(env.RENDERDOC_VERSION).0" IncludeMinimum="no" />
+      <UpgradeVersion OnlyDetect="yes" Property="NEWERVERSIONDETECTED" Minimum="$(env.NOOBDAWN_VERSION).0" IncludeMinimum="no" />
     </Upgrade>
 
     <Condition Message="A later version of [ProductName] is already installed"> 
       NOT NEWERVERSIONDETECTED
     </Condition> 
 
-    <Media Id='1' Cabinet='renderdoc.cab' EmbedCab='yes' CompressionLevel='high' DiskPrompt="CD-ROM #1" />
-    <Property Id='DiskPrompt' Value="RenderDoc Installation [1]" />
+    <Media Id='1' Cabinet='noobdawn.cab' EmbedCab='yes' CompressionLevel='high' DiskPrompt="CD-ROM #1" />
+    <Property Id='DiskPrompt' Value="NoobDawn Installation [1]" />
 
     <Directory Id='TARGETDIR' Name='SourceDir'>
       <Directory Id='ProgramFilesFolder' Name='PFiles'>
-        <Directory Id='INSTALLDIR' Name='RenderDoc'>
+        <Directory Id='INSTALLDIR' Name='NoobDawn'>
 
-          <Component Id='QRenderDoc' Guid='0DB375D5-7712-4853-AA75-536DF863C827'>
-            <File Id='qrenderdocEXE' Name='qrenderdoc.exe' DiskId='1' Source='dist/Release32/qrenderdoc.exe' KeyPath='yes'>
-              <Shortcut Id="startmenuRenderDoc" Directory="ProgramMenuDir" Name="RenderDoc" WorkingDirectory='INSTALLDIR' Icon="icon.ico" IconIndex="0" Advertise="yes" />
+          <Component Id='QNoobDawn' Guid='0DB375D5-7712-4853-AA75-536DF863C827'>
+            <File Id='qnoobdawnEXE' Name='qnoobdawn.exe' DiskId='1' Source='dist/Release32/qnoobdawn.exe' KeyPath='yes'>
+              <Shortcut Id="startmenuNoobDawn" Directory="ProgramMenuDir" Name="NoobDawn" WorkingDirectory='INSTALLDIR' Icon="icon.ico" IconIndex="0" Advertise="yes" />
             </File>
 
-            <RegistryValue Root="HKLM" Id="VerbRDC" Action="write" 
-              Key="Software\Classes\RenderDoc.RDCCapture.1\shell\open\command" 
-              Value='"[#qrenderdocEXE]" "%1"'
+            <RegistryValue Root="HKLM" Id="VerbNBD" Action="write" 
+              Key="Software\Classes\NoobDawn.NBDCapture.1\shell\open\command" 
+              Value='"[#qnoobdawnEXE]" "%1"'
               Type="expandable" />
-            <RegistryValue Root="HKLM" Id="VerbDescRDC" Action="write" 
-              Key="Software\Classes\RenderDoc.RDCCapture.1" 
-              Value='RenderDoc Capture Log (.rdc)' 
+            <RegistryValue Root="HKLM" Id="VerbDescNBD" Action="write" 
+              Key="Software\Classes\NoobDawn.NBDCapture.1" 
+              Value='NoobDawn Capture Log (.nbd)' 
               Type="expandable" />
-            <RegistryValue Root="HKLM" Id="VerbIconRDC" Action="write" 
-              Key="Software\Classes\RenderDoc.RDCCapture.1\DefaultIcon" 
-              Value='[#qrenderdocEXE]'
+            <RegistryValue Root="HKLM" Id="VerbIconNBD" Action="write" 
+              Key="Software\Classes\NoobDawn.NBDCapture.1\DefaultIcon" 
+              Value='[#qnoobdawnEXE]'
               Type="expandable" />
-            <RegistryValue Root="HKLM" Id="RDCProgIDCLSID" Action="write" 
-              Key="Software\Classes\RenderDoc.RDCCapture.1\CLSID" 
+            <RegistryValue Root="HKLM" Id="NBDProgIDCLSID" Action="write" 
+              Key="Software\Classes\NoobDawn.NBDCapture.1\CLSID" 
               Value='{5D6BF029-A6BA-417A-8523-120492B1DCE3}' 
               Type="expandable" />
 
             <RegistryValue Root="HKLM" Id="VerbCAP" Action="write" 
-              Key="Software\Classes\RenderDoc.RDCSettings.1\shell\open\command" 
-              Value='"[#qrenderdocEXE]" "%1"'
+              Key="Software\Classes\NoobDawn.NBDSettings.1\shell\open\command" 
+              Value='"[#qnoobdawnEXE]" "%1"'
               Type="expandable" />
             <RegistryValue Root="HKLM" Id="VerbDescCAP" Action="write" 
-              Key="Software\Classes\RenderDoc.RDCSettings.1" 
-              Value='RenderDoc Capture Settings (.cap)' 
+              Key="Software\Classes\NoobDawn.NBDSettings.1" 
+              Value='NoobDawn Capture Settings (.cap)' 
               Type="expandable" />
             <RegistryValue Root="HKLM" Id="VerbIconCAP" Action="write" 
-              Key="Software\Classes\RenderDoc.RDCSettings.1\DefaultIcon" 
-              Value='[#qrenderdocEXE]'
+              Key="Software\Classes\NoobDawn.NBDSettings.1\DefaultIcon" 
+              Value='[#qnoobdawnEXE]'
               Type="expandable" />
 
           </Component>
 
-          <Component Id='RenderDocCPP' Guid='2E6F718F-8BCC-4D41-9688-E99CF2F6B303'>
-            <File Id='RenderDocCPP' Name='renderdoc.dll' DiskId='1' Source='dist/Release32/renderdoc.dll' KeyPath='yes' />
-            <File Id='RenderDocJSON' Name='renderdoc.json' DiskId='1' Source='dist/Release32/renderdoc.json' />
+          <Component Id='NoobDawnCPP' Guid='2E6F718F-8BCC-4D41-9688-E99CF2F6B303'>
+            <File Id='NoobDawnCPP' Name='noobdawn.dll' DiskId='1' Source='dist/Release32/noobdawn.dll' KeyPath='yes' />
+            <File Id='NoobDawnJSON' Name='noobdawn.json' DiskId='1' Source='dist/Release32/noobdawn.json' />
             <File Id='D3DCompiler47' Name='d3dcompiler_47.dll' DiskId='1' Source='dist/Release32/d3dcompiler_47.dll' />
-            <File Id='RenderDocSHIM' Name='renderdocshim32.dll' DiskId='1' Source='dist/Release32/renderdocshim32.dll' />
+            <File Id='NoobDawnSHIM' Name='noobdawnshim32.dll' DiskId='1' Source='dist/Release32/noobdawnshim32.dll' />
             <File Id='dbghelpDLL' Name='dbghelp.dll' DiskId='1' Source='dist/Release32/dbghelp.dll' />
             <File Id='symsrvDLL' Name='symsrv.dll' DiskId='1' Source='dist/Release32/symsrv.dll' />
             <File Id='symsrvYES' Name='symsrv.yes' DiskId='1' Source='dist/Release32/symsrv.yes' />
 
-            <File Id='RenderDocAPIheader' Name='renderdoc_app.h' DiskId='1' Source='dist/Release32/renderdoc_app.h' />
+            <File Id='NoobDawnAPIheader' Name='noobdawn_app.h' DiskId='1' Source='dist/Release32/noobdawn_app.h' />
 
-            <RegistryValue Root="HKLM" Id="RDCCLSID" Action="write" 
+            <RegistryValue Root="HKLM" Id="NBDCLSID" Action="write" 
               Key="Software\Classes\CLSID\{5D6BF029-A6BA-417A-8523-120492B1DCE3}" 
-              Value='RenderDoc Thumbnail Handler' 
+              Value='NoobDawn Thumbnail Handler' 
               Type="expandable" />
-            <RegistryValue Root="HKLM" Id="RDCCLSIDServer" Action="write" 
+            <RegistryValue Root="HKLM" Id="NBDCLSIDServer" Action="write" 
               Key="Software\Classes\CLSID\{5D6BF029-A6BA-417A-8523-120492B1DCE3}\InprocServer32" 
-              Value='[#RenderDocCPP]' 
+              Value='[#NoobDawnCPP]' 
               Type="expandable" />
 
-            <RegistryValue Root="HKLM" Id="RDCVulkanImplicitLayer" Action="write"
+            <RegistryValue Root="HKLM" Id="NBDVulkanImplicitLayer" Action="write"
               Key="Software\Khronos\Vulkan\ImplicitLayers" 
-              Name='[#RenderDocJSON]'
+              Name='[#NoobDawnJSON]'
               Value='0'
               Type="integer" />
 
@@ -114,8 +114,8 @@
             <File Id='LICENSE' Name='LICENSE.rtf' DiskId='1' Source='util/installer/LICENSE.rtf' KeyPath='yes' />
           </Component>
 
-          <Component Id='RenderDocCMD' Guid='97338A5D-8FDB-4DF5-AEC7-14B36F234F29'>
-            <File Id='RenderDocCMD' Name='renderdoccmd.exe' DiskId='1' Source='dist/Release32/renderdoccmd.exe' KeyPath='yes' />
+          <Component Id='NoobDawnCMD' Guid='97338A5D-8FDB-4DF5-AEC7-14B36F234F29'>
+            <File Id='NoobDawnCMD' Name='noobdawncmd.exe' DiskId='1' Source='dist/Release32/noobdawncmd.exe' KeyPath='yes' />
           </Component>
 
           <Component Id='Qt' Guid='63C1C176-5B7C-4D29-9382-8E0FA75C5B80'>
@@ -136,8 +136,8 @@
           </Component>
 
           <Component Id='Documentation' Guid='CD32B446-6DC1-49E4-8FE9-509E1AFB126D'>
-            <File Id='Documentation' Name='renderdoc.chm' DiskId='1' Source='dist/Release32/renderdoc.chm' KeyPath='yes'>
-              <Shortcut Id="startmenuDocs" Directory="ProgramMenuDir" Name="RenderDoc Documentation" Icon='chm.ico' Advertise="yes" />
+            <File Id='Documentation' Name='noobdawn.chm' DiskId='1' Source='dist/Release32/noobdawn.chm' KeyPath='yes'>
+              <Shortcut Id="startmenuDocs" Directory="ProgramMenuDir" Name="NoobDawn Documentation" Icon='chm.ico' Advertise="yes" />
             </File>
           </Component>
 
@@ -183,8 +183,8 @@
 
             <Directory Id='plugins_android' Name='android'>
               <Component Id='android_plugin' Guid='D469744A-7915-46B8-88B4-4B76223EE8CB'>
-                <File Id='APKarm32' Name='org.renderdoc.renderdoccmd.arm32.apk' DiskId='1' Source='dist/Release32/plugins/android/org.renderdoc.renderdoccmd.arm32.apk' KeyPath='yes' />
-                <File Id='APKarm64' Name='org.renderdoc.renderdoccmd.arm64.apk' DiskId='1' Source='dist/Release32/plugins/android/org.renderdoc.renderdoccmd.arm64.apk' />
+                <File Id='APKarm32' Name='org.noobdawn.noobdawncmd.arm32.apk' DiskId='1' Source='dist/Release32/plugins/android/org.noobdawn.noobdawncmd.arm32.apk' KeyPath='yes' />
+                <File Id='APKarm64' Name='org.noobdawn.noobdawncmd.arm64.apk' DiskId='1' Source='dist/Release32/plugins/android/org.noobdawn.noobdawncmd.arm64.apk' />
                 <File Id='adb' Name='adb.exe' DiskId='1' Source='dist/Release32/plugins/android/adb.exe' />
                 <File Id='AdbWinApi' Name='AdbWinApi.dll' DiskId='1' Source='dist/Release32/plugins/android/AdbWinApi.dll' />
                 <File Id='AdbWinUsbApi' Name='AdbWinUsbApi.dll' DiskId='1' Source='dist/Release32/plugins/android/AdbWinUsbApi.dll' />
@@ -211,7 +211,7 @@
       </Directory>
 
       <Directory Id="ProgramMenuFolder" Name="Programs">
-        <Directory Id="ProgramMenuDir" Name="RenderDoc">
+        <Directory Id="ProgramMenuDir" Name="NoobDawn">
           <Component Id="ProgramMenuDir" Guid="30CCCAB1-49D5-45B3-952C-53E3B581E691">
             <RemoveFolder Id='ProgramMenuDir' On='uninstall' />
             <RegistryValue Root='HKCU' Key='Software\[Manufacturer]\[ProductName]' Type='string' Value='' KeyPath='yes' />
@@ -220,79 +220,79 @@
       </Directory>
 
       <Component Id="ImageOpenWith" Guid="1F56AF06-3E83-4D7E-85A2-6A309A55FF4F">
-        <RegistryValue Root="HKLM" Id="RDCOpenWithCommand" Action="write" KeyPath='yes'
-          Key="Software\Classes\Applications\qrenderdoc.exe\shell\open\command"
-          Value='"[#qrenderdocEXE]" "%1"'
+        <RegistryValue Root="HKLM" Id="NBDOpenWithCommand" Action="write" KeyPath='yes'
+          Key="Software\Classes\Applications\qnoobdawn.exe\shell\open\command"
+          Value='"[#qnoobdawnEXE]" "%1"'
           Type="string" />
 
-        <RegistryValue Root="HKLM" Id="RDCOpenWithDDS" Action="write"
-          Key="Software\Classes\Applications\qrenderdoc.exe\SupportedTypes"
+        <RegistryValue Root="HKLM" Id="NBDOpenWithDDS" Action="write"
+          Key="Software\Classes\Applications\qnoobdawn.exe\SupportedTypes"
           Name='.dds'  Value='' Type="string" />
-        <RegistryValue Root="HKLM" Id="RDCOpenWithHDR" Action="write"
-          Key="Software\Classes\Applications\qrenderdoc.exe\SupportedTypes"
+        <RegistryValue Root="HKLM" Id="NBDOpenWithHDR" Action="write"
+          Key="Software\Classes\Applications\qnoobdawn.exe\SupportedTypes"
           Name='.hdr'  Value='' Type="string" />
-        <RegistryValue Root="HKLM" Id="RDCOpenWithJPG" Action="write"
-          Key="Software\Classes\Applications\qrenderdoc.exe\SupportedTypes"
+        <RegistryValue Root="HKLM" Id="NBDOpenWithJPG" Action="write"
+          Key="Software\Classes\Applications\qnoobdawn.exe\SupportedTypes"
           Name='.jpg'  Value='' Type="string" />
-        <RegistryValue Root="HKLM" Id="RDCOpenWithJPEG" Action="write"
-          Key="Software\Classes\Applications\qrenderdoc.exe\SupportedTypes"
+        <RegistryValue Root="HKLM" Id="NBDOpenWithJPEG" Action="write"
+          Key="Software\Classes\Applications\qnoobdawn.exe\SupportedTypes"
           Name='.jpeg'  Value='' Type="string" />
-        <RegistryValue Root="HKLM" Id="RDCOpenWithPNG" Action="write"
-          Key="Software\Classes\Applications\qrenderdoc.exe\SupportedTypes"
+        <RegistryValue Root="HKLM" Id="NBDOpenWithPNG" Action="write"
+          Key="Software\Classes\Applications\qnoobdawn.exe\SupportedTypes"
           Name='.png'  Value='' Type="string" />
-        <RegistryValue Root="HKLM" Id="RDCOpenWithEXR" Action="write"
-          Key="Software\Classes\Applications\qrenderdoc.exe\SupportedTypes"
+        <RegistryValue Root="HKLM" Id="NBDOpenWithEXR" Action="write"
+          Key="Software\Classes\Applications\qnoobdawn.exe\SupportedTypes"
           Name='.exr'  Value='' Type="string" />
-        <RegistryValue Root="HKLM" Id="RDCOpenWithTGA" Action="write"
-          Key="Software\Classes\Applications\qrenderdoc.exe\SupportedTypes"
+        <RegistryValue Root="HKLM" Id="NBDOpenWithTGA" Action="write"
+          Key="Software\Classes\Applications\qnoobdawn.exe\SupportedTypes"
           Name='.tga'  Value='' Type="string" />
-        <RegistryValue Root="HKLM" Id="RDCOpenWithBMP" Action="write"
-          Key="Software\Classes\Applications\qrenderdoc.exe\SupportedTypes"
+        <RegistryValue Root="HKLM" Id="NBDOpenWithBMP" Action="write"
+          Key="Software\Classes\Applications\qnoobdawn.exe\SupportedTypes"
           Name='.bmp'  Value='' Type="string" />
-        <RegistryValue Root="HKLM" Id="RDCOpenWithGIF" Action="write"
-          Key="Software\Classes\Applications\qrenderdoc.exe\SupportedTypes"
+        <RegistryValue Root="HKLM" Id="NBDOpenWithGIF" Action="write"
+          Key="Software\Classes\Applications\qnoobdawn.exe\SupportedTypes"
           Name='.gif'  Value='' Type="string" />
-        <RegistryValue Root="HKLM" Id="RDCOpenWithPSD" Action="write"
-          Key="Software\Classes\Applications\qrenderdoc.exe\SupportedTypes"
+        <RegistryValue Root="HKLM" Id="NBDOpenWithPSD" Action="write"
+          Key="Software\Classes\Applications\qnoobdawn.exe\SupportedTypes"
           Name='.psd'  Value='' Type="string" />
 
-        <RegistryValue Root="HKLM" Id="RDCOpenWithProgidDDS" Action="write"
-          Key="Software\Classes\.dds\OpenWithProgids" Name='RenderDoc.RDCCapture.1'  Value='' Type="string" />
-        <RegistryValue Root="HKLM" Id="RDCOpenWithProgidHDR" Action="write"
-          Key="Software\Classes\.hdr\OpenWithProgids" Name='RenderDoc.RDCCapture.1'  Value='' Type="string" />
-        <RegistryValue Root="HKLM" Id="RDCOpenWithProgidJPG" Action="write"
-          Key="Software\Classes\.jpg\OpenWithProgids" Name='RenderDoc.RDCCapture.1'  Value='' Type="string" />
-        <RegistryValue Root="HKLM" Id="RDCOpenWithProgidJPEG" Action="write"
-          Key="Software\Classes\.jpeg\OpenWithProgids" Name='RenderDoc.RDCCapture.1' Value='' Type="string" />
-        <RegistryValue Root="HKLM" Id="RDCOpenWithProgidPNG" Action="write"
-          Key="Software\Classes\.png\OpenWithProgids" Name='RenderDoc.RDCCapture.1'  Value='' Type="string" />
-        <RegistryValue Root="HKLM" Id="RDCOpenWithProgidEXR" Action="write"
-          Key="Software\Classes\.exr\OpenWithProgids" Name='RenderDoc.RDCCapture.1'  Value='' Type="string" />
-        <RegistryValue Root="HKLM" Id="RDCOpenWithProgidTGA" Action="write"
-          Key="Software\Classes\.tga\OpenWithProgids" Name='RenderDoc.RDCCapture.1'  Value='' Type="string" />
-        <RegistryValue Root="HKLM" Id="RDCOpenWithProgidBMP" Action="write"
-          Key="Software\Classes\.bmp\OpenWithProgids" Name='RenderDoc.RDCCapture.1'  Value='' Type="string" />
-        <RegistryValue Root="HKLM" Id="RDCOpenWithProgidGIF" Action="write"
-          Key="Software\Classes\.gif\OpenWithProgids" Name='RenderDoc.RDCCapture.1'  Value='' Type="string" />
-        <RegistryValue Root="HKLM" Id="RDCOpenWithProgidPSD" Action="write"
-          Key="Software\Classes\.psd\OpenWithProgids" Name='RenderDoc.RDCCapture.1'  Value='' Type="string" />
+        <RegistryValue Root="HKLM" Id="NBDOpenWithProgidDDS" Action="write"
+          Key="Software\Classes\.dds\OpenWithProgids" Name='NoobDawn.NBDCapture.1'  Value='' Type="string" />
+        <RegistryValue Root="HKLM" Id="NBDOpenWithProgidHDR" Action="write"
+          Key="Software\Classes\.hdr\OpenWithProgids" Name='NoobDawn.NBDCapture.1'  Value='' Type="string" />
+        <RegistryValue Root="HKLM" Id="NBDOpenWithProgidJPG" Action="write"
+          Key="Software\Classes\.jpg\OpenWithProgids" Name='NoobDawn.NBDCapture.1'  Value='' Type="string" />
+        <RegistryValue Root="HKLM" Id="NBDOpenWithProgidJPEG" Action="write"
+          Key="Software\Classes\.jpeg\OpenWithProgids" Name='NoobDawn.NBDCapture.1' Value='' Type="string" />
+        <RegistryValue Root="HKLM" Id="NBDOpenWithProgidPNG" Action="write"
+          Key="Software\Classes\.png\OpenWithProgids" Name='NoobDawn.NBDCapture.1'  Value='' Type="string" />
+        <RegistryValue Root="HKLM" Id="NBDOpenWithProgidEXR" Action="write"
+          Key="Software\Classes\.exr\OpenWithProgids" Name='NoobDawn.NBDCapture.1'  Value='' Type="string" />
+        <RegistryValue Root="HKLM" Id="NBDOpenWithProgidTGA" Action="write"
+          Key="Software\Classes\.tga\OpenWithProgids" Name='NoobDawn.NBDCapture.1'  Value='' Type="string" />
+        <RegistryValue Root="HKLM" Id="NBDOpenWithProgidBMP" Action="write"
+          Key="Software\Classes\.bmp\OpenWithProgids" Name='NoobDawn.NBDCapture.1'  Value='' Type="string" />
+        <RegistryValue Root="HKLM" Id="NBDOpenWithProgidGIF" Action="write"
+          Key="Software\Classes\.gif\OpenWithProgids" Name='NoobDawn.NBDCapture.1'  Value='' Type="string" />
+        <RegistryValue Root="HKLM" Id="NBDOpenWithProgidPSD" Action="write"
+          Key="Software\Classes\.psd\OpenWithProgids" Name='NoobDawn.NBDCapture.1'  Value='' Type="string" />
       </Component>
 
       <Component Id="ImageThumbnailProvider" Guid="51E29C24-61F0-4F40-AB17-D66A97B3D543">
-        <RegistryValue Root="HKLM" Id="RDCProvider" Action="write" KeyPath='yes'
-          Key="Software\Classes\RenderDoc.RDCCapture.1\ShellEx\{e357fccd-a995-4576-b01f-234630154e96}" 
+        <RegistryValue Root="HKLM" Id="NBDProvider" Action="write" KeyPath='yes'
+          Key="Software\Classes\NoobDawn.NBDCapture.1\ShellEx\{e357fccd-a995-4576-b01f-234630154e96}" 
           Value='{5D6BF029-A6BA-417A-8523-120492B1DCE3}' 
           Type="expandable" />
       </Component>
 
-      <Component Id="FileExtensionRDC" Guid="5F21081F-59A8-43EE-8E95-170335FC3EF4">
-        <ProgId Id='RenderDoc.RDCCapture.1' Description='RenderDoc Capture Log (.rdc)'>
-          <Extension Id='rdc' />
+      <Component Id="FileExtensionNBD" Guid="5F21081F-59A8-43EE-8E95-170335FC3EF4">
+        <ProgId Id='NoobDawn.NBDCapture.1' Description='NoobDawn Capture Log (.nbd)'>
+          <Extension Id='nbd' />
         </ProgId>
       </Component>
 
       <Component Id="FileExtensionCAP"  Guid="3A373912-99D7-4A1C-B81C-6C69BA6B8733">
-        <ProgId Id='RenderDoc.RDCSettings.1' Description='RenderDoc Capture Settings (.cap)'>
+        <ProgId Id='NoobDawn.NBDSettings.1' Description='NoobDawn Capture Settings (.cap)'>
           <Extension Id='cap' />
         </ProgId>
       </Component>
@@ -344,11 +344,11 @@
       <Custom Action="RemoveHash" Before="LaunchConditions"/>
     </InstallUISequence>
 
-    <Feature Id='Complete' Title='RenderDoc' Description='Everything included.' AllowAdvertise='no' Absent='disallow' Display='expand' Level='1' ConfigurableDirectory='INSTALLDIR'>
+    <Feature Id='Complete' Title='NoobDawn' Description='Everything included.' AllowAdvertise='no' Absent='disallow' Display='expand' Level='1' ConfigurableDirectory='INSTALLDIR'>
       <Feature Id='MainProgram' Title='Program' Description='The main executable with everything needed to capture and replay.' AllowAdvertise='no' Absent='disallow' Level='1'>
-        <ComponentRef Id='QRenderDoc' />
-        <ComponentRef Id='RenderDocCPP' />
-        <ComponentRef Id='RenderDocCMD' />
+        <ComponentRef Id='QNoobDawn' />
+        <ComponentRef Id='NoobDawnCPP' />
+        <ComponentRef Id='NoobDawnCMD' />
 
         <ComponentRef Id='Qt' />
         <ComponentRef Id='Python' />
@@ -383,9 +383,9 @@
         <ComponentRef Id='Documentation' />
       </Feature>
 
-      <Feature Id='FileExts' Title='File Associations' Description='Associate .rdc (Capture logs) and .cap (Capture settings) files with RenderDoc.' Level='1'>
+      <Feature Id='FileExts' Title='File Associations' Description='Associate .nbd (Capture logs) and .cap (Capture settings) files with NoobDawn.' Level='1'>
         <ComponentRef Id='ImageThumbnailProvider' />
-        <ComponentRef Id='FileExtensionRDC' />
+        <ComponentRef Id='FileExtensionNBD' />
         <ComponentRef Id='FileExtensionCAP' />
       </Feature>
 
@@ -400,9 +400,9 @@
     <WixVariable Id="WixUIDialogBmp" Value="util/installer/dlgbmp.bmp" />
 
     <Icon Id="chm.ico"  SourceFile="util/installer/chm.ico" />
-    <Icon Id="icon.ico" SourceFile="qrenderdoc/Resources/icon.ico" />
+    <Icon Id="icon.ico" SourceFile="qnoobdawn/Resources/icon.ico" />
     <Property Id="ARPPRODUCTICON" Value="icon.ico" />
-    <Property Id="ARPHELPLINK" Value="http://renderdoc.org/" />
+    <Property Id="ARPHELPLINK" Value="http://noobdawn.org/" />
 
   </Product>
 </Wix>

@@ -1,6 +1,6 @@
 # Build scripts
 
-The build.sh in this folder is used for building packaged builds of renderdoc on both windows and linux.
+The build.sh in this folder is used for building packaged builds of noobdawn on both windows and linux.
 
 On windows the only supported environment is a MSYS2 bash shell, other shells may work but modifications to support them are unlikely to be accepted.
 
@@ -17,7 +17,7 @@ As above, running build.sh by default will compile all this.
 
 # Running
 
-Running build.sh apart from the optional arguments must pass `--snapshot <name>`. The name is used in packaging, i.e. the resulting zips will be `RenderDoc_name.zip`.
+Running build.sh apart from the optional arguments must pass `--snapshot <name>`. The name is used in packaging, i.e. the resulting zips will be `NoobDawn_name.zip`.
 
 The output files will be placed in a `package` subfolder under the root.
 
@@ -25,9 +25,9 @@ The output files will be placed in a `package` subfolder under the root.
 
 # Extras
 
-Some extra files can be used, see the `support` subfolder. Also https://renderdoc.org/plugins.zip contains the windows plugins, and https://renderdoc.org/plugins.tgz contains the linux plugins. Extracting these in the root of the repository will be included in the package builds.
+Some extra files can be used, see the `support` subfolder. Also https://noobdawn.org/plugins.zip contains the windows plugins, and https://noobdawn.org/plugins.tgz contains the linux plugins. Extracting these in the root of the repository will be included in the package builds.
 
-On windows PySide2 can be included with the Qt build by extracting https://renderdoc.org/qrenderdoc_3rdparty.zip in the root.
+On windows PySide2 can be included with the Qt build by extracting https://noobdawn.org/qnoobdawn_3rdparty.zip in the root.
 
 For windows to build installers, all these extras must be present.
 

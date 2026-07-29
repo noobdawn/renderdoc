@@ -1,7 +1,7 @@
 Texture Viewer
 ==============
 
-The texture viewer is likely the most intuitive window in RenderDoc and commonly the most regularly used. It displays the contents of any texture in its current state at the given event, as well as providing controls to adjust and inspect it in different ways.
+The texture viewer is likely the most intuitive window in NoobDawn and commonly the most regularly used. It displays the contents of any texture in its current state at the given event, as well as providing controls to adjust and inspect it in different ways.
 
 Overview
 --------

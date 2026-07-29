@@ -1,4 +1,4 @@
-import renderdoc as rd
+import noobdawn as rd
 import os
 import datetime
 import rdtest

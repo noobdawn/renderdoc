@@ -27,7 +27,7 @@
 #include "d3d11_test.h"
 #include <stdio.h>
 #include "../3rdparty/lz4/lz4.h"
-#include "../renderdoc_app.h"
+#include "../noobdawn_app.h"
 #include "../win32/win32_window.h"
 
 typedef HRESULT(WINAPI *PFN_CREATE_DXGI_FACTORY)(REFIID, void **);
@@ -716,15 +716,15 @@ void D3D11GraphicsTest::SetBlobPath(std::string name, ID3DBlobPtr &blob)
 {
   ID3DBlobPtr newBlob = NULL;
 
-  const GUID RENDERDOC_ShaderDebugMagicValue = RENDERDOC_ShaderDebugMagicValue_struct;
+  const GUID NOOBDAWN_ShaderDebugMagicValue = NOOBDAWN_ShaderDebugMagicValue_struct;
 
   std::string pathData;
-  for(size_t i = 0; i < sizeof(RENDERDOC_ShaderDebugMagicValue); i++)
+  for(size_t i = 0; i < sizeof(NOOBDAWN_ShaderDebugMagicValue); i++)
     pathData.push_back(' ');
 
   pathData += name;
 
-  memcpy(&pathData[0], &RENDERDOC_ShaderDebugMagicValue, sizeof(RENDERDOC_ShaderDebugMagicValue));
+  memcpy(&pathData[0], &NOOBDAWN_ShaderDebugMagicValue, sizeof(NOOBDAWN_ShaderDebugMagicValue));
 
   dyn_D3DSetBlobPart(blob->GetBufferPointer(), blob->GetBufferSize(), D3D_BLOB_PRIVATE_DATA, 0,
                      pathData.c_str(), pathData.size() + 1, &newBlob);
@@ -734,9 +734,9 @@ void D3D11GraphicsTest::SetBlobPath(std::string name, ID3DBlobPtr &blob)
 
 void D3D11GraphicsTest::SetBlobPath(std::string name, ID3D11DeviceChild *shader)
 {
-  const GUID RENDERDOC_ShaderDebugMagicValue = RENDERDOC_ShaderDebugMagicValue_struct;
+  const GUID NOOBDAWN_ShaderDebugMagicValue = NOOBDAWN_ShaderDebugMagicValue_struct;
 
-  shader->SetPrivateData(RENDERDOC_ShaderDebugMagicValue, (UINT)name.size() + 1, name.c_str());
+  shader->SetPrivateData(NOOBDAWN_ShaderDebugMagicValue, (UINT)name.size() + 1, name.c_str());
 }
 
 void D3D11GraphicsTest::CreateDefaultInputLayout(ID3DBlobPtr vsblob)

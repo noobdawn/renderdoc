@@ -2,7 +2,7 @@ import os
 import traceback
 import re
 import datetime
-import renderdoc as rd
+import noobdawn as rd
 from . import util
 from . import analyse
 from . import capture
@@ -211,7 +211,7 @@ class TestCase:
         """
         Method to overload if you want to override the replay options used.
 
-        :return: The renderdoc.ReplayOptions to use.
+        :return: The noobdawn.ReplayOptions to use.
         """
 
         return rd.ReplayOptions()
@@ -220,7 +220,7 @@ class TestCase:
         """
         Method to overload if you want to override the capture options used.
 
-        :return: The renderdoc.CaptureOptions to use.
+        :return: The noobdawn.CaptureOptions to use.
         """
 
         return rd.CaptureOptions()
@@ -943,20 +943,20 @@ class TestCase:
     def check_export(self, capture_filename):
         capture_filename = self.retrieve_capture()
 
-        recomp_path = util.get_tmp_path('recompressed.rdc')
+        recomp_path = util.get_tmp_path('recompressed.nbd')
         conv_zipxml_path = util.get_tmp_path('conv.zip.xml')
-        conv_path = util.get_tmp_path('conv.rdc')
+        conv_path = util.get_tmp_path('conv.nbd')
 
-        origrdc = rd.OpenCaptureFile()
-        result = origrdc.OpenFile(capture_filename, '', None)
+        orignbd = rd.OpenCaptureFile()
+        result = orignbd.OpenFile(capture_filename, '', None)
 
         self.check(result == rd.ResultCode.Succeeded, "Couldn't open '{}': {}".format(capture_filename, str(result)))
 
-        # Export to rdc, to recompress
-        origrdc.Convert(recomp_path, '', None, None)
-        origrdc.Convert(conv_zipxml_path, 'zip.xml', None, None)
+        # Export to nbd, to recompress
+        orignbd.Convert(recomp_path, '', None, None)
+        orignbd.Convert(conv_zipxml_path, 'zip.xml', None, None)
 
-        origrdc.Shutdown()
+        orignbd.Shutdown()
 
         # Load up the zip.xml file
         zipxml = rd.OpenCaptureFile()
@@ -964,7 +964,7 @@ class TestCase:
 
         self.check(result == rd.ResultCode.Succeeded, "Couldn't open '{}': {}".format(conv_zipxml_path, str(result)))
 
-        # Convert out to rdc
+        # Convert out to nbd
         zipxml.Convert(conv_path, '', None, None)
 
         zipxml.Shutdown()
@@ -1055,7 +1055,7 @@ class TestCase:
                     taskIdx += 1
         return data
 
-    def check_renderdoc_log_asserts(self):
+    def check_noobdawn_log_asserts(self):
         countAsserts = 0
         rdlog = rd.GetLogFile()
         with open(rdlog, 'r') as f:
@@ -1064,7 +1064,7 @@ class TestCase:
                     log.error(line)
                     countAsserts += 1
         if countAsserts > 0:
-            raise TestFailureException(f'Renderdoc log file contains {countAsserts} Asserts')
+            raise TestFailureException(f'Noobdawn log file contains {countAsserts} Asserts')
 
     def validate_shadervariable(self, var: rd.ShaderVariable):
         if len(var.members) != 0:

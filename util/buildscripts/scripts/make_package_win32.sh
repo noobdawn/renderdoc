@@ -48,7 +48,7 @@ cp LICENSE.md Documentation/htmlhelp/*.chm dist/Release32/
 if [ -d plugins-win64 ]; then
 	cp -R plugins-win64/ dist/Release64/plugins
 else
-	echo "WARNING: x64 plugins missing, download and extract https://renderdoc.org/plugins.zip in root";
+	echo "WARNING: x64 plugins missing, download and extract https://noobdawn.org/plugins.zip in root";
 
 	if [[ "$STRICT" == "yes" ]]; then
 		echo "Strict mode: Failed to locate plugins.";
@@ -59,7 +59,7 @@ fi;
 if [ -d plugins-win32 ]; then
 	cp -R plugins-win32/ dist/Release32/plugins
 else
-	echo "WARNING: x86 plugins missing, download and extract https://renderdoc.org/plugins.zip in root";
+	echo "WARNING: x86 plugins missing, download and extract https://noobdawn.org/plugins.zip in root";
 
 	if [[ "$STRICT" == "yes" ]]; then
 		echo "Strict mode: Failed to locate plugins.";
@@ -75,7 +75,7 @@ find dist/Release{32,64}/ -iname '*.iobj' -exec rm '{}' \;
 # Copy in any android APKs that were built
 mkdir -p dist/Release64/plugins/android/
 if ls build-android-* > /dev/null; then
-	find build-android-* -iname 'org.renderdoc.renderdoccmd.*.apk' -exec cp '{}' dist/Release64/plugins/android ';'
+	find build-android-* -iname 'org.noobdawn.noobdawncmd.*.apk' -exec cp '{}' dist/Release64/plugins/android ';'
 else
 	echo "WARNING: No android builds found, expected build-android-arm32 and build-android-arm64";
 
@@ -117,18 +117,18 @@ rm -f dist/Release{32,64}/*.{exp,lib,metagen,xml} dist/Release{32,64}/*.vshost.*
 # Delete all but xml files from PDB folder as well (large files, and not useful)
 rm -f dist/ReleasePDBs{32,64}/*.{exp,lib,metagen} dist/Release{32,64}/*.vshost.*
 
-# In the 64bit release folder, make an x86 subfolder and copy in renderdoc 32bit
+# In the 64bit release folder, make an x86 subfolder and copy in noobdawn 32bit
 mkdir -p dist/Release64/x86
-cp -R dist/Release32/{d3dcompiler_47.dll,renderdoc.dll,renderdoc.json,renderdocshim32.dll,renderdoccmd.exe,dbghelp.dll,symsrv.dll,symsrv.yes} dist/Release64/x86/
+cp -R dist/Release32/{d3dcompiler_47.dll,noobdawn.dll,noobdawn.json,noobdawnshim32.dll,noobdawncmd.exe,dbghelp.dll,symsrv.dll,symsrv.yes} dist/Release64/x86/
 mkdir -p dist/ReleasePDBs64/x86
-cp -R dist/ReleasePDBs32/{d3dcompiler_47.dll,renderdoc.dll,renderdoc.json,renderdoc.pdb,renderdocshim32.dll,renderdocshim32.pdb,renderdoccmd.exe,renderdoccmd.pdb,dbghelp.dll,symsrv.dll,symsrv.yes} dist/ReleasePDBs64/x86/
+cp -R dist/ReleasePDBs32/{d3dcompiler_47.dll,noobdawn.dll,noobdawn.json,noobdawn.pdb,noobdawnshim32.dll,noobdawnshim32.pdb,noobdawncmd.exe,noobdawncmd.pdb,dbghelp.dll,symsrv.dll,symsrv.yes} dist/ReleasePDBs64/x86/
 
-VERSION=`grep -E "#define RENDERDOC_VERSION_(MAJOR|MINOR)" renderdoc/api/replay/version.h | tr -dc '[0-9\n]' | tr '\n' '.' | grep -Eo '[0-9]+\.[0-9]+'`
+VERSION=`grep -E "#define NOOBDAWN_VERSION_(MAJOR|MINOR)" noobdawn/api/replay/version.h | tr -dc '[0-9\n]' | tr '\n' '.' | grep -Eo '[0-9]+\.[0-9]+'`
 
-export RENDERDOC_VERSION="${VERSION}"
+export NOOBDAWN_VERSION="${VERSION}"
 
 # Ensure this variable passes through to windows on WSL
-export WSLENV=$WSLENV:RENDERDOC_VERSION
+export WSLENV=$WSLENV:NOOBDAWN_VERSION
 
 "$WIX/bin/candle.exe" -o dist/Installer32.wixobj util/installer/Installer32.wxs
 "$WIX/bin/light.exe" -ext WixUIExtension -sw1076 -loc util/installer/customtext.wxl -o dist/Installer32.msi dist/Installer32.wixobj

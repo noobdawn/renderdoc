@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  ******************************************************************************/
 
-// This is the minimum required to get the RenderDoc demo UI to work
+// This is the minimum required to get the NoobDawn demo UI to work
 // The keyboard handling for delete is not perfect
 
 /*

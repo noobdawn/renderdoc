@@ -132,7 +132,7 @@ void main()
         else
           glTexStorage2D(texbind, numMips, fmts[fmt], width, height);
 
-        // force renderdoc to late-fetch the texture contents, and not serialise the
+        // force noobdawn to late-fetch the texture contents, and not serialise the
         // subimage data calls below
         for(int blah = 0; blah < 100; blah++)
           glTexParameteri(texbind, GL_TEXTURE_MAX_LEVEL, numMips - 1);

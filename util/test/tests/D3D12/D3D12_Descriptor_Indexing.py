@@ -1,5 +1,5 @@
 import rdtest
-import renderdoc as rd
+import noobdawn as rd
 
 
 class D3D12_Descriptor_Indexing(rdtest.TestCase):

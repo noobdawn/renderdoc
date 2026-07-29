@@ -60,7 +60,7 @@ fi
 
 if ! valid_clang_format; then
 	echo "Couldn't find correct clang-format version, was looking for $CLANG_FORMAT_VERSION"
-	echo "Renderdoc requires a very specific clang-format version to ensure there isn't any"
+	echo "Noobdawn requires a very specific clang-format version to ensure there isn't any"
 	echo "variance between versions that can happen. You can install it as"
 	echo "'clang-format-$CLANG_FORMAT_VERSION' so that it doesn't interfere with any other"
 	echo "versions you might have installed, and this script will find it there"
@@ -68,7 +68,7 @@ if ! valid_clang_format; then
 	exit 1;
 fi;
 
-# Search through the code that should be formatted, exclude any non-renderdoc code.
+# Search through the code that should be formatted, exclude any non-noobdawn code.
 if [ "$1" = "--head-commit" ] || [ "$2" = "--head-commit" ]; then
 	COMMIT=$(git rev-parse HEAD)
 	for F in $(git diff --stat --name-only $COMMIT^1  $COMMIT | grep -E ".*\.(h|c|cpp|m|mm|inl|geom|frag|vert|comp|hlsl)$" | grep -E -v "resource.h$"); do
@@ -76,5 +76,5 @@ if [ "$1" = "--head-commit" ] || [ "$2" = "--head-commit" ]; then
 		"$CLANG_FORMAT" -i -style=file "$F"
 	done
 else
-	find qrenderdoc/ renderdoc/ renderdoccmd/ renderdocshim/ util/test/demos/ -name "3rdparty" -prune -o -name "official" -prune -o -print | grep -E ".*\.(h|c|cpp|m|mm|inl|geom|frag|vert|comp|hlsl)$" | grep -E -v "resource.h$" | awk '{printf("%s%c",$0,0)}' | xargs -0 -n1 "$CLANG_FORMAT" -i -style=file
+	find qnoobdawn/ noobdawn/ noobdawncmd/ noobdawnshim/ util/test/demos/ -name "3rdparty" -prune -o -name "official" -prune -o -print | grep -E ".*\.(h|c|cpp|m|mm|inl|geom|frag|vert|comp|hlsl)$" | grep -E -v "resource.h$" | awk '{printf("%s%c",$0,0)}' | xargs -0 -n1 "$CLANG_FORMAT" -i -style=file
 fi

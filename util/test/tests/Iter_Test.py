@@ -3,7 +3,7 @@ import os
 import random
 import struct
 from typing import List
-import renderdoc as rd
+import noobdawn as rd
 
 
 class Iter_Test(rdtest.TestCase):
@@ -484,7 +484,7 @@ class Iter_Test(rdtest.TestCase):
         dir_path = self.get_ref_path('', extra=True)
 
         for file in sorted(os.scandir(dir_path), key=lambda e: e.name.lower()):
-            if '.rdc' not in file.name:
+            if '.nbd' not in file.name:
                 continue
 
             # Ensure we are deterministic at least from run to run by seeding with the path

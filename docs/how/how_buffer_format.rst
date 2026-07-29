@@ -138,9 +138,9 @@ Packing and layout rules
 
 Graphics APIs define different rules for how data should be packed into memory, and this sometimes depends on the usage of the buffer within the API.
 
-RenderDoc will use the most sensible default where possible - e.g. for D3D buffers that are known to be bound as constant buffers the constant buffer packing will be used, similarly for OpenGL uniform buffers using std140. However the packing can be explicitly specified and any automatic reflection-based format will declare the packing explicitly.
+NoobDawn will use the most sensible default where possible - e.g. for D3D buffers that are known to be bound as constant buffers the constant buffer packing will be used, similarly for OpenGL uniform buffers using std140. However the packing can be explicitly specified and any automatic reflection-based format will declare the packing explicitly.
 
-Once a packing format is specified, RenderDoc will calculate the necessary alignment and padding for each element to comply with the rules while otherwise tightly packing, the same as a normal shader declaration would.
+Once a packing format is specified, NoobDawn will calculate the necessary alignment and padding for each element to comply with the rules while otherwise tightly packing, the same as a normal shader declaration would.
 
 The format for a buffer can be specified using ``#pack(packing_format)``. This can only be specified at global scope, not inside a structure, and the packing rules will apply for all subsequent declarations.
 
@@ -200,7 +200,7 @@ Array of Structs (AoS) vs Struct of Arrays (SoA)
 
 The :doc:`../window/buffer_viewer` is capable of displaying both repeating data of a single format (AoS) as well as fixed non-repeating data (called SoA). Typically AoS is used for large buffers, where a small struct is repeated many times to form the elemnts in the buffer. SoA is used most commonly for constant buffers with a fixed amount of data, but can be used in any context. On some APIs it is possible for a buffer to contain some fixed data before the repeating data and thus it contains both types.
 
-RenderDoc tries to use context to interpret buffer formats correctly, defaulting to AoS interpretation in cases where it is likely intended. However this can be hinted or overridden as desired.
+NoobDawn tries to use context to interpret buffer formats correctly, defaulting to AoS interpretation in cases where it is likely intended. However this can be hinted or overridden as desired.
 
 To specify AoS data explicitly you can declare an unbounded array:
 

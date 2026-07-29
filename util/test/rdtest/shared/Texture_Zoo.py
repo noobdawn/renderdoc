@@ -1,4 +1,4 @@
-import renderdoc as rd
+import noobdawn as rd
 import rdtest
 from typing import List, Tuple
 import time
@@ -731,7 +731,7 @@ class Texture_Zoo():
                 continue
 
             cap = rd.OpenCaptureFile()
-            result = cap.OpenFile(file.path, 'rdc', None)
+            result = cap.OpenFile(file.path, 'nbd', None)
 
             if result != rd.ResultCode.Succeeded:
                 rdtest.log.error("Couldn't open {}".format(file.name))

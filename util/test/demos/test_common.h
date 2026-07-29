@@ -44,7 +44,7 @@
 #include <string>
 #include <vector>
 
-#include "renderdoc_app.h"
+#include "noobdawn_app.h"
 
 typedef uint8_t byte;
 
@@ -217,11 +217,11 @@ struct GraphicsTest
 
   int curFrame = -1;
 
-  const char *screenTitle = "RenderDoc test program";
+  const char *screenTitle = "NoobDawn test program";
 
   bool headless = false;
 
-  RENDERDOC_API_1_7_0 *rdoc = NULL;
+  NOOBDAWN_API_1_7_0 *rdoc = NULL;
 
   // shared parameters
   static int maxFrameCount;

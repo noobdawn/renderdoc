@@ -27,7 +27,7 @@
 RD_TEST(GL_Entry_Points, OpenGLGraphicsTest)
 {
   static constexpr const char *Description =
-      "Test that RenderDoc correctly lists the different function call aliases used.";
+      "Test that NoobDawn correctly lists the different function call aliases used.";
 
   std::string vertex = R"EOSHADER(
 #version 420 core

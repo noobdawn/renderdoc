@@ -11,7 +11,7 @@ We start off with the basic registration function. Create an ``__init__.py`` in 
 .. highlight:: python
 .. code:: python
 
-    import qrenderdoc as qrd
+    import qnoobdawn as qrd
 
     extiface_version = ''
 
@@ -19,12 +19,12 @@ We start off with the basic registration function. Create an ``__init__.py`` in 
         global extiface_version
         extiface_version = version
 
-        print("Registering my extension for RenderDoc version {}".format(version))
+        print("Registering my extension for NoobDawn version {}".format(version))
 
     def unregister():
         print("Unregistering my extension")
 
-Here we create the minimum ``register()`` and ``unregister()`` functions required for an extension to load, that just print a message. We store the interface version in a global which we can use in future to do version-checks if we want to be compatible with more than one RenderDoc version, since the python interface is not fully forwards and backwards compatible.
+Here we create the minimum ``register()`` and ``unregister()`` functions required for an extension to load, that just print a message. We store the interface version in a global which we can use in future to do version-checks if we want to be compatible with more than one NoobDawn version, since the python interface is not fully forwards and backwards compatible.
 
 This doesn't really do much, let's register a tool menu item:
 
@@ -50,7 +50,7 @@ This is a good proof of concept, but really we want something more directly usab
 Adding a window and capture viewer
 ----------------------------------
 
-First we create a class to handle our window and to derive from :py:class:`qrenderdoc.CaptureViewer` to get callbacks for events.
+First we create a class to handle our window and to derive from :py:class:`qnoobdawn.CaptureViewer` to get callbacks for events.
 
 .. highlight:: python
 .. code:: python
@@ -79,7 +79,7 @@ First we create a class to handle our window and to derive from :py:class:`qrend
         def OnEventChanged(self, event):
             pass
 
-Here we implement stubs for the different events. More information on when they are sent can be found in the class documentation. We use the :py:class:`qrenderdoc.MiniQtHelper` to create a top-level window for ourselves with the 'breadcrumbs' title, then register oureslves as a capture viewer. The mini-Qt helper is useful to provide simple access to Qt widgets in a portable way from the RenderDoc UI, without relying on full Qt python bindings that may not be available depending on how RenderDoc was built.
+Here we implement stubs for the different events. More information on when they are sent can be found in the class documentation. We use the :py:class:`qnoobdawn.MiniQtHelper` to create a top-level window for ourselves with the 'breadcrumbs' title, then register oureslves as a capture viewer. The mini-Qt helper is useful to provide simple access to Qt widgets in a portable way from the NoobDawn UI, without relying on full Qt python bindings that may not be available depending on how NoobDawn was built.
 
 We will need to unregister ourselves as a capture viewer when the window is closed, which happens in the ``window_closed()`` callback that we'll define later.
 
@@ -95,7 +95,7 @@ An empty window is not very useful, so let's give ourselves a label. More comple
 
     self.mqt.AddWidget(vert, self.breadcrumbs)
 
-And finally we can fill in the event functions to set the breadcrumbs. We use ``@1234`` syntax for events which causes them to be clickable links that jump to that event. You can also convert a :py:class:`renderdoc.ResourceId` to a string with ``str()`` and it will similarly provide a link for that resource named with the current debug name.
+And finally we can fill in the event functions to set the breadcrumbs. We use ``@1234`` syntax for events which causes them to be clickable links that jump to that event. You can also convert a :py:class:`noobdawn.ResourceId` to a string with ``str()`` and it will similarly provide a link for that resource named with the current debug name.
 
 .. highlight:: python
 .. code:: python
@@ -190,7 +190,7 @@ To start with we can identify the resource on the UI thread, so let's do that:
 .. highlight:: python
 .. code:: python
 
-    import renderdoc as rd
+    import noobdawn as rd
 
     def menu_callback(ctx: qrd.CaptureContext, data):
         texid = rd.ResourceId.Null()
@@ -239,4 +239,4 @@ Now that we've done that correctly our extension will be able to run in-depth re
 Conclusion
 ----------
 
-Hopefully now from that worked example you have an idea of the basics of writing UI extensions. More complex examples can be found at the `community contributed repository <https://github.com/baldurk/renderdoc-contrib>`_ and the source code for this extension is available in the `github repository <https://github.com/baldurk/renderdoc/tree/v1.x/docs/python_api/ui_extension_tutorial>`_
+Hopefully now from that worked example you have an idea of the basics of writing UI extensions. More complex examples can be found at the `community contributed repository <https://github.com/baldurk/noobdawn-contrib>`_ and the source code for this extension is available in the `github repository <https://github.com/baldurk/noobdawn/tree/v1.x/docs/python_api/ui_extension_tutorial>`_

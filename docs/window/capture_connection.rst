@@ -6,13 +6,13 @@ The capture connection window opens up when you launch a capture of a program, a
 Attaching to an existing instance
 ---------------------------------
 
-After you've launched a program through RenderDoc and its hooks are added you can freely disconnect (by closing the capture connection window) or close the main UI. You can then connect to this again later, either from the same computer or another computer connecting over the network. For more information, see the page about :doc:`network capture and replay <../how/how_network_capture_replay>`.
+After you've launched a program through NoobDawn and its hooks are added you can freely disconnect (by closing the capture connection window) or close the main UI. You can then connect to this again later, either from the same computer or another computer connecting over the network. For more information, see the page about :doc:`network capture and replay <../how/how_network_capture_replay>`.
 
 To connect to an existing hooked program, select :guilabel:`File` → :guilabel:`Attach to Running Instance`. This opens up the remote host management window that allows you to select a remote host to connect to. localhost is always in the list, but you can add and remove other hosts.
 
 .. warning::
 
-	Please note that none of the connections RenderDoc makes or uses are encrypted or authenticated/protected, so if this is a concern you should look into securing the connections manually.
+	Please note that none of the connections NoobDawn makes or uses are encrypted or authenticated/protected, so if this is a concern you should look into securing the connections manually.
 
 .. figure:: ../imgs/Screenshots/RemoteHostManager.png
 
@@ -47,7 +47,7 @@ Next you can queue a capture at a specific frame number, if you know that a bug 
 
 .. note::
 
-   Capturing a frame in RenderDoc will cause a noticeable stall on any non-trivial application, so if you are investigating a timing issue often this can throw things off and hide the bug. However capturing multiple frames can be useful when you know a bug alternates every N frames, or you specifically want to debug how N sequential frames look and you know extreme frame times won't skew the results.
+   Capturing a frame in NoobDawn will cause a noticeable stall on any non-trivial application, so if you are investigating a timing issue often this can throw things off and hide the bug. However capturing multiple frames can be useful when you know a bug alternates every N frames, or you specifically want to debug how N sequential frames look and you know extreme frame times won't skew the results.
 
 During running or after the application has closed, all captures will appear as thumbnails here. As mentioned above, if only one capture is made and the application is closed the capture dialog will automatically begin to load it up in the UI. Otherwise you can use this window to browse the captures, save and delete any frame captures, and open them either in the currently running UI or in a new separate instance.
 
@@ -55,7 +55,7 @@ During running or after the application has closed, all captures will appear as 
 
 	Connection Window: Viewing multiple captures taken in a program.
 
-In this example we have a connection window open to the debugmarker sample from Sascha Willms' Vulkan examples. Three captures have been made and we can see their thumbnails to help distinguish between them. This is visible at any point, regardless of whether you have close the program or not - you can simply switch back to RenderDoc while it's running.
+In this example we have a connection window open to the debugmarker sample from Sascha Willms' Vulkan examples. Three captures have been made and we can see their thumbnails to help distinguish between them. This is visible at any point, regardless of whether you have close the program or not - you can simply switch back to NoobDawn while it's running.
 
 .. note::
 
@@ -63,24 +63,24 @@ In this example we have a connection window open to the debugmarker sample from 
 
 From here you can save these captures out - as currently they are only temporary copies that will be cleaned up on close. You can also manually delete any capture you wish to discard.
 
-Double clicking on any capture will close any current open capture in the RenderDoc UI, and open up that capture for inspection. You may also right click or use the drop-down menu on the open button to launch a new instance of RenderDoc for viewing the capture. This is mostly useful if you want to compare two captures side-by-side easily.
+Double clicking on any capture will close any current open capture in the NoobDawn UI, and open up that capture for inspection. You may also right click or use the drop-down menu on the open button to launch a new instance of NoobDawn for viewing the capture. This is mostly useful if you want to compare two captures side-by-side easily.
 
 You can press F2 or single click on a selected capture (not double click) to rename the default label given to each capture. This can be useful if you're changing something as you go or toggling an option and you want to remember which capture is which.
 
 .. figure:: ../imgs/Screenshots/OpenCapNewInstance.png
 
-	New instance: Launch new RenderDoc instance to open this capture.
+	New instance: Launch new NoobDawn instance to open this capture.
 
 Child Processes
 ---------------
 
-RenderDoc is able to automatically inject into any child processes started by the initial process launched from the UI. To do this simply check :guilabel:`Capture Child Processes` when :doc:`capture_attach`.
+NoobDawn is able to automatically inject into any child processes started by the initial process launched from the UI. To do this simply check :guilabel:`Capture Child Processes` when :doc:`capture_attach`.
 
 
-RenderDoc has a particular handling of child processes to help you navigate to the process of interest. Whenever a child process is launched, the UI is notified and a list of processes is displayed in a box on the capture connection window. You can double click on any of these entries to open up a new connection to that process, in a new window.
+NoobDawn has a particular handling of child processes to help you navigate to the process of interest. Whenever a child process is launched, the UI is notified and a list of processes is displayed in a box on the capture connection window. You can double click on any of these entries to open up a new connection to that process, in a new window.
 
 
-If a process exits, instead of just closing the connection window if there have been no captures, instead RenderDoc looks at the child processes - if there is only one child process, it assume that process must be of interest and immediately switches to tracking that process. If there are *more* than one child process open, the capture connection window will stay open to give you a chance to double click on those child processes to open a new connection window.
+If a process exits, instead of just closing the connection window if there have been no captures, instead NoobDawn looks at the child processes - if there is only one child process, it assume that process must be of interest and immediately switches to tracking that process. If there are *more* than one child process open, the capture connection window will stay open to give you a chance to double click on those child processes to open a new connection window.
 
 See Also
 --------

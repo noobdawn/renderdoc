@@ -1,7 +1,7 @@
 How do I generate an RGP profile?
 =================================
 
-RenderDoc has integration with AMD's Radeon GPU Profiler. This allows you to generate an RGP profile from a RenderDoc capture, embed the profile in the capture file, and synchronise the view of the frames between RenderDoc and RGP.
+NoobDawn has integration with AMD's Radeon GPU Profiler. This allows you to generate an RGP profile from a NoobDawn capture, embed the profile in the capture file, and synchronise the view of the frames between NoobDawn and RGP.
 
 Enabling RGP integration
 ------------------------
@@ -22,27 +22,27 @@ Selecting this menu item will open a small popup and spend a few second creating
 Opening a previously created profile
 ------------------------------------
 
-After generating a profile above, the RGP data is embedded in the ``.rdc`` file.
+After generating a profile above, the RGP data is embedded in the ``.nbd`` file.
 
 Since RGP can open a profile on any machine without needing AMD drivers or hardware, this embedded RGP profile can be opened at any time by going to the :guilabel:`Tools` menu and select :guilabel:`Open RGP Profile`.
 
 The RGP tool will open just the same as if the profile was newly created.
 
-Correlating information between RenderDoc and RGP
+Correlating information between NoobDawn and RGP
 -------------------------------------------------
 
 If using RGP version 1.2 or higher, once both tools are open they have a synchronised view of the underlying data.
 
-This means that within RGP you can select an event, right click and choose :guilabel:`Select RenderDoc Event`. This will bring RenderDoc to the foreground with the event selected. Similarly in RenderDoc you can right-click on an event in the event browser and choose :guilabel:`Select RGP Event` which will perform the same operation in reverse.
+This means that within RGP you can select an event, right click and choose :guilabel:`Select NoobDawn Event`. This will bring NoobDawn to the foreground with the event selected. Similarly in NoobDawn you can right-click on an event in the event browser and choose :guilabel:`Select RGP Event` which will perform the same operation in reverse.
 
 .. figure:: ../imgs/Screenshots/SelectRGPEvent.png
 
-	Select an RGP event from RenderDoc
+	Select an RGP event from NoobDawn
 
-.. figure:: ../imgs/Screenshots/SelectRenderDocEvent.png
+.. figure:: ../imgs/Screenshots/SelectNoobDawnEvent.png
 
-	Select a RenderDoc event from RGP
+	Select a NoobDawn event from RGP
 
 .. note::
 
-    Since RGP and RenderDoc have different scopes, purposes, and views of the frame the numbering of events will not be the same between the two tools.
+    Since RGP and NoobDawn have different scopes, purposes, and views of the frame the numbering of events will not be the same between the two tools.

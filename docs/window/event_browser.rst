@@ -100,7 +100,7 @@ The event browser is the primary way to browse through the frame. Events are lis
 
 .. |flag_green| image:: ../imgs/icons/flag_green.png
 
-The currently selected event is highlighted and indicated with a green flag |flag_green|. This is the event that RenderDoc is inspecting and is reflected in all the other windows of the UI.
+The currently selected event is highlighted and indicated with a green flag |flag_green|. This is the event that NoobDawn is inspecting and is reflected in all the other windows of the UI.
 
 .. figure:: ../imgs/Screenshots/EventBrowserRegions.png
 

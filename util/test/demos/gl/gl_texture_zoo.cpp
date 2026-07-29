@@ -538,7 +538,7 @@ void main()
 
     glObjectLabel(GL_TEXTURE, test.tex, -1, (MakeName(test) + " " + test.fmt.name).c_str());
 
-    // invalidate the texture, this makes renderdoc treat it as dirty
+    // invalidate the texture, this makes noobdawn treat it as dirty
     glInvalidateTexImage(test.tex, 0);
 
     if(!test.isMSAA)
@@ -842,7 +842,7 @@ void main()
 
         TEST_CASE(TextureType::Unknown, GL_RGBA4, 0, 0, DataType::UNorm),
 
-        // formats we don't support in RenderDoc currently
+        // formats we don't support in NoobDawn currently
         // TEST_CASE(TextureType::Unknown, GL_RGB4, 0, 0, DataType::UNorm),
         // TEST_CASE(TextureType::Unknown, GL_RGB5, 0, 0, DataType::UNorm),
         // TEST_CASE(TextureType::Unknown, GL_RGB10, 0, 0, DataType::UNorm),

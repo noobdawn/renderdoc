@@ -98,7 +98,7 @@ document.body.onload = function() {
           commit = hash[2];
         }
 
-        title = title.replace(commit, '<a href="https://github.com/baldurk/renderdoc/commit/' + commit + '">' + commit.substr(0, 8) + '</a>');
+        title = title.replace(commit, '<a href="https://github.com/baldurk/noobdawn/commit/' + commit + '">' + commit.substr(0, 8) + '</a>');
 
         html += '<h1>' + title + '</h1>';
 
@@ -221,7 +221,7 @@ document.body.onload = function() {
       } else if(instack) {
         var frame = line.match(/File "(.*)", line (.*), in (.*)/);
         if(frame)
-          html += `File <a href="https://github.com/baldurk/renderdoc/blob/${commit}/${basepath}${frame[1]}#L${frame[2]}">"${frame[1]}", line ${frame[2]}</a>, in ${frame[3]}\n`;
+          html += `File <a href="https://github.com/baldurk/noobdawn/blob/${commit}/${basepath}${frame[1]}#L${frame[2]}">"${frame[1]}", line ${frame[2]}</a>, in ${frame[3]}\n`;
         else
           html += line.substr(indent) + '\n';
       } else {

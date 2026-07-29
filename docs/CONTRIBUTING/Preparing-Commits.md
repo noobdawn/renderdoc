@@ -23,14 +23,14 @@ To make things easier for everyone, I've adopted clang-format for keeping code c
 | :warning: |                                                                                                                                           | :warning: |
 | --------- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------- |
 | :warning: | **Unfortunately clang-format output changes between versions even with the same config.**                                                 | :warning: |
-| :warning: | **I have fixed the version used for RenderDoc at [clang-format-15.0](https://github.com/llvm/llvm-project/releases/tag/llvmorg-15.0.7).** | :warning: |
+| :warning: | **I have fixed the version used for NoobDawn at [clang-format-15.0](https://github.com/llvm/llvm-project/releases/tag/llvmorg-15.0.7).** | :warning: |
 | :warning: | **This formatting is enforced by CI checks that run on PRs, so if you aren't running the same version locally it will show up there.**    | :warning: |
 
 This version changed as of 2023-09-02, from clang-format-3.8 to clang-format-15.0. A statically linked binary of clang-format-15.0.7 for x64 windows and linux is committed to the repo under util/clangformat.
 
 If you want to format a single file, run: `clang-format -i file.cpp`. If you want to format any changes you make before you commit them, you'll need python installed and then run: `git clang-format`. To clang-format the whole codebase, you can run the bash script `util/clang_format_all.sh` but be sure to squash any changes into the right commits.
 
-There are instructions on how to set up git hooks or IDE integration [on the wiki](https://github.com/baldurk/renderdoc/wiki/Code-formatting-(using-clang-format)).
+There are instructions on how to set up git hooks or IDE integration [on the wiki](https://github.com/baldurk/noobdawn/wiki/Code-formatting-(using-clang-format)).
 
 All intermediate commits should follow the formatting conventions. Having several intermediate commits with mismatched formatting then a single 'reformatted code' commit at the end makes history harder to read, which is an important tool for others to understand your code. It is much easier to enforce proper formatting on each commit as you go along, than to try and untangle and merge formatting changes in after the fact.
 

@@ -1,0 +1,6 @@
+?package(local.noobdawn):needs="x11" section="Applications/Programming" \
+	title="NoobDawn" \
+	command="qnoobdawn" \
+	icon="/usr/share/pixmaps/noobdawn-icon-32x32.xpm" \
+	icon16x16="/usr/share/pixmaps/noobdawn-icon-16x16.xpm" \
+	icon32x32="/usr/share/pixmaps/noobdawn-icon-32x32.xpm"

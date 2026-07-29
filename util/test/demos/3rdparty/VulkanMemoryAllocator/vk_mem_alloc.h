@@ -3294,7 +3294,7 @@ Mapping hysteresis is a logic that launches when vmaMapMemory/vmaUnmapMemory is 
 or a persistently mapped allocation is created and destroyed several times in a row.
 It keeps additional +1 mapping of a device memory block to prevent calling actual
 vkMapMemory/vkUnmapMemory too many times, which may improve performance and help
-tools like RenderDoc.
+tools like NoobDawn.
 */
 #ifndef VMA_MAPPING_HYSTERESIS_ENABLED
     #define VMA_MAPPING_HYSTERESIS_ENABLED 1
@@ -11415,7 +11415,7 @@ VkResult VmaBlockVector::AllocatePage(
                 For non-mappable allocations, check blocks that are not mapped first.
                 For mappable allocations, check blocks that are already mapped first.
                 This way, having many blocks, we will separate mappable and non-mappable allocations,
-                hopefully limiting the number of blocks that are mapped, which will help tools like RenderDoc.
+                hopefully limiting the number of blocks that are mapped, which will help tools like NoobDawn.
                 */
                 for(size_t mappingI = 0; mappingI < 2; ++mappingI)
                 {
@@ -18999,7 +18999,7 @@ allocated memory blocks wherever it might be needed.
 
 Please note that the library supports only `VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT*`.
 The second part of this functionality related to "capture and replay" is not supported,
-as it is intended for usage in debugging tools like RenderDoc, not in everyday Vulkan usage.
+as it is intended for usage in debugging tools like NoobDawn, not in everyday Vulkan usage.
 
 \section enabling_buffer_device_address_more_information More information
 

@@ -1,7 +1,7 @@
 import copy
 import rdtest
 import struct
-import renderdoc as rd
+import noobdawn as rd
 from typing import Tuple
 
 

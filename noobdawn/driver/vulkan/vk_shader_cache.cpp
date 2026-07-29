@@ -1,0 +1,1391 @@
+/******************************************************************************
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2018-2026 Baldur Karlsson
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ ******************************************************************************/
+
+#include "vk_shader_cache.h"
+#include "common/shader_cache.h"
+#include "data/glsl_shaders.h"
+#include "strings/string_utils.h"
+
+enum class FeatureCheck
+{
+  NoCheck = 0x0,
+  ShaderMSAAStorage = 0x1,
+  FragmentStores = 0x2,
+  NonMetalBackend = 0x4,
+  FormatlessWrite = 0x8,
+  SampleShading = 0x10,
+  Geometry = 0x20,
+  MultiView = 0x40,
+};
+
+BITMASK_OPERATORS(FeatureCheck);
+
+enum class BuiltinShaderFlags
+{
+  None = 0x0,
+  BaseTypeParameterised = 0x1,
+  TextureTypeParameterised = 0x2,
+  Multiview = 0x4,
+};
+
+BITMASK_OPERATORS(BuiltinShaderFlags);
+
+struct BuiltinShaderConfig
+{
+  BuiltinShaderConfig(BuiltinShader builtin, EmbeddedResourceType resource,
+                      nbdspv::ShaderStage stage, FeatureCheck checks = FeatureCheck::NoCheck,
+                      BuiltinShaderFlags flags = BuiltinShaderFlags::None)
+      : builtin(builtin), resource(resource), stage(stage), checks(checks), flags(flags)
+  {
+  }
+  BuiltinShader builtin;
+  EmbeddedResourceType resource;
+  nbdspv::ShaderStage stage;
+  FeatureCheck checks;
+  BuiltinShaderFlags flags;
+};
+
+static const BuiltinShaderConfig builtinShaders[] = {
+    BuiltinShaderConfig(BuiltinShader::BlitVS, EmbeddedResource(glsl_blit_vert),
+                        nbdspv::ShaderStage::Vertex),
+    BuiltinShaderConfig(BuiltinShader::CheckerboardFS, EmbeddedResource(glsl_checkerboard_frag),
+                        nbdspv::ShaderStage::Fragment),
+    BuiltinShaderConfig(BuiltinShader::CheckerboardMultiviewFS,
+                        EmbeddedResource(glsl_checkerboard_frag), nbdspv::ShaderStage::Fragment,
+                        FeatureCheck::MultiView, BuiltinShaderFlags::Multiview),
+    BuiltinShaderConfig(BuiltinShader::TexDisplayFS, EmbeddedResource(glsl_texdisplay_frag),
+                        nbdspv::ShaderStage::Fragment),
+    BuiltinShaderConfig(BuiltinShader::FixedColFS, EmbeddedResource(glsl_fixedcol_frag),
+                        nbdspv::ShaderStage::Fragment),
+    BuiltinShaderConfig(BuiltinShader::TextVS, EmbeddedResource(glsl_vktext_vert),
+                        nbdspv::ShaderStage::Vertex),
+    BuiltinShaderConfig(BuiltinShader::TextFS, EmbeddedResource(glsl_vktext_frag),
+                        nbdspv::ShaderStage::Fragment),
+    BuiltinShaderConfig(BuiltinShader::MeshVS, EmbeddedResource(glsl_mesh_vert),
+                        nbdspv::ShaderStage::Vertex),
+    BuiltinShaderConfig(BuiltinShader::MeshGS, EmbeddedResource(glsl_mesh_geom),
+                        nbdspv::ShaderStage::Geometry),
+    BuiltinShaderConfig(BuiltinShader::MeshFS, EmbeddedResource(glsl_mesh_frag),
+                        nbdspv::ShaderStage::Fragment),
+    BuiltinShaderConfig(BuiltinShader::MeshCS, EmbeddedResource(glsl_mesh_comp),
+                        nbdspv::ShaderStage::Compute),
+    BuiltinShaderConfig(BuiltinShader::QuadResolveFS, EmbeddedResource(glsl_quadresolve_frag),
+                        nbdspv::ShaderStage::Fragment, FeatureCheck::FragmentStores),
+    BuiltinShaderConfig(BuiltinShader::QuadResolveMultiviewFS,
+                        EmbeddedResource(glsl_quadresolve_frag), nbdspv::ShaderStage::Fragment,
+                        FeatureCheck::FragmentStores | FeatureCheck::MultiView,
+                        BuiltinShaderFlags::Multiview),
+    BuiltinShaderConfig(BuiltinShader::QuadWriteFS, EmbeddedResource(glsl_quadwrite_frag),
+                        nbdspv::ShaderStage::Fragment),
+    BuiltinShaderConfig(
+        BuiltinShader::QuadWriteMultiviewFS, EmbeddedResource(glsl_quadwrite_frag),
+        nbdspv::ShaderStage::Fragment,
+        FeatureCheck::FragmentStores | FeatureCheck::NonMetalBackend | FeatureCheck::MultiView,
+        BuiltinShaderFlags::Multiview),
+    BuiltinShaderConfig(BuiltinShader::TrisizeGS, EmbeddedResource(glsl_trisize_geom),
+                        nbdspv::ShaderStage::Geometry),
+    BuiltinShaderConfig(BuiltinShader::TrisizeFS, EmbeddedResource(glsl_trisize_frag),
+                        nbdspv::ShaderStage::Fragment),
+    BuiltinShaderConfig(BuiltinShader::TrisizeMultiviewFS, EmbeddedResource(glsl_trisize_frag),
+                        nbdspv::ShaderStage::Fragment, FeatureCheck::MultiView,
+                        BuiltinShaderFlags::Multiview),
+    BuiltinShaderConfig(BuiltinShader::TexRemap, EmbeddedResource(glsl_texremap_frag),
+                        nbdspv::ShaderStage::Fragment, FeatureCheck::NoCheck,
+                        BuiltinShaderFlags::BaseTypeParameterised),
+    BuiltinShaderConfig(BuiltinShader::PixelHistoryMSCopyCS,
+                        EmbeddedResource(glsl_pixelhistory_mscopy_comp), nbdspv::ShaderStage::Compute),
+    BuiltinShaderConfig(BuiltinShader::PixelHistoryMSCopyDepthCS,
+                        EmbeddedResource(glsl_pixelhistory_mscopy_depth_comp),
+                        nbdspv::ShaderStage::Compute),
+    BuiltinShaderConfig(BuiltinShader::PixelHistoryPrimIDFS,
+                        EmbeddedResource(glsl_pixelhistory_primid_frag),
+                        nbdspv::ShaderStage::Fragment, FeatureCheck::Geometry),
+    BuiltinShaderConfig(BuiltinShader::ShaderDebugSampleVS,
+                        EmbeddedResource(glsl_shaderdebug_sample_vert), nbdspv::ShaderStage::Vertex),
+    BuiltinShaderConfig(BuiltinShader::DiscardFS, EmbeddedResource(glsl_discard_frag),
+                        nbdspv::ShaderStage::Fragment, FeatureCheck::NoCheck,
+                        BuiltinShaderFlags::BaseTypeParameterised),
+    BuiltinShaderConfig(
+        BuiltinShader::HistogramCS, EmbeddedResource(glsl_histogram_comp),
+        nbdspv::ShaderStage::Compute, FeatureCheck::NoCheck,
+        BuiltinShaderFlags::BaseTypeParameterised | BuiltinShaderFlags::TextureTypeParameterised),
+    BuiltinShaderConfig(
+        BuiltinShader::MinMaxTileCS, EmbeddedResource(glsl_minmaxtile_comp),
+        nbdspv::ShaderStage::Compute, FeatureCheck::NoCheck,
+        BuiltinShaderFlags::BaseTypeParameterised | BuiltinShaderFlags::TextureTypeParameterised),
+    BuiltinShaderConfig(BuiltinShader::MinMaxResultCS, EmbeddedResource(glsl_minmaxresult_comp),
+                        nbdspv::ShaderStage::Compute, FeatureCheck::NoCheck,
+                        BuiltinShaderFlags::BaseTypeParameterised),
+    BuiltinShaderConfig(BuiltinShader::MS2BufferCS, EmbeddedResource(glsl_vk_ms2buffer_comp),
+                        nbdspv::ShaderStage::Compute, FeatureCheck::NonMetalBackend),
+    BuiltinShaderConfig(BuiltinShader::DepthMS2BufferCS, EmbeddedResource(glsl_vk_depthms2buffer_comp),
+                        nbdspv::ShaderStage::Compute, FeatureCheck::NonMetalBackend),
+    BuiltinShaderConfig(BuiltinShader::Buffer2MSCS, EmbeddedResource(glsl_vk_buffer2ms_comp),
+                        nbdspv::ShaderStage::Compute,
+                        FeatureCheck::ShaderMSAAStorage | FeatureCheck::FormatlessWrite |
+                            FeatureCheck::NonMetalBackend),
+    BuiltinShaderConfig(BuiltinShader::DepthBuf2MSFS, EmbeddedResource(glsl_vk_depthbuf2ms_frag),
+                        nbdspv::ShaderStage::Fragment,
+                        FeatureCheck::SampleShading | FeatureCheck::NonMetalBackend),
+    BuiltinShaderConfig(BuiltinShader::DepthCopyFS, EmbeddedResource(glsl_depth_copy_frag),
+                        nbdspv::ShaderStage::Fragment, FeatureCheck::FragmentStores),
+    BuiltinShaderConfig(BuiltinShader::DepthCopyMSFS, EmbeddedResource(glsl_depth_copyms_frag),
+                        nbdspv::ShaderStage::Fragment,
+                        FeatureCheck::SampleShading | FeatureCheck::FragmentStores),
+};
+
+NBDCOMPILE_ASSERT(ARRAY_COUNT(builtinShaders) == arraydim<BuiltinShader>(),
+                  "Missing built-in shader config");
+
+static bool PassesChecks(const BuiltinShaderConfig &config, const WrappedVulkan *driver,
+                         const VkDriverInfo &driverVersion, const VkPhysicalDeviceFeatures &features)
+{
+  if(config.checks & FeatureCheck::ShaderMSAAStorage)
+  {
+    if(driverVersion.TexelFetchBrokenDriver() || driverVersion.AMDStorageMSAABrokenDriver() ||
+       !features.shaderStorageImageMultisample)
+    {
+      return false;
+    }
+  }
+
+  if(config.checks & FeatureCheck::FormatlessWrite)
+  {
+    if(!features.shaderStorageImageWriteWithoutFormat)
+    {
+      return false;
+    }
+  }
+
+  if(config.checks & FeatureCheck::SampleShading)
+  {
+    if(!features.sampleRateShading)
+    {
+      return false;
+    }
+  }
+
+  if(config.checks & FeatureCheck::FragmentStores)
+  {
+    if(!features.fragmentStoresAndAtomics)
+      return false;
+  }
+
+  if(config.checks & FeatureCheck::NonMetalBackend)
+  {
+    // for now we don't allow it at all - in future we could check on whether it's been enabled
+    // via a more advanced query
+    if(driverVersion.RunningOnMetal())
+      return false;
+  }
+
+  if(config.checks & FeatureCheck::Geometry)
+  {
+    if(!features.geometryShader)
+    {
+      return false;
+    }
+  }
+
+  if(config.checks & FeatureCheck::MultiView)
+  {
+    if(!driver->MultiView())
+    {
+      return false;
+    }
+  }
+
+  if(config.stage == nbdspv::ShaderStage::Geometry && !features.geometryShader)
+    return false;
+
+  return true;
+}
+
+struct VulkanBlobShaderCallbacks
+{
+  bool Create(uint32_t size, byte *data, SPIRVBlob *ret) const
+  {
+    NBDASSERT(ret);
+
+    SPIRVBlob blob = new nbdarray<uint32_t>();
+
+    blob->resize(size / sizeof(uint32_t));
+
+    memcpy(&(*blob)[0], data, size);
+
+    *ret = blob;
+
+    return true;
+  }
+
+  void Destroy(SPIRVBlob blob) const { delete blob; }
+  uint32_t GetSize(SPIRVBlob blob) const { return (uint32_t)(blob->size() * sizeof(uint32_t)); }
+  const byte *GetData(SPIRVBlob blob) const { return (const byte *)blob->data(); }
+} VulkanShaderCacheCallbacks;
+
+struct VkPipeCacheHeader
+{
+  uint32_t length;
+  VkPipelineCacheHeaderVersion version;
+  uint32_t vendorID;
+  uint32_t deviceID;
+  byte uuid[VK_UUID_SIZE];
+};
+
+VulkanShaderCache::VulkanShaderCache(WrappedVulkan *driver)
+{
+  // Load shader cache, if present
+  bool success = LoadShaderCache("vkshaders.cache", m_ShaderCacheMagic, m_ShaderCacheVersion,
+                                 m_ShaderCache, VulkanShaderCacheCallbacks);
+
+  // if we failed to load from the cache
+  m_ShaderCacheDirty = !success;
+
+  m_pDriver = driver;
+  m_Device = driver->GetDev();
+
+  SetCaching(true);
+
+  const VkDriverInfo &driverVersion = driver->GetDriverInfo();
+  const VkPhysicalDeviceFeatures &enabledFeatures = driver->GetDeviceEnabledFeatures();
+  const VkPhysicalDeviceFeatures &availFeatures = driver->GetDeviceAvailableFeatures();
+
+  nbdstr globalDefines = "#define HAS_BIT_CONVERSION 1\n";
+  if(driverVersion.TexelFetchBrokenDriver())
+    globalDefines += "#define NO_TEXEL_FETCH\n";
+  if(driverVersion.RunningOnMetal())
+    globalDefines += "#define METAL_BACKEND\n";
+
+  nbdspv::CompilationSettings compileSettings;
+  compileSettings.lang = nbdspv::InputLanguage::VulkanGLSL;
+
+  uint32_t toolCount = 0;
+  if(ObjDisp(driver->GetPhysDev())->GetPhysicalDeviceToolProperties != NULL)
+  {
+    ObjDisp(driver->GetPhysDev())
+        ->GetPhysicalDeviceToolProperties(Unwrap(driver->GetPhysDev()), &toolCount, NULL);
+    nbdarray<VkPhysicalDeviceToolProperties> tools;
+    tools.resize(toolCount);
+    ObjDisp(driver->GetPhysDev())
+        ->GetPhysicalDeviceToolProperties(Unwrap(driver->GetPhysDev()), &toolCount, tools.data());
+
+    for(const VkPhysicalDeviceToolProperties &t : tools)
+    {
+      if(nbdstr(t.name) == "NoobDawn")
+      {
+        NBDLOG("Enabling debug info for self-captured shaders");
+        compileSettings.debugInfo = true;
+      }
+    }
+  }
+
+  m_Buffer2MSSupported = PassesChecks(builtinShaders[(size_t)BuiltinShader::Buffer2MSCS], driver,
+                                      driverVersion, availFeatures);
+
+  for(auto i : indices<BuiltinShader>())
+  {
+    const BuiltinShaderConfig &config = builtinShaders[i];
+
+    NBDASSERT(config.builtin == (BuiltinShader)i);
+
+    bool passesChecks = PassesChecks(config, driver, driverVersion, enabledFeatures);
+
+    if(!passesChecks)
+      continue;
+
+    size_t baseTypeCount = size_t(BuiltinShaderBaseType::First) + 1,
+           textureTypeCount = size_t(BuiltinShaderTextureType::First) + 1;
+
+    if(config.flags & BuiltinShaderFlags::BaseTypeParameterised)
+      baseTypeCount = (size_t)BuiltinShaderBaseType::Count;
+    if(config.flags & BuiltinShaderFlags::TextureTypeParameterised)
+      textureTypeCount = (size_t)BuiltinShaderTextureType::Count;
+
+    compileSettings.stage = config.stage;
+
+    // for shaders that aren't parameterised these loops will be a no-op that only iterates once,
+    // and fills in [First][First] entry.
+    for(size_t baseType = (size_t)BuiltinShaderBaseType::First; baseType < baseTypeCount; baseType++)
+    {
+      for(size_t textureType = (size_t)BuiltinShaderTextureType::First;
+          textureType < textureTypeCount; textureType++)
+      {
+        nbdstr defines = globalDefines;
+
+        defines += nbdstr("#define SHADER_RESTYPE ") + ToStr(textureType) + "\n";
+        defines += nbdstr("#define SHADER_BASETYPE ") + ToStr(baseType) + "\n";
+
+        if(config.flags & BuiltinShaderFlags::Multiview)
+          defines += nbdstr("#define USE_MULTIVIEW 1\n");
+
+        SPIRVBlob &blob = m_BuiltinShaderBlobs[i][baseType][textureType];
+        nbdstr source = GetDynamicEmbeddedResource(config.resource);
+
+        uint32_t inputHash = strhash(source.c_str());
+        inputHash = strhash(defines.c_str(), inputHash);
+
+        // bump this version if anything inside GenerateGLSLShader changes. This is used to
+        // determine if we can skip the call to GenerateGLSLShader (which calls out to glslang).
+        // Otherwise we'll use the cached SPIR-V generated by the previous call using the same
+        // source & defines.
+        inputHash = strhash("inputHashVersion2", inputHash);
+
+        if(compileSettings.debugInfo)
+          inputHash = strhash("debug", inputHash);
+
+        nbdstr err;
+
+        if(m_ShaderCache.find(inputHash) != m_ShaderCache.end())
+          blob = m_ShaderCache[inputHash];
+
+        if(blob == NULL)
+        {
+          err = GetSPIRVBlob(compileSettings,
+                             GenerateGLSLShader(source, ShaderType::Vulkan, 430, defines), blob);
+
+          // if we missed the inputHash, make a copy there too.
+          if(m_CacheShaders && blob)
+          {
+            m_ShaderCache[inputHash] = new nbdarray<uint32_t>(*blob);
+            m_ShaderCacheDirty = true;
+          }
+        }
+
+        if(!err.empty() || blob == VK_NULL_HANDLE)
+        {
+          NBDERR("Error compiling builtin %u (baseType %zu textureType %zu): %s", (uint32_t)i,
+                 baseType, textureType, err.c_str());
+        }
+        else
+        {
+          VkShaderModuleCreateInfo modinfo = {
+              VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+              NULL,
+              0,
+              blob->size() * sizeof(uint32_t),
+              blob->data(),
+          };
+
+          VkResult vkr = driver->vkCreateShaderModule(
+              m_Device, &modinfo, NULL, &m_BuiltinShaderModules[i][baseType][textureType]);
+          CHECK_VKR(driver, vkr);
+
+          driver->GetResourceManager()->SetInternalResource(
+              GetResID(m_BuiltinShaderModules[i][baseType][textureType]));
+        }
+      }
+    }
+  }
+
+  {
+    VkPipelineCacheCreateInfo createInfo = {VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO};
+
+    GetPipeCacheBlob();
+
+    if(!m_PipeCacheBlob.empty())
+    {
+      if(m_PipeCacheBlob.size() < sizeof(VkPipeCacheHeader))
+      {
+        m_PipeCacheBlob.clear();
+      }
+      else
+      {
+        VkPipeCacheHeader *header = (VkPipeCacheHeader *)m_PipeCacheBlob.data();
+
+        // check explicitly for incompatibility
+        if(header->length != sizeof(VkPipeCacheHeader))
+        {
+          m_PipeCacheBlob.clear();
+          NBDLOG("Pipeline cache header length %u is unexpected, not using cache", header->length);
+        }
+        else if(header->version != VK_PIPELINE_CACHE_HEADER_VERSION_ONE)
+        {
+          m_PipeCacheBlob.clear();
+          NBDLOG("Pipeline cache header version %u is unexpected, not using cache", header->version);
+        }
+        else if(header->vendorID != m_pDriver->GetDeviceProps().vendorID)
+        {
+          m_PipeCacheBlob.clear();
+          NBDLOG("Pipeline cache header vendorID %u doesn't match %u", header->vendorID,
+                 m_pDriver->GetDeviceProps().vendorID);
+        }
+        else if(header->deviceID != m_pDriver->GetDeviceProps().deviceID)
+        {
+          m_PipeCacheBlob.clear();
+          NBDLOG("Pipeline cache header deviceID %u doesn't match %u", header->deviceID,
+                 m_pDriver->GetDeviceProps().deviceID);
+        }
+        else if(memcmp(header->uuid, m_pDriver->GetDeviceProps().pipelineCacheUUID, VK_UUID_SIZE) != 0)
+        {
+          m_PipeCacheBlob.clear();
+          NBDLOG("Pipeline cache UUID doesn't match");
+        }
+      }
+    }
+
+    if(!m_PipeCacheBlob.empty())
+    {
+      createInfo.initialDataSize = m_PipeCacheBlob.size();
+      createInfo.pInitialData = m_PipeCacheBlob.data();
+    }
+
+    // manually wrap the cache so the data is uploaded
+
+    VkResult vkr = ObjDisp(m_Device)->CreatePipelineCache(Unwrap(m_Device), &createInfo, NULL,
+                                                          &m_PipelineCache);
+    CHECK_VKR(driver, vkr);
+
+    if(vkr == VK_SUCCESS)
+    {
+      ResourceId id = m_pDriver->GetResourceManager()->WrapResource(ResourceId(), Unwrap(m_Device),
+                                                                    m_PipelineCache);
+
+      if(IsCaptureMode(m_pDriver->GetState()))
+      {
+        m_pDriver->GetResourceManager()->AddResourceRecord(m_PipelineCache);
+      }
+    }
+  }
+
+  SetCaching(false);
+}
+
+VulkanShaderCache::~VulkanShaderCache()
+{
+  if(m_PipelineCache != VK_NULL_HANDLE)
+  {
+    bytebuf blob;
+    size_t size = 0;
+    ObjDisp(m_Device)->GetPipelineCacheData(Unwrap(m_Device), Unwrap(m_PipelineCache), &size, NULL);
+    blob.resize(size);
+    ObjDisp(m_Device)->GetPipelineCacheData(Unwrap(m_Device), Unwrap(m_PipelineCache), &size,
+                                            blob.data());
+    SetPipeCacheBlob(blob);
+    m_pDriver->vkDestroyPipelineCache(m_Device, m_PipelineCache, NULL);
+  }
+
+  if(m_ShaderCacheDirty)
+  {
+    SaveShaderCache("vkshaders.cache", m_ShaderCacheMagic, m_ShaderCacheVersion, m_ShaderCache,
+                    VulkanShaderCacheCallbacks);
+  }
+  else
+  {
+    for(auto it = m_ShaderCache.begin(); it != m_ShaderCache.end(); ++it)
+      VulkanShaderCacheCallbacks.Destroy(it->second);
+  }
+
+  for(size_t i = 0; i < ARRAY_COUNT(m_BuiltinShaderModules); i++)
+    for(size_t b = 0; b < ARRAY_COUNT(m_BuiltinShaderModules[0]); b++)
+      for(size_t t = 0; t < ARRAY_COUNT(m_BuiltinShaderModules[0][0]); t++)
+        m_pDriver->vkDestroyShaderModule(m_Device, m_BuiltinShaderModules[i][b][t], NULL);
+}
+
+nbdstr VulkanShaderCache::GetSPIRVBlob(const nbdspv::CompilationSettings &settings,
+                                       const nbdstr &src, SPIRVBlob &outBlob)
+{
+  NBDASSERT(!src.empty());
+
+  uint32_t hash = strhash(src.c_str());
+
+  char typestr[3] = {'a', 'a', 0};
+  typestr[0] += (char)settings.stage;
+  typestr[1] += (char)settings.lang;
+  hash = strhash(typestr, hash);
+
+  if(m_ShaderCache.find(hash) != m_ShaderCache.end())
+  {
+    outBlob = m_ShaderCache[hash];
+    return "";
+  }
+
+  SPIRVBlob spirv = new nbdarray<uint32_t>();
+  nbdstr errors = nbdspv::Compile(settings, {src}, *spirv);
+
+  if(!errors.empty())
+  {
+    nbdstr logerror = errors;
+    if(logerror.length() > 1024)
+      logerror = logerror.substr(0, 1024) + "...";
+
+    NBDWARN("Shader compile error:\n%s", logerror.c_str());
+
+    delete spirv;
+    outBlob = NULL;
+    return errors;
+  }
+
+  outBlob = spirv;
+
+  if(m_CacheShaders)
+  {
+    m_ShaderCache[hash] = spirv;
+    m_ShaderCacheDirty = true;
+  }
+
+  return errors;
+}
+
+void VulkanShaderCache::GetPipeCacheBlob()
+{
+  m_PipeCacheBlob.clear();
+
+  uint32_t hash = strhash(StringFormat::Fmt("PipelineCache%x%x", m_pDriver->GetDeviceProps().vendorID,
+                                            m_pDriver->GetDeviceProps().deviceID)
+                              .c_str());
+
+  auto it = m_ShaderCache.find(hash);
+
+  if(it != m_ShaderCache.end())
+  {
+    SPIRVBlob blob = it->second;
+
+    // first uint32_t is the real byte size, since we rounded up to the nearest uint32 to store in a
+    // SPIRVBlob
+    uint32_t size = blob->at(0);
+    if(size == nbdspv::MagicNumber)
+    {
+      NBDLOG("Hash collision - pipeline cache trampled");
+      return;
+    }
+    m_PipeCacheBlob.resize(size);
+    memcpy(m_PipeCacheBlob.data(), blob->data() + 1, m_PipeCacheBlob.size());
+  }
+}
+
+void VulkanShaderCache::SetPipeCacheBlob(bytebuf &blob)
+{
+  if(m_PipeCacheBlob == blob)
+    return;
+
+  VkPipeCacheHeader *header = (VkPipeCacheHeader *)blob.data();
+
+  uint32_t hash =
+      strhash(StringFormat::Fmt("PipelineCache%x%x", header->vendorID, header->deviceID).c_str());
+
+  nbdarray<uint32_t> *spirvBlob = new nbdarray<uint32_t>();
+
+  // align the size up to the nearest 4, and add one extra for us to store the real byte size
+  spirvBlob->resize(AlignUp4(blob.size()) / 4 + 1);
+
+  // store the size, then the real data after that
+  (*spirvBlob)[0] = (uint32_t)blob.size();
+  memcpy(spirvBlob->data() + 1, blob.data(), blob.size());
+
+  m_ShaderCache[hash] = spirvBlob;
+  m_ShaderCacheDirty = true;
+}
+
+void VulkanShaderCache::MakeGraphicsPipelineInfo(VkGraphicsPipelineCreateInfo &pipeCreateInfo,
+                                                 ResourceId pipeline)
+{
+  // skip if invalid pipeline
+  if(pipeline == ResourceId())
+  {
+    NBDEraseEl(pipeCreateInfo);
+    return;
+  }
+
+  const VulkanCreationInfo::Pipeline &pipeInfo = m_pDriver->m_CreationInfo.m_Pipeline[pipeline];
+
+  VulkanResourceManager *rm = m_pDriver->GetResourceManager();
+
+  static VkPipelineShaderStageCreateInfo stages[NumShaderStages];
+  static VkSpecializationInfo specInfo[NumShaderStages];
+  static nbdarray<VkSpecializationMapEntry> specMapEntries;
+
+  // the specialization constants can't use more than a uint64_t, so we just over-allocate
+  static nbdarray<uint64_t> specdata;
+
+  size_t specEntries = 0;
+
+  for(uint32_t i = 0; i < NumShaderStages; i++)
+    specEntries += pipeInfo.shaders[i].specialization.size();
+
+  specMapEntries.resize(specEntries);
+  specdata.resize(specEntries);
+
+  VkSpecializationMapEntry *entry = specMapEntries.data();
+  uint64_t *data = specdata.data();
+
+  uint32_t stageCount = 0;
+  uint32_t dataOffset = 0;
+
+  static VkPipelineShaderStageRequiredSubgroupSizeCreateInfo reqSubgroupSize[NumShaderStages] = {};
+  static VkPipelineRobustnessCreateInfo shaderRobustness[NumShaderStages] = {};
+
+  // reserve space for spec constants
+  for(uint32_t i = 0; i < NumShaderStages; i++)
+  {
+    if(pipeInfo.shaders[i].module != ResourceId())
+    {
+      stages[stageCount].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+      stages[stageCount].stage = (VkShaderStageFlagBits)(1 << i);
+      stages[stageCount].module = rm->GetHandle<VkShaderModule>(pipeInfo.shaders[i].module);
+      stages[stageCount].pName = pipeInfo.shaders[i].entryPoint.c_str();
+      stages[stageCount].pNext = NULL;
+      stages[stageCount].pSpecializationInfo = NULL;
+      stages[stageCount].flags = pipeInfo.shaders[i].flags;
+
+      if(pipeInfo.shaders[i].requiredSubgroupSize != 0)
+      {
+        reqSubgroupSize[i].requiredSubgroupSize = pipeInfo.shaders[i].requiredSubgroupSize;
+
+        reqSubgroupSize[i].sType =
+            VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_REQUIRED_SUBGROUP_SIZE_CREATE_INFO;
+        reqSubgroupSize[i].pNext = (void *)stages[stageCount].pNext;
+        stages[stageCount].pNext = &reqSubgroupSize[i];
+      }
+
+      if(pipeInfo.shaders[i].HasRobustness())
+      {
+        shaderRobustness[i].images = pipeInfo.shaders[i].imageRobustness;
+        shaderRobustness[i].uniformBuffers = pipeInfo.shaders[i].uniformBufferRobustness;
+        shaderRobustness[i].storageBuffers = pipeInfo.shaders[i].storageBufferRobustness;
+
+        shaderRobustness[i].sType = VK_STRUCTURE_TYPE_PIPELINE_ROBUSTNESS_CREATE_INFO;
+        shaderRobustness[i].pNext = stages[stageCount].pNext;
+        stages[stageCount].pNext = &shaderRobustness;
+      }
+
+      if(!pipeInfo.shaders[i].specialization.empty())
+      {
+        stages[stageCount].pSpecializationInfo = &specInfo[i];
+        specInfo[i].pMapEntries = entry;
+        specInfo[i].mapEntryCount = (uint32_t)pipeInfo.shaders[i].specialization.size();
+
+        for(size_t s = 0; s < pipeInfo.shaders[i].specialization.size(); s++)
+        {
+          entry[s].constantID = pipeInfo.shaders[i].specialization[s].specID;
+          entry[s].size = pipeInfo.shaders[i].specialization[s].dataSize;
+          entry[s].offset = dataOffset * sizeof(uint64_t);
+
+          data[dataOffset] = pipeInfo.shaders[i].specialization[s].value;
+
+          dataOffset++;
+        }
+
+        specInfo[i].dataSize = specdata.size() * sizeof(uint64_t);
+        specInfo[i].pData = specdata.data();
+
+        entry += specInfo[i].mapEntryCount;
+      }
+
+      stageCount++;
+    }
+  }
+
+  static VkPipelineVertexInputStateCreateInfo vi = {
+      VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+  };
+
+  vi.pNext = NULL;
+
+  static VkVertexInputAttributeDescription viattr[128] = {};
+  static VkVertexInputBindingDescription vibind[128] = {};
+
+  vi.pVertexAttributeDescriptions = viattr;
+  vi.pVertexBindingDescriptions = vibind;
+
+  vi.vertexAttributeDescriptionCount = (uint32_t)pipeInfo.vertexAttrs.size();
+  vi.vertexBindingDescriptionCount = (uint32_t)pipeInfo.vertexBindings.size();
+
+  for(uint32_t i = 0; i < vi.vertexAttributeDescriptionCount; i++)
+  {
+    viattr[i].binding = pipeInfo.vertexAttrs[i].binding;
+    viattr[i].offset = pipeInfo.vertexAttrs[i].byteoffset;
+    viattr[i].format = pipeInfo.vertexAttrs[i].format;
+    viattr[i].location = pipeInfo.vertexAttrs[i].location;
+  }
+
+  for(uint32_t i = 0; i < vi.vertexBindingDescriptionCount; i++)
+  {
+    vibind[i].binding = pipeInfo.vertexBindings[i].vbufferBinding;
+    vibind[i].stride = pipeInfo.vertexBindings[i].bytestride;
+    vibind[i].inputRate = pipeInfo.vertexBindings[i].perInstance ? VK_VERTEX_INPUT_RATE_INSTANCE
+                                                                 : VK_VERTEX_INPUT_RATE_VERTEX;
+  }
+
+  static VkPipelineVertexInputDivisorStateCreateInfo vertexDivisor = {
+      VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_DIVISOR_STATE_CREATE_INFO,
+  };
+  static VkVertexInputBindingDivisorDescription vibindDivisors[128] = {};
+
+  if(m_pDriver->GetExtensions(GetRecord(m_Device)).ext_EXT_vertex_attribute_divisor ||
+     m_pDriver->GetExtensions(GetRecord(m_Device)).ext_KHR_vertex_attribute_divisor)
+  {
+    vertexDivisor.pVertexBindingDivisors = vibindDivisors;
+    vertexDivisor.vertexBindingDivisorCount = 0;
+
+    for(uint32_t i = 0; i < vi.vertexBindingDescriptionCount; i++)
+    {
+      if(pipeInfo.vertexBindings[i].perInstance)
+      {
+        uint32_t instIdx = vertexDivisor.vertexBindingDivisorCount++;
+        vibindDivisors[instIdx].binding = pipeInfo.vertexBindings[i].vbufferBinding;
+        vibindDivisors[instIdx].divisor = pipeInfo.vertexBindings[i].instanceDivisor;
+      }
+    }
+
+    if(vertexDivisor.vertexBindingDivisorCount > 0)
+    {
+      vertexDivisor.pNext = vi.pNext;
+      vi.pNext = &vertexDivisor;
+    }
+  }
+
+  NBDASSERT(ARRAY_COUNT(viattr) >= pipeInfo.vertexAttrs.size());
+  NBDASSERT(ARRAY_COUNT(vibind) >= pipeInfo.vertexBindings.size());
+
+  static VkPipelineInputAssemblyStateCreateInfo ia = {
+      VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};
+
+  ia.pNext = NULL;
+
+  ia.topology = pipeInfo.topology;
+  ia.primitiveRestartEnable = pipeInfo.primitiveRestartEnable;
+
+  static VkPipelineTessellationStateCreateInfo tess = {
+      VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO};
+
+  tess.pNext = NULL;
+
+  tess.patchControlPoints = pipeInfo.patchControlPoints;
+
+  static VkPipelineTessellationDomainOriginStateCreateInfo tessDomain = {
+      VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_DOMAIN_ORIGIN_STATE_CREATE_INFO,
+  };
+
+  if(m_pDriver->GetExtensions(GetRecord(m_Device)).ext_KHR_maintenance2)
+  {
+    tessDomain.domainOrigin = pipeInfo.tessellationDomainOrigin;
+
+    tessDomain.pNext = tess.pNext;
+    tess.pNext = &tessDomain;
+  }
+
+  static VkPipelineViewportStateCreateInfo vp = {
+      VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO};
+  static VkViewport views[32] = {};
+  static VkRect2D scissors[32] = {};
+
+  vp.pNext = NULL;
+
+  memcpy(views, &pipeInfo.viewports[0], pipeInfo.viewports.size() * sizeof(VkViewport));
+
+  vp.pViewports = &views[0];
+  vp.viewportCount = (uint32_t)pipeInfo.viewports.size();
+
+  memcpy(scissors, &pipeInfo.scissors[0], pipeInfo.scissors.size() * sizeof(VkRect2D));
+
+  vp.pScissors = &scissors[0];
+  vp.scissorCount = (uint32_t)pipeInfo.scissors.size();
+
+  NBDASSERT(ARRAY_COUNT(views) >= pipeInfo.viewports.size());
+  NBDASSERT(ARRAY_COUNT(scissors) >= pipeInfo.scissors.size());
+
+  static VkPipelineViewportDepthClipControlCreateInfoEXT depthClipControl = {
+      VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_DEPTH_CLIP_CONTROL_CREATE_INFO_EXT,
+  };
+
+  if(m_pDriver->GetExtensions(GetRecord(m_Device)).ext_EXT_depth_clip_control)
+  {
+    depthClipControl.negativeOneToOne = pipeInfo.negativeOneToOne;
+
+    depthClipControl.pNext = vp.pNext;
+    vp.pNext = &depthClipControl;
+  }
+
+  static VkPipelineRasterizationStateCreateInfo rs = {
+      VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+  };
+
+  rs.pNext = NULL;
+
+  rs.depthClampEnable = pipeInfo.depthClampEnable;
+  rs.rasterizerDiscardEnable = pipeInfo.rasterizerDiscardEnable;
+  rs.polygonMode = pipeInfo.polygonMode;
+  rs.cullMode = pipeInfo.cullMode;
+  rs.frontFace = pipeInfo.frontFace;
+  rs.depthBiasEnable = pipeInfo.depthBiasEnable;
+  rs.depthBiasConstantFactor = pipeInfo.depthBiasConstantFactor;
+  rs.depthBiasClamp = pipeInfo.depthBiasClamp;
+  rs.depthBiasSlopeFactor = pipeInfo.depthBiasSlopeFactor;
+  rs.lineWidth = pipeInfo.lineWidth;
+
+  static VkDepthBiasRepresentationInfoEXT depthBiasRepr = {
+      VK_STRUCTURE_TYPE_DEPTH_BIAS_REPRESENTATION_INFO_EXT,
+  };
+
+  if(m_pDriver->DepthBiasControl())
+  {
+    depthBiasRepr.depthBiasRepresentation = pipeInfo.depthBiasRepresentation;
+    depthBiasRepr.depthBiasExact = pipeInfo.depthBiasExact;
+
+    depthBiasRepr.pNext = rs.pNext;
+    rs.pNext = &depthBiasRepr;
+  }
+
+  static VkPipelineRasterizationConservativeStateCreateInfoEXT conservRast = {
+      VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_CONSERVATIVE_STATE_CREATE_INFO_EXT,
+  };
+
+  if(m_pDriver->GetExtensions(GetRecord(m_Device)).ext_EXT_conservative_rasterization)
+  {
+    conservRast.conservativeRasterizationMode = pipeInfo.conservativeRasterizationMode;
+    conservRast.extraPrimitiveOverestimationSize = pipeInfo.extraPrimitiveOverestimationSize;
+
+    conservRast.pNext = rs.pNext;
+    rs.pNext = &conservRast;
+  }
+
+  static VkPipelineRasterizationStateStreamCreateInfoEXT rastStream = {
+      VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_STREAM_CREATE_INFO_EXT,
+  };
+
+  if(m_pDriver->GetExtensions(GetRecord(m_Device)).ext_EXT_transform_feedback &&
+     pipeInfo.rasterizationStream != 0)
+  {
+    rastStream.rasterizationStream = pipeInfo.rasterizationStream;
+
+    rastStream.pNext = rs.pNext;
+    rs.pNext = &rastStream;
+  }
+
+  static VkPipelineRasterizationDepthClipStateCreateInfoEXT depthClipState = {
+      VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_DEPTH_CLIP_STATE_CREATE_INFO_EXT,
+  };
+
+  if(m_pDriver->GetExtensions(GetRecord(m_Device)).ext_EXT_depth_clip_enable)
+  {
+    depthClipState.depthClipEnable = pipeInfo.depthClipEnable;
+
+    depthClipState.pNext = rs.pNext;
+    rs.pNext = &depthClipState;
+  }
+
+  static VkPipelineRasterizationLineStateCreateInfo lineRasterState = {
+      VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_LINE_STATE_CREATE_INFO,
+  };
+
+  if(m_pDriver->GetExtensions(GetRecord(m_Device)).ext_EXT_line_rasterization ||
+     m_pDriver->GetExtensions(GetRecord(m_Device)).ext_KHR_line_rasterization)
+  {
+    lineRasterState.lineRasterizationMode = pipeInfo.lineRasterMode;
+    lineRasterState.stippledLineEnable = pipeInfo.stippleEnabled;
+    lineRasterState.lineStippleFactor = pipeInfo.stippleFactor;
+    lineRasterState.lineStipplePattern = pipeInfo.stipplePattern;
+
+    lineRasterState.pNext = rs.pNext;
+    rs.pNext = &lineRasterState;
+  }
+
+  static VkPipelineMultisampleStateCreateInfo msaa = {
+      VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+  };
+
+  msaa.pNext = NULL;
+
+  msaa.rasterizationSamples = pipeInfo.rasterizationSamples;
+  msaa.sampleShadingEnable = pipeInfo.sampleShadingEnable;
+  msaa.minSampleShading = pipeInfo.minSampleShading;
+  msaa.pSampleMask = &pipeInfo.sampleMask;
+  msaa.alphaToCoverageEnable = pipeInfo.alphaToCoverageEnable;
+  msaa.alphaToOneEnable = pipeInfo.alphaToOneEnable;
+
+  static VkPipelineSampleLocationsStateCreateInfoEXT sampleLoc = {
+      VK_STRUCTURE_TYPE_PIPELINE_SAMPLE_LOCATIONS_STATE_CREATE_INFO_EXT,
+  };
+
+  if(m_pDriver->GetExtensions(GetRecord(m_Device)).ext_EXT_sample_locations &&
+     pipeInfo.sampleLocations.enabled)
+  {
+    sampleLoc.sampleLocationsEnable = pipeInfo.sampleLocations.enabled;
+    sampleLoc.sampleLocationsInfo.sType = VK_STRUCTURE_TYPE_SAMPLE_LOCATIONS_INFO_EXT;
+    sampleLoc.sampleLocationsInfo.sampleLocationGridSize = pipeInfo.sampleLocations.gridSize;
+    sampleLoc.sampleLocationsInfo.sampleLocationsPerPixel = pipeInfo.rasterizationSamples;
+    sampleLoc.sampleLocationsInfo.sampleLocationsCount =
+        (uint32_t)pipeInfo.sampleLocations.locations.size();
+    sampleLoc.sampleLocationsInfo.pSampleLocations = pipeInfo.sampleLocations.locations.data();
+
+    sampleLoc.pNext = msaa.pNext;
+    msaa.pNext = &sampleLoc;
+  }
+
+  static VkPipelineDepthStencilStateCreateInfo ds = {
+      VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO};
+
+  ds.pNext = NULL;
+
+  ds.depthTestEnable = pipeInfo.depthTestEnable;
+  ds.depthWriteEnable = pipeInfo.depthWriteEnable;
+  ds.depthCompareOp = pipeInfo.depthCompareOp;
+  ds.depthBoundsTestEnable = pipeInfo.depthBoundsEnable;
+  ds.stencilTestEnable = pipeInfo.stencilTestEnable;
+  ds.front = pipeInfo.front;
+  ds.back = pipeInfo.back;
+  ds.minDepthBounds = pipeInfo.minDepthBounds;
+  ds.maxDepthBounds = pipeInfo.maxDepthBounds;
+
+  static VkPipelineColorBlendStateCreateInfo cb = {
+      VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO};
+
+  cb.pNext = NULL;
+
+  cb.logicOpEnable = pipeInfo.logicOpEnable;
+  cb.logicOp = pipeInfo.logicOp;
+  memcpy(cb.blendConstants, pipeInfo.blendConst, sizeof(cb.blendConstants));
+
+  static VkPipelineColorBlendAttachmentState atts[32] = {};
+
+  cb.attachmentCount = (uint32_t)pipeInfo.attachments.size();
+  cb.pAttachments = atts;
+
+  for(uint32_t i = 0; i < cb.attachmentCount; i++)
+  {
+    atts[i].blendEnable = pipeInfo.attachments[i].blendEnable;
+    atts[i].colorWriteMask = pipeInfo.attachments[i].channelWriteMask;
+    atts[i].alphaBlendOp = pipeInfo.attachments[i].alphaBlend.Operation;
+    atts[i].srcAlphaBlendFactor = pipeInfo.attachments[i].alphaBlend.Source;
+    atts[i].dstAlphaBlendFactor = pipeInfo.attachments[i].alphaBlend.Destination;
+    atts[i].colorBlendOp = pipeInfo.attachments[i].blend.Operation;
+    atts[i].srcColorBlendFactor = pipeInfo.attachments[i].blend.Source;
+    atts[i].dstColorBlendFactor = pipeInfo.attachments[i].blend.Destination;
+  }
+
+  NBDASSERT(ARRAY_COUNT(atts) >= pipeInfo.attachments.size());
+
+  static VkDynamicState dynSt[VkDynamicCount];
+
+  static VkPipelineDynamicStateCreateInfo dyn = {VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO};
+
+  dyn.pNext = NULL;
+
+  dyn.dynamicStateCount = 0;
+  dyn.pDynamicStates = dynSt;
+
+  for(uint32_t i = 0; i < VkDynamicCount; i++)
+    if(pipeInfo.dynamicStates[i])
+      dynSt[dyn.dynamicStateCount++] = ConvertDynamicState((VulkanDynamicStateIndex)i);
+
+  // since we don't have to worry about threading, we point everything at the above static structs
+
+  VkGraphicsPipelineCreateInfo ret = {
+      VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+      NULL,
+      0,
+      stageCount,
+      stages,
+      &vi,
+      &ia,
+      &tess,
+      &vp,
+      &rs,
+      &msaa,
+      &ds,
+      &cb,
+      &dyn,
+      VK_NULL_HANDLE,
+      rm->GetHandle<VkRenderPass>(pipeInfo.renderpass),
+      pipeInfo.subpass,
+      VK_NULL_HANDLE,    // base pipeline handle
+      0,                 // base pipeline index
+  };
+
+  // if the layouts are the same object (non-library case) we can just use it directly
+  if(pipeInfo.vertLayout == pipeInfo.fragLayout)
+  {
+    ret.layout = rm->GetHandle<VkPipelineLayout>(pipeInfo.vertLayout);
+  }
+  else
+  {
+    ret.layout = m_CombinedPipeLayouts[pipeline];
+    if(ret.layout == VK_NULL_HANDLE)
+    {
+      nbdarray<VkDescriptorSetLayout> descSetLayouts;
+
+      for(ResourceId setLayout : pipeInfo.descSetLayouts)
+        descSetLayouts.push_back(rm->GetHandle<VkDescriptorSetLayout>(setLayout));
+
+      // don't have to handle separate vert/frag layouts as push constant ranges must be identical
+      const VulkanCreationInfo::PipelineLayout &pipeLayoutInfo =
+          m_pDriver->m_CreationInfo
+              .m_PipelineLayout[pipeInfo.ownLayout != ResourceId() ? pipeInfo.ownLayout
+                                                                   : pipeInfo.vertLayout];
+      const nbdarray<VkPushConstantRange> &push = pipeLayoutInfo.pushRanges;
+
+      VkPipelineLayoutCreateInfo pipeLayoutCreateInfo = {
+          VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+          NULL,
+          pipeLayoutInfo.flags,
+          (uint32_t)descSetLayouts.size(),
+          descSetLayouts.data(),
+          (uint32_t)push.size(),
+          push.data(),
+      };
+
+      VkResult vkr = m_pDriver->vkCreatePipelineLayout(m_pDriver->GetDev(), &pipeLayoutCreateInfo,
+                                                       NULL, &m_CombinedPipeLayouts[pipeline]);
+      CHECK_VKR(m_pDriver, vkr);
+
+      ret.layout = m_CombinedPipeLayouts[pipeline];
+    }
+  }
+
+  static VkFormat colFormats[16] = {};
+  static VkPipelineRenderingCreateInfo dynRenderCreate = {
+      VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO, NULL, pipeInfo.viewMask, 0, colFormats,
+  };
+
+  if(pipeInfo.renderpass == ResourceId())
+  {
+    dynRenderCreate.depthAttachmentFormat = pipeInfo.depthFormat;
+    dynRenderCreate.stencilAttachmentFormat = pipeInfo.stencilFormat;
+    dynRenderCreate.colorAttachmentCount = (uint32_t)pipeInfo.colorFormats.size();
+    memcpy(colFormats, pipeInfo.colorFormats.data(), pipeInfo.colorFormats.byteSize());
+
+    dynRenderCreate.pNext = ret.pNext;
+    ret.pNext = &dynRenderCreate;
+  }
+
+  static VkFormat customResColFormats[16] = {};
+  static VkCustomResolveCreateInfoEXT customResCreate = {
+      VK_STRUCTURE_TYPE_CUSTOM_RESOLVE_CREATE_INFO_EXT, NULL, VK_FALSE, 0, customResColFormats};
+
+  if(pipeInfo.renderpass == ResourceId() && (pipeInfo.hasCustomResCreateInfo))
+  {
+    customResCreate.customResolve = pipeInfo.customResCreateInfo.customResolve;
+    customResCreate.colorAttachmentCount = (uint32_t)pipeInfo.customResCreateInfo.colorFormats.size();
+    memcpy(customResColFormats, pipeInfo.customResCreateInfo.colorFormats.data(),
+           pipeInfo.customResCreateInfo.colorFormats.byteSize());
+    customResCreate.depthAttachmentFormat = pipeInfo.customResCreateInfo.depthFormat;
+    customResCreate.stencilAttachmentFormat = pipeInfo.customResCreateInfo.stencilFormat;
+    customResCreate.pNext = ret.pNext;
+    ret.pNext = &customResCreate;
+  }
+
+  static VkPipelineDiscardRectangleStateCreateInfoEXT discardRects = {
+      VK_STRUCTURE_TYPE_PIPELINE_DISCARD_RECTANGLE_STATE_CREATE_INFO_EXT,
+  };
+
+  if(m_pDriver->GetExtensions(GetRecord(m_Device)).ext_EXT_discard_rectangles)
+  {
+    discardRects.discardRectangleMode = pipeInfo.discardMode;
+    discardRects.discardRectangleCount = (uint32_t)pipeInfo.discardRectangles.size();
+    discardRects.pDiscardRectangles = pipeInfo.discardRectangles.data();
+
+    discardRects.pNext = ret.pNext;
+    ret.pNext = &discardRects;
+  }
+
+  static VkPipelineFragmentShadingRateStateCreateInfoKHR shadingRate = {
+      VK_STRUCTURE_TYPE_PIPELINE_FRAGMENT_SHADING_RATE_STATE_CREATE_INFO_KHR,
+  };
+
+  if(pipeInfo.shadingRate.width != 1 || pipeInfo.shadingRate.height != 1 ||
+     pipeInfo.shadingRateCombiners[0] != VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR ||
+     pipeInfo.shadingRateCombiners[1] != VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR)
+  {
+    shadingRate.fragmentSize = pipeInfo.shadingRate;
+    shadingRate.combinerOps[0] = pipeInfo.shadingRateCombiners[0];
+    shadingRate.combinerOps[1] = pipeInfo.shadingRateCombiners[1];
+
+    shadingRate.pNext = ret.pNext;
+    ret.pNext = &shadingRate;
+  }
+
+  static VkPipelineRasterizationProvokingVertexStateCreateInfoEXT provokeSetup = {
+      VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_PROVOKING_VERTEX_STATE_CREATE_INFO_EXT,
+  };
+
+  if(m_pDriver->GetExtensions(GetRecord(m_Device)).ext_EXT_provoking_vertex)
+  {
+    provokeSetup.provokingVertexMode = pipeInfo.provokingVertex;
+
+    provokeSetup.pNext = rs.pNext;
+    rs.pNext = &provokeSetup;
+  }
+
+  uint64_t flags = pipeInfo.flags;
+  // never create derivatives
+  flags &= ~VK_PIPELINE_CREATE_DERIVATIVE_BIT;
+
+  flags &= ~VK_PIPELINE_CREATE_LIBRARY_BIT_KHR;
+  flags &= ~VK_PIPELINE_CREATE_RETAIN_LINK_TIME_OPTIMIZATION_INFO_BIT_EXT;
+
+  static VkPipelineCreateFlags2CreateInfo createFlags = {
+      VK_STRUCTURE_TYPE_PIPELINE_CREATE_FLAGS_2_CREATE_INFO,
+  };
+
+  if(pipeInfo.useCreateFlags2 && m_pDriver->Maintenance5())
+  {
+    createFlags.flags = flags;
+
+    createFlags.pNext = ret.pNext;
+    ret.pNext = &createFlags;
+  }
+  else
+  {
+    ret.flags = (uint32_t)flags;
+  }
+
+  static VkPipelineRobustnessCreateInfo VkPipelineRobustnessCreateInfo = {
+      VK_STRUCTURE_TYPE_PIPELINE_ROBUSTNESS_CREATE_INFO,
+  };
+
+  // we only need to specify vertex input robustness, all per-shader robustness is handled via
+  // pNexts on the stages above
+  if(pipeInfo.vertexInputRobustness != VK_PIPELINE_ROBUSTNESS_BUFFER_BEHAVIOR_DEVICE_DEFAULT)
+  {
+    VkPipelineRobustnessCreateInfo.vertexInputs = pipeInfo.vertexInputRobustness;
+
+    VkPipelineRobustnessCreateInfo.pNext = ret.pNext;
+    ret.pNext = &VkPipelineRobustnessCreateInfo;
+  }
+
+  static VkPipelineFragmentDensityMapLayeredCreateInfoVALVE
+      VkPipelineFragmentDensityMapLayeredCreateInfoVALVE = {
+          VK_STRUCTURE_TYPE_PIPELINE_FRAGMENT_DENSITY_MAP_LAYERED_CREATE_INFO_VALVE,
+      };
+
+  // we only need to specify vertex input robustness, all per-shader robustness is handled via
+  // pNexts on the stages above
+  if(pipeInfo.maxFragmentDensityMapLayers)
+  {
+    VkPipelineFragmentDensityMapLayeredCreateInfoVALVE.maxFragmentDensityMapLayers =
+        pipeInfo.maxFragmentDensityMapLayers;
+
+    VkPipelineFragmentDensityMapLayeredCreateInfoVALVE.pNext = ret.pNext;
+    ret.pNext = &VkPipelineFragmentDensityMapLayeredCreateInfoVALVE;
+  }
+
+  pipeCreateInfo = ret;
+}
+
+void VulkanShaderCache::MakeComputePipelineInfo(VkComputePipelineCreateInfo &pipeCreateInfo,
+                                                ResourceId pipeline)
+{
+  const VulkanCreationInfo::Pipeline &pipeInfo = m_pDriver->m_CreationInfo.m_Pipeline[pipeline];
+
+  VulkanResourceManager *rm = m_pDriver->GetResourceManager();
+
+  VkPipelineShaderStageCreateInfo stage;    // Returned by value
+  static VkSpecializationInfo specInfo;
+  static nbdarray<VkSpecializationMapEntry> specMapEntries;
+
+  // the specialization constants can't use more than a uint64_t, so we just over-allocate
+  static nbdarray<uint64_t> specdata;
+
+  const uint32_t i = 5;    // Compute stage
+  NBDASSERT(pipeInfo.shaders[i].module != ResourceId());
+
+  size_t specEntries = pipeInfo.shaders[i].specialization.size();
+
+  specdata.resize(specEntries);
+  specMapEntries.resize(specEntries);
+  VkSpecializationMapEntry *entry = specMapEntries.data();
+
+  stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  stage.stage = (VkShaderStageFlagBits)(1 << i);
+  stage.module = rm->GetHandle<VkShaderModule>(pipeInfo.shaders[i].module);
+  stage.pName = pipeInfo.shaders[i].entryPoint.c_str();
+  stage.pNext = NULL;
+  stage.pSpecializationInfo = NULL;
+  stage.flags = pipeInfo.shaders[i].flags;
+
+  uint32_t dataOffset = 0;
+
+  if(!pipeInfo.shaders[i].specialization.empty())
+  {
+    stage.pSpecializationInfo = &specInfo;
+    specInfo.pMapEntries = entry;
+    specInfo.mapEntryCount = (uint32_t)pipeInfo.shaders[i].specialization.size();
+
+    for(size_t s = 0; s < pipeInfo.shaders[i].specialization.size(); s++)
+    {
+      entry[s].constantID = pipeInfo.shaders[i].specialization[s].specID;
+      entry[s].size = pipeInfo.shaders[i].specialization[s].dataSize;
+      entry[s].offset = dataOffset * sizeof(uint64_t);
+
+      specdata[dataOffset] = pipeInfo.shaders[i].specialization[s].value;
+
+      dataOffset++;
+    }
+
+    specInfo.dataSize = specdata.size() * sizeof(uint64_t);
+    specInfo.pData = specdata.data();
+  }
+
+  static VkPipelineShaderStageRequiredSubgroupSizeCreateInfo reqSubgroupSize = {
+      VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_REQUIRED_SUBGROUP_SIZE_CREATE_INFO,
+  };
+
+  if(pipeInfo.shaders[i].requiredSubgroupSize != 0)
+  {
+    reqSubgroupSize.requiredSubgroupSize = pipeInfo.shaders[i].requiredSubgroupSize;
+    reqSubgroupSize.pNext = (void *)stage.pNext;
+    stage.pNext = &reqSubgroupSize;
+  }
+
+  static VkPipelineRobustnessCreateInfo robustness = {
+      VK_STRUCTURE_TYPE_PIPELINE_ROBUSTNESS_CREATE_INFO,
+  };
+
+  if(pipeInfo.shaders[i].HasRobustness())
+  {
+    robustness.images = pipeInfo.shaders[i].imageRobustness;
+    robustness.uniformBuffers = pipeInfo.shaders[i].uniformBufferRobustness;
+    robustness.storageBuffers = pipeInfo.shaders[i].storageBufferRobustness;
+    robustness.pNext = stage.pNext;
+    stage.pNext = &robustness;
+  }
+
+  VkComputePipelineCreateInfo ret = {
+      VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
+      NULL,
+      0,
+      stage,
+      rm->GetHandle<VkPipelineLayout>(pipeInfo.compLayout),
+      VK_NULL_HANDLE,    // base pipeline handle
+      0,                 // base pipeline index
+  };
+
+  uint64_t flags = pipeInfo.flags;
+  // never create derivatives
+  flags &= ~VK_PIPELINE_CREATE_DERIVATIVE_BIT;
+
+  static VkPipelineCreateFlags2CreateInfo createFlags = {
+      VK_STRUCTURE_TYPE_PIPELINE_CREATE_FLAGS_2_CREATE_INFO,
+  };
+
+  if(pipeInfo.useCreateFlags2 && m_pDriver->Maintenance5())
+  {
+    createFlags.flags = flags;
+
+    createFlags.pNext = ret.pNext;
+    ret.pNext = &createFlags;
+  }
+  else
+  {
+    ret.flags = (uint32_t)flags;
+  }
+
+  pipeCreateInfo = ret;
+}
+
+void VulkanShaderCache::MakeShaderObjectInfo(VkShaderCreateInfoEXT &shadCreateInfo,
+                                             ResourceId shaderObj)
+{
+  // skip if invalid shader object
+  if(shaderObj == ResourceId())
+  {
+    NBDEraseEl(shadCreateInfo);
+    return;
+  }
+
+  const VulkanCreationInfo::ShaderObject &shadInfo =
+      m_pDriver->m_CreationInfo.m_ShaderObject[shaderObj];
+
+  const VulkanCreationInfo::ShaderModule &moduleInfo =
+      m_pDriver->m_CreationInfo.m_ShaderModule[shadInfo.shad.module];
+  const nbdarray<uint32_t> &modSpirv = moduleInfo.spirv.GetSPIRV();
+
+  VulkanResourceManager *rm = m_pDriver->GetResourceManager();
+
+  static VkSpecializationInfo specInfo;
+  static nbdarray<VkSpecializationMapEntry> specMapEntries;
+
+  // the specialization constants can't use more than a uint64_t, so we just over-allocate
+  static nbdarray<uint64_t> specdata;
+
+  size_t specEntries = shadInfo.shad.specialization.size();
+
+  specdata.resize(specEntries);
+  specMapEntries.resize(specEntries);
+  VkSpecializationMapEntry *entry = specMapEntries.data();
+
+  uint32_t stage = (uint32_t)shadInfo.shad.stage;
+
+  static nbdarray<VkDescriptorSetLayout> descSetLayouts;
+  descSetLayouts = {};
+
+  for(ResourceId setLayout : shadInfo.descSetLayouts)
+    descSetLayouts.push_back(rm->GetHandle<VkDescriptorSetLayout>(setLayout));
+
+  VkShaderCreateInfoEXT ret = {VK_STRUCTURE_TYPE_SHADER_CREATE_INFO_EXT,
+                               NULL,
+                               shadInfo.flags,
+                               (VkShaderStageFlagBits)(1 << stage),
+                               shadInfo.nextStage,
+                               VK_SHADER_CODE_TYPE_SPIRV_EXT,
+                               modSpirv.size() * sizeof(uint32_t),
+                               modSpirv.data(),
+                               shadInfo.shad.entryPoint.c_str(),
+                               (uint32_t)descSetLayouts.size(),
+                               descSetLayouts.data(),
+                               (uint32_t)shadInfo.pushRanges.size(),
+                               shadInfo.pushRanges.data(),
+                               NULL};
+
+  // specialization info
+  uint32_t dataOffset = 0;
+
+  if(!shadInfo.shad.specialization.empty())
+  {
+    ret.pSpecializationInfo = &specInfo;
+    specInfo.pMapEntries = entry;
+    specInfo.mapEntryCount = (uint32_t)shadInfo.shad.specialization.size();
+
+    for(size_t s = 0; s < shadInfo.shad.specialization.size(); s++)
+    {
+      entry[s].constantID = shadInfo.shad.specialization[s].specID;
+      entry[s].size = shadInfo.shad.specialization[s].dataSize;
+      entry[s].offset = dataOffset * sizeof(uint64_t);
+
+      specdata[dataOffset] = shadInfo.shad.specialization[s].value;
+
+      dataOffset++;
+    }
+
+    specInfo.dataSize = specdata.size() * sizeof(uint64_t);
+    specInfo.pData = specdata.data();
+  }
+
+  static VkCustomResolveCreateInfoEXT customResCreate = {
+      VK_STRUCTURE_TYPE_CUSTOM_RESOLVE_CREATE_INFO_EXT,
+      NULL,
+      VK_FALSE,
+      0,
+      NULL,
+      VK_FORMAT_UNDEFINED,
+      VK_FORMAT_UNDEFINED,
+  };
+  if(shadInfo.hasCustomResCreateInfo)
+  {
+    customResCreate.customResolve = shadInfo.customResolve;
+    customResCreate.pNext = ret.pNext;
+    ret.pNext = &customResCreate;
+  }
+  shadCreateInfo = ret;
+}

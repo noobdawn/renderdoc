@@ -1,6 +1,6 @@
 import copy
 import rdtest
-import renderdoc as rd
+import noobdawn as rd
 
 
 class GL_Vertex_Attr_Zoo(rdtest.TestCase):

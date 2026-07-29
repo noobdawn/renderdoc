@@ -1,4 +1,4 @@
-I want RenderDoc to be an open and welcoming project, and for that reason I want to make sure that people feel secure joining the project by outlining and enforcing expected behaviour from members of the community. This code of conduct is used in many open source projects and embodies that spirit of inclusiveness well.
+I want NoobDawn to be an open and welcoming project, and for that reason I want to make sure that people feel secure joining the project by outlining and enforcing expected behaviour from members of the community. This code of conduct is used in many open source projects and embodies that spirit of inclusiveness well.
 
 The full text is listed below. Anywhere that 'community leaders' are referred to as a collective group, this currently refers just directly to me. If you have any queries or issues with the code of conduct, you can get in touch with me [directly via email](mailto:baldurk@baldurk.org)
 

@@ -60,7 +60,7 @@ RD_TEST(D3D11_Refcount_Check, D3D11GraphicsTest)
   {
     if(rdoc || reftest.rdoc)
     {
-      // renderdoc keeps driver DLLs around to avoid race condition bugs, so we can't check on those
+      // noobdawn keeps driver DLLs around to avoid race condition bugs, so we can't check on those
       // DLLs being unloaded.
       // Instead we hack by calling D3D9's Begin/EndEvent. If there's no D3D11 device alive it
       // always returns 0, otherwise it returns the nesting level minus 1. Since we don't have a
@@ -136,7 +136,7 @@ RD_TEST(D3D11_Refcount_Check, D3D11GraphicsTest)
       // for the first device enable INFO for creation/destruction
       ID3D11InfoQueue *infoQueue = NULL;
 
-      // try first with renderdoc's GUID to get the unwrapped queue for testing against
+      // try first with noobdawn's GUID to get the unwrapped queue for testing against
       reftest.dev.QueryInterface(unwrappedID3D11InfoQueue__uuid, &infoQueue);
 
       if(infoQueue == NULL)
@@ -177,7 +177,7 @@ RD_TEST(D3D11_Refcount_Check, D3D11GraphicsTest)
       // this is particularly annoying when they're checking for implementation details, like
       // whether a resource hits 0 refcount even if it's still bound somewhere, etc.
       // The below refcounting behaviour was accurate for the D3D11 runtime at time of writing, and
-      // we check it against renderdoc which is based on emulating that behaviour enough to fit this
+      // we check it against noobdawn which is based on emulating that behaviour enough to fit this
       // test.
 
       // grab the device into a local pointer so we can AddRef / Release manually
@@ -770,7 +770,7 @@ RD_TEST(D3D11_Refcount_Check, D3D11GraphicsTest)
 
       localdev->GetImmediateContext(&localctx);
 
-      // try first with renderdoc's GUID to get the unwrapped queue for testing against
+      // try first with noobdawn's GUID to get the unwrapped queue for testing against
       localdev->QueryInterface(unwrappedID3D11InfoQueue__uuid, (void **)&infoQueue);
 
       if(infoQueue == NULL)
@@ -877,7 +877,7 @@ RD_TEST(D3D11_Refcount_Check, D3D11GraphicsTest)
 
       localdev->GetImmediateContext(&localctx);
 
-      // try first with renderdoc's GUID to get the unwrapped queue for testing against
+      // try first with noobdawn's GUID to get the unwrapped queue for testing against
       localdev->QueryInterface(unwrappedID3D11InfoQueue__uuid, (void **)&infoQueue);
 
       if(infoQueue == NULL)

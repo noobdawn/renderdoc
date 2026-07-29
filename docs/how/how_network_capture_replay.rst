@@ -1,18 +1,18 @@
 How do I capture and replay over a network?
 ===========================================
 
-RenderDoc supports capture and replay over a network connection. While slightly more complicated than the default workflow of doing everything on one machine, there are a number of scenarios where this can be useful.
+NoobDawn supports capture and replay over a network connection. While slightly more complicated than the default workflow of doing everything on one machine, there are a number of scenarios where this can be useful.
 
 This is also the same mechanism used for Android capture and replay, except with built-in native support for supporting Android targets.
 
-If you can run the minimal RenderDoc support for capturing on a target machine such as an embedded device or devkit, the bulk of the replay work can be done on an existing machine where the UI is running.
+If you can run the minimal NoobDawn support for capturing on a target machine such as an embedded device or devkit, the bulk of the replay work can be done on an existing machine where the UI is running.
 
-Likewise if you have a capture that you'd like to run on a different driver or hardware, you don't have to set up a full environment to run RenderDoc, you can just run the minimal remote server.
+Likewise if you have a capture that you'd like to run on a different driver or hardware, you don't have to set up a full environment to run NoobDawn, you can just run the minimal remote server.
 
 Overview
 --------
 
-RenderDoc's network support has the core concept of a "Replay Context".
+NoobDawn's network support has the core concept of a "Replay Context".
 
 By default you are in the "local" replay context. All operations happen relative to your own machine - from executables that you launch, to how replays are processed and instantiated. This is the familiar process, where you browse and launch executables on a machine and all the replaying happens locally.
 
@@ -29,7 +29,7 @@ To configure a remote host, open the manager by opening the :guilabel:`Tools` me
 
 This manager allows you to configure both which remote hosts are available, as well as starting and stopping the "Remote Server" on that host.
 
-To add a new host, simply type its hostname in the hostname box and click ``Add``. It will be added to the list of known remote hosts, and immediately a network lookup will happen to see if the remote server or any running RenderDoc-injected applications are alive.
+To add a new host, simply type its hostname in the hostname box and click ``Add``. It will be added to the list of known remote hosts, and immediately a network lookup will happen to see if the remote server or any running NoobDawn-injected applications are alive.
 
 .. note::
 
@@ -41,9 +41,9 @@ At minimum, this is all you must configure. However it is recommended that you c
 
 	Remote Hosts: Configuring the properties of a remote host.
 
-To configure such a command, enter it under the "Run Command" box and click ``Update``. If you haven't added the host yet, you can fill out both boxes at once and click ``Add``. This command runs under the context of the host with the UI, and is an arbitrary command. When the remote server is needed, RenderDoc will run this command to attempt to launch it without needing any manual intervention.
+To configure such a command, enter it under the "Run Command" box and click ``Update``. If you haven't added the host yet, you can fill out both boxes at once and click ``Add``. This command runs under the context of the host with the UI, and is an arbitrary command. When the remote server is needed, NoobDawn will run this command to attempt to launch it without needing any manual intervention.
 
-The remote server can be run with the command ``renderdoccmd remoteserver``. The exact syntax may depend on your operating system, see ``renderdoccmd remoteserver --help`` for more information, you might want to use the ``-d`` parameter to make the remote server run in the background instead of pausing interactively.
+The remote server can be run with the command ``noobdawncmd remoteserver``. The exact syntax may depend on your operating system, see ``noobdawncmd remoteserver --help`` for more information, you might want to use the ``-d`` parameter to make the remote server run in the background instead of pausing interactively.
 
 .. note::
 
@@ -59,9 +59,9 @@ An example for this for linux would be to use ``plink.exe`` and passwordless key
 
 .. code::
 
-    plink.exe user@host DISPLAY=:0.0 renderdoccmd remoteserver -d
+    plink.exe user@host DISPLAY=:0.0 noobdawncmd remoteserver -d
 
-Assuming that plink.exe is in ``PATH`` on the host machine, and ``renderdoccmd`` is on the host machine.
+Assuming that plink.exe is in ``PATH`` on the host machine, and ``noobdawncmd`` is on the host machine.
 
 Switching to a Replay Context
 -----------------------------
@@ -72,7 +72,7 @@ Once a remote context is configured, you can switch to it in the bottom left of 
 
 	Replay Context status: Switching to a remote replay context
 
-The drop-down will show you which remote hosts you have configured are currently already running a remote server, with periodic refreshes. When a remote host is selected, RenderDoc will attempt to connect. If it fails to find an active server but a run command is configured it will execute the command to try and launch the remote server.
+The drop-down will show you which remote hosts you have configured are currently already running a remote server, with periodic refreshes. When a remote host is selected, NoobDawn will attempt to connect. If it fails to find an active server but a run command is configured it will execute the command to try and launch the remote server.
 
 If you don't have a run command configured, this is where you would need to launch the server manually. The server can be left running indefinitely until you want to stop it, as it will continue to live on after the UI closes.
 
@@ -105,7 +105,7 @@ Capture files will all be kept on the target system by default. They will only b
 
   Note that this is the same as if a program is run locally without any connection to the UI made at all - the captures will leak with nothing left to take ownership of them. The difference is that if a connection is made, because the files are on the local machine they can be deleted or saved directly by the UI even after the program has closed.
 
-Capture files made with a recent version of RenderDoc will store a coarse type of machine that was used at capture time, such as 'Linux 64-bit' or 'Windows 32-bit'. If you have the local replay context active and the machine you are running on differs significantly from the machine that the capture was made on, the UI will prompt you to ask if you really want to replay it locally (which may or may not work depending on the API and contents of the capture), or switch to a remote context.
+Capture files made with a recent version of NoobDawn will store a coarse type of machine that was used at capture time, such as 'Linux 64-bit' or 'Windows 32-bit'. If you have the local replay context active and the machine you are running on differs significantly from the machine that the capture was made on, the UI will prompt you to ask if you really want to replay it locally (which may or may not work depending on the API and contents of the capture), or switch to a remote context.
 
 .. figure:: ../imgs/Screenshots/RemoteHostCapturePrompt.png
 
@@ -114,7 +114,7 @@ Capture files made with a recent version of RenderDoc will store a coarse type o
 Configuring the Remote Server
 -----------------------------
 
-The remote server can be configured by a file in ``~/.renderdoc`` or ``%APPDATA%/renderdoc`` called ``remoteserver.conf``. This allows you to restrict which IPs can connect to the server, as well as whether execution is allowed.
+The remote server can be configured by a file in ``~/.noobdawn`` or ``%APPDATA%/noobdawn`` called ``remoteserver.conf``. This allows you to restrict which IPs can connect to the server, as well as whether execution is allowed.
 
 To whitelist an IP range, add a line such as this:
 
@@ -130,7 +130,7 @@ To prevent the server from ever executing any commands regardless of whether the
 
     noexec
 
-This will prevent any execution from happening under any circumstances. Note that if you do this, you will have to launch renderdoc-injected commands another way and the workflow described in this document will not work as-is.
+This will prevent any execution from happening under any circumstances. Note that if you do this, you will have to launch noobdawn-injected commands another way and the workflow described in this document will not work as-is.
 
 The file also allows blank lines and comments beginning with ``#``.
 

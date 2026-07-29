@@ -42,5 +42,5 @@
 *.rc binary
 
 # Specific files that should be left alone
-renderdoccmd/resource.h binary
-renderdoc/data/resource.h binary
+noobdawncmd/resource.h binary
+noobdawn/data/resource.h binary

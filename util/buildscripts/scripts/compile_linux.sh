@@ -1,18 +1,18 @@
 #!/bin/bash
 
-echo "Building renderdoc-build docker image"
+echo "Building noobdawn-build docker image"
 
 # Ensure the docker image is prepared
 pushd "${BUILD_ROOT}"/scripts/docker
-docker build -t renderdoc-build . || exit 1
+docker build -t noobdawn-build . || exit 1
 popd
 
 echo "Docker image built. Running build"
 
-# Run the docker compilation script inside the container above to build the main renderdoc project
+# Run the docker compilation script inside the container above to build the main noobdawn project
 mkdir -p /tmp/rdoc_docker
 cp "${BUILD_ROOT}"/scripts/compile_docker.sh /tmp/rdoc_docker
-docker run --rm -v /tmp/rdoc_docker:/io -v $(readlink -f "${REPO_ROOT}"):/renderdoc:ro renderdoc-build bash /io/compile_docker.sh
+docker run --rm -v /tmp/rdoc_docker:/io -v $(readlink -f "${REPO_ROOT}"):/noobdawn:ro noobdawn-build bash /io/compile_docker.sh
 
 if [ -d /tmp/rdoc_docker/dist ]; then
 	echo "Build successful.";

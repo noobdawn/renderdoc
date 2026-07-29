@@ -484,7 +484,7 @@ float4 main(v2f IN) : SV_Target0
       {
         ID3D11Texture2DPtr tex = MakeTexture(texFmt, rgba8.width, rgba8.height).Mips(1).SRV();
 
-        // discard the resource when possible, this makes renderdoc treat it as dirty
+        // discard the resource when possible, this makes noobdawn treat it as dirty
         if(ctx1)
           ctx1->DiscardResource(tex);
 

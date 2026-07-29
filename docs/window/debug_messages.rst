@@ -3,7 +3,7 @@ Debug Messages
 
 The Debug Messages window shows messages from the API including warnings about performance issues or concerns about potential hazards, as well as errors on invalid use of the API.
 
-RenderDoc will alert you if there are any debug messages to show from the capture by flashing in the status bar. Sometimes RenderDoc will also add new alerts there that aren't part of the original capture if there are warnings or problems that it encounters while processing and analysing the capture.
+NoobDawn will alert you if there are any debug messages to show from the capture by flashing in the status bar. Sometimes NoobDawn will also add new alerts there that aren't part of the original capture if there are warnings or problems that it encounters while processing and analysing the capture.
 
 Capturing with debug messages included
 --------------------------------------

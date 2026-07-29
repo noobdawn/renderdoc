@@ -14,7 +14,7 @@ Adding shader prints
 
 The exact mechanism for printing from shaders varies by API, so it is best to consult the documentation for each API for more information.
 
-For Vulkan the SPIR-V extension ``NonSemantic.DebugPrintf`` is used to list printfs which are ignored by drivers but can be processed by tools like RenderDoc. This is exposed in GLSL via the ``GL_EXT_debug_printf`` extension and ``debugPrintfEXT()`` function, and in HLSL via the ``printf`` built-in function.
+For Vulkan the SPIR-V extension ``NonSemantic.DebugPrintf`` is used to list printfs which are ignored by drivers but can be processed by tools like NoobDawn. This is exposed in GLSL via the ``GL_EXT_debug_printf`` extension and ``debugPrintfEXT()`` function, and in HLSL via the ``printf`` built-in function.
 
 Fetching shader messages
 ------------------------

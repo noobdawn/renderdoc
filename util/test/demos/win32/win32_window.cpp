@@ -37,7 +37,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
   return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
 
-const wchar_t *classname = L"renderdoc_d3d11_test";
+const wchar_t *classname = L"noobdawn_d3d11_test";
 
 void regClass()
 {

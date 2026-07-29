@@ -325,8 +325,8 @@ void VulkanGraphicsTest::Prepare(int argc, char **argv)
 
       vulkanVersion = volkGetInstanceVersion();
 
-      vkh::ApplicationInfo app("RenderDoc autotesting", VK_MAKE_VERSION(1, 0, 0),
-                               "RenderDoc autotesting", VK_MAKE_VERSION(1, 0, 0), vulkanVersion);
+      vkh::ApplicationInfo app("NoobDawn autotesting", VK_MAKE_VERSION(1, 0, 0),
+                               "NoobDawn autotesting", VK_MAKE_VERSION(1, 0, 0), vulkanVersion);
 
       TEST_LOG("Initialising Vulkan at VK%u.%u", VK_VERSION_MAJOR(vulkanVersion),
                VK_VERSION_MINOR(vulkanVersion));

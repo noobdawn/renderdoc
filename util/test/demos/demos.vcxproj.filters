@@ -1011,7 +1011,7 @@
     <ClInclude Include="3rdparty\VulkanMemoryAllocator\vk_mem_alloc.h">
       <Filter>3rdparty\vma</Filter>
     </ClInclude>
-    <ClInclude Include="renderdoc_app.h" />
+    <ClInclude Include="noobdawn_app.h" />
     <ClInclude Include="3rdparty\fmt\core.h">
       <Filter>3rdparty\fmt</Filter>
     </ClInclude>

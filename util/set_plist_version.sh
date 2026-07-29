@@ -9,4 +9,4 @@ PLIST=$2
 /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string $VERSION" "$PLIST" || exit 1
 
 # Set identifier
-/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier org.renderdoc.qrenderdoc" "$PLIST" || exit 1
+/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier org.noobdawn.qnoobdawn" "$PLIST" || exit 1

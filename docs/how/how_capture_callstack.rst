@@ -1,7 +1,7 @@
 How do I capture callstacks?
 ============================
 
-This page gives an overview of the callstack-capturing capability in RenderDoc, with details and important information about how to enable this.
+This page gives an overview of the callstack-capturing capability in NoobDawn, with details and important information about how to enable this.
 
 Overview
 --------
@@ -10,7 +10,7 @@ It can be useful when tracking down problems to have an idea of where each API c
 
 .. warning::
 
-	On Windows the callstack gathering uses ``dbghelp.dll``. If you're using this dll for some other debugging functionality in your app it is highly recommended that you disable it, otherwise it can conflict and break RenderDoc's callstack capture.
+	On Windows the callstack gathering uses ``dbghelp.dll``. If you're using this dll for some other debugging functionality in your app it is highly recommended that you disable it, otherwise it can conflict and break NoobDawn's callstack capture.
 
 .. note::
 
@@ -19,7 +19,7 @@ It can be useful when tracking down problems to have an idea of where each API c
 Launching Capture
 -----------------
 
-When launching a capture (as in :doc:`how_capture_frame`) you should enable :guilabel:`Collect callstacks`. This will set RenderDoc to collect callstacks at every API entry point that will be serialised into the capture file.
+When launching a capture (as in :doc:`how_capture_frame`) you should enable :guilabel:`Collect callstacks`. This will set NoobDawn to collect callstacks at every API entry point that will be serialised into the capture file.
 
 .. figure:: ../imgs/Screenshots/Callstacks.png
 
@@ -30,7 +30,7 @@ If you wish to save some time & overhead you can then enable :guilabel:`Only act
 Replaying the capture
 ---------------------
 
-When the capture is loaded in RenderDoc the callstacks will be available in the API inspector. The bottom section of the dialog is a panel that can be expanded to show the callstack. Initially this section will indicate that symbols need to be resolved.
+When the capture is loaded in NoobDawn the callstacks will be available in the API inspector. The bottom section of the dialog is a panel that can be expanded to show the callstack. Initially this section will indicate that symbols need to be resolved.
 
 .. figure:: ../imgs/Screenshots/NeedResolve.png
 

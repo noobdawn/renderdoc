@@ -1,5 +1,5 @@
 import rdtest
-import renderdoc as rd
+import noobdawn as rd
 
 class D3D12_CBuffer_Zoo(rdtest.TestCase):
     demos_test_name = 'D3D12_CBuffer_Zoo'

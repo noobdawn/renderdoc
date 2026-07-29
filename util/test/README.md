@@ -1,6 +1,6 @@
-# RenderDoc testing
+# NoobDawn testing
 
-This readme only covers the testing system specifically. For general information about renderdoc check out [the main github repository](https://github.com/baldurk/renderdoc).
+This readme only covers the testing system specifically. For general information about noobdawn check out [the main github repository](https://github.com/baldurk/noobdawn).
 
 ## Building demos
 
@@ -15,7 +15,7 @@ cmake -Bbuild -Hdemos
 make -C build
 ```
 
-For linux you'll need `libX11`, `libxcb`, and `libX11-xcb`. These are all needed to build RenderDoc with GL support so you likely have them already.
+For linux you'll need `libX11`, `libxcb`, and `libX11-xcb`. These are all needed to build NoobDawn with GL support so you likely have them already.
 
 **NOTE:** Currently there is one soft external dependency. If shaderc is not linked into the demos program, it expects to be able to run `glslc` at runtime to compile shaders to SPIR-V. Without this, some tests will be disabled.
 
@@ -25,13 +25,13 @@ On linux or Apple to run the tests you'll need to modify your `PATH` variable to
 
 ## Running tests
 
-Running the tests requires the same python version as was used to build the version of RenderDoc you are testing. On windows this is likely python 3.6 as that's what comes with the repository.
+Running the tests requires the same python version as was used to build the version of NoobDawn you are testing. On windows this is likely python 3.6 as that's what comes with the repository.
 
-**NOTE:** For windows users you also need to match the bitness, so a 64-bit python install will be needed to test a 64-bit build of RenderDoc, and similarly for 32-bit.
+**NOTE:** For windows users you also need to match the bitness, so a 64-bit python install will be needed to test a 64-bit build of NoobDawn, and similarly for 32-bit.
 
 Then running the tests means invoking `run_tests.py` with any options you need:
 
-* `--renderdoc` and `--pyrenderdoc` are common parameters, used to modify the OS library search path and the python module path respectively to locate the right libraries. E.g. on windows `--pyrenderdoc /path/to/renderdoc/x64/Development/pymodules --renderdoc /path/to/renderdoc/x64/Development`.
+* `--noobdawn` and `--pynoobdawn` are common parameters, used to modify the OS library search path and the python module path respectively to locate the right libraries. E.g. on windows `--pynoobdawn /path/to/noobdawn/x64/Development/pymodules --noobdawn /path/to/noobdawn/x64/Development`.
 * `-l` or `--list` will list the available tests then exit.
 * `-t` or `--test_include` will take a parameter giving a regexp of tests to include. Only tests matching this regexp will be included. If omitted, all tests will be run.
 * `-x` or `--test_exclude` will take a parameter giving a regexp of tests to exclude. Any tests matching this regexp will be excluded. If omitted, all tests will be run.
@@ -59,7 +59,7 @@ When adding a test that needs to compare against a reference image, first run th
 License
 --------------
 
-RenderDoc is released under the MIT license, see [the main github repository](https://github.com/baldurk/renderdoc) for full details.
+NoobDawn is released under the MIT license, see [the main github repository](https://github.com/baldurk/noobdawn) for full details.
 
 The tests use [GLAD](https://github.com/Dav1dde/glad) for extension loading, which is MIT licensed. [LZ4](https://github.com/lz4/lz4) for compression, which is BSD licensed. [volk](https://github.com/zeux/volk) for vulkan loading, which is MIT licensed. [nuklear](https://github.com/vurtun/nuklear) for the launcher UI, which is MIT licensed. [shaderc](https://github.com/google/shaderc) for building SPIR-V shaders, which is Apache-2.0 licensed.
 

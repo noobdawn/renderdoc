@@ -1,6 +1,6 @@
 # PyCharm helpers
 
-PyCharm does a fairly good job of code completion etc with RenderDoc's python modules, but when generating reflection for the modules it doesn't quite get everything - e.g. some parameter types and especially return types aren't properly parsed and don't get detected as the right types.
+PyCharm does a fairly good job of code completion etc with NoobDawn's python modules, but when generating reflection for the modules it doesn't quite get everything - e.g. some parameter types and especially return types aren't properly parsed and don't get detected as the right types.
 
 The information is in the docstrings in standard format but the skeleton generator PyCharm uses has some issues.
 

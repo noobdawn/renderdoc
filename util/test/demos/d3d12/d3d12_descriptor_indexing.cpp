@@ -25,13 +25,13 @@
 #include "d3d12_test.h"
 
 MIDL_INTERFACE("52528c37-bfd9-4bbb-99ff-fdb7188619ce")
-IRenderDocDescriptorNamer : public IUnknown
+INoobDawnDescriptorNamer : public IUnknown
 {
 public:
   virtual HRESULT STDMETHODCALLTYPE SetName(UINT DescriptorIndex, LPCSTR Name) = 0;
 };
 
-COM_SMARTPTR(IRenderDocDescriptorNamer);
+COM_SMARTPTR(INoobDawnDescriptorNamer);
 
 RD_TEST(D3D12_Descriptor_Indexing, D3D12GraphicsTest)
 {
@@ -478,7 +478,7 @@ float4 main(v2f IN) : SV_Target0
     MakeSRV(alias1Buf).StructureStride(3 * sizeof(Vec4f)).CreateGPU(150 + 6);
     MakeSRV(alias2Buf).StructureStride(3 * sizeof(Vec4f)).CreateGPU(150 + 12);
 
-    IRenderDocDescriptorNamerPtr namer = m_CBVUAVSRV;
+    INoobDawnDescriptorNamerPtr namer = m_CBVUAVSRV;
 
     MakeSRV(smiley).CreateGPU(12);
     if(namer)

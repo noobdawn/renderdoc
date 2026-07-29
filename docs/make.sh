@@ -143,15 +143,15 @@ if [ $1 == "htmlhelp" ]; then
 	"$SPHINXBUILD" -b htmlhelp -t htmlhelp $ALLSPHINXOPTS $BUILDDIR/htmlhelp
 	if [ $? != 0 ]; then exit 1; fi
 	# Copy handwritten index file to output, overwriting auto-generated one
-	cp renderdoc.hhk $BUILDDIR/htmlhelp
+	cp noobdawn.hhk $BUILDDIR/htmlhelp
 	# Copy introduction page over index.html
 	cp $BUILDDIR/htmlhelp/introduction.html $BUILDDIR/htmlhelp/index.html
 	# Filter out the auto-generated TOC to remove anchor links and root index.html
-	cp $BUILDDIR/htmlhelp/renderdoc.hhc $BUILDDIR/htmlhelp/renderdoc.hhc.bak
-	cat $BUILDDIR/htmlhelp/renderdoc.hhc | "$PYTHON" remove_lines.py ".html#" | "$PYTHON" remove_lines.py "\"index.html\"" > $BUILDDIR/htmlhelp/tmp
-	mv $BUILDDIR/htmlhelp/tmp $BUILDDIR/htmlhelp/renderdoc.hhc
+	cp $BUILDDIR/htmlhelp/noobdawn.hhc $BUILDDIR/htmlhelp/noobdawn.hhc.bak
+	cat $BUILDDIR/htmlhelp/noobdawn.hhc | "$PYTHON" remove_lines.py ".html#" | "$PYTHON" remove_lines.py "\"index.html\"" > $BUILDDIR/htmlhelp/tmp
+	mv $BUILDDIR/htmlhelp/tmp $BUILDDIR/htmlhelp/noobdawn.hhc
 	if [ -f "${HHCBUILD}" ]; then
-		"${HHCBUILD}" $BUILDDIR/htmlhelp/renderdoc.hhp
+		"${HHCBUILD}" $BUILDDIR/htmlhelp/noobdawn.hhp
 		echo "Build finished."
 		exit
 	fi
@@ -170,9 +170,9 @@ if [ $1 == "qthelp" ]; then
 	echo
 	echo "Build finished; now you can run "qcollectiongenerator" with the "
 	echo ".qhcp project file in $BUILDDIR/qthelp, like this:"
-	echo "> qcollectiongenerator $BUILDDIR\qthelp\RenderDoc.qhcp"
+	echo "> qcollectiongenerator $BUILDDIR\qthelp\NoobDawn.qhcp"
 	echo "To view the help file:"
-	echo "> assistant -collectionFile $BUILDDIR\qthelp\RenderDoc.ghc"
+	echo "> assistant -collectionFile $BUILDDIR\qthelp\NoobDawn.ghc"
 	exit
 fi
 

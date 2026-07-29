@@ -395,7 +395,7 @@ int main(int argc, char **argv)
   if(argc >= 2 && (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h") || !strcmp(argv[1], "-?") ||
                    !strcmp(argv[1], "/help") || !strcmp(argv[1], "/h") || !strcmp(argv[1], "/?")))
   {
-    OutputPrint(R"(RenderDoc testing demo program
+    OutputPrint(R"(NoobDawn testing demo program
 
 Usage: %s Test_Name [test_options]
 
@@ -413,7 +413,7 @@ Usage: %s Test_Name [test_options]
   --max-frames <n>
   --frame-count <n>             Only run the demo for this number of frames
   --data <path>                 Specfiy where extended data should come from.
-                                By default in the path in $RENDERDOC_DEMOS_DATA
+                                By default in the path in $NOOBDAWN_DEMOS_DATA
                                 environment variable, or else in the data/demos
                                 folder next to the executable.
 )",
@@ -515,7 +515,7 @@ Usage: %s Test_Name [test_options]
 
     const int width = 400, height = 575;
 
-    nk_context *ctx = NuklearInit(width, height, "RenderDoc Test Program");
+    nk_context *ctx = NuklearInit(width, height, "NoobDawn Test Program");
 
     if(!ctx)
       return 1;

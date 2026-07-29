@@ -1,5 +1,5 @@
 import rdtest
-import renderdoc as rd
+import noobdawn as rd
 
 
 class GL_Overlay_Test(rdtest.Overlay_Test):

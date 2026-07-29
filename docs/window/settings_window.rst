@@ -7,14 +7,14 @@ The settings window contains various advanced or niche settings that configure t
 
 Some settings may not be saved until the application is closed, although most will come into immediate effect.
 
-The settings are saved in the application-specific settings directory (On windows that's ``%APPDATA%\qrenderdoc\UI.config`` and on linux that's a path like ``~/.local/share/qrenderdoc``) if you wish to back up or reset these settings.
+The settings are saved in the application-specific settings directory (On windows that's ``%APPDATA%\qnoobdawn\UI.config`` and on linux that's a path like ``~/.local/share/qnoobdawn``) if you wish to back up or reset these settings.
 
 General options
 ---------------
 
   | :guilabel:`Visual theme of the UI` Default: ``Light`` or ``Dark`` depending on native color theme.
 
-This allows you to choose what theme to use in RenderDoc. By default when first starting either the light or dark native RenderDoc theme will be selected, but you can change that or switch to any other supported theme here.
+This allows you to choose what theme to use in NoobDawn. By default when first starting either the light or dark native NoobDawn theme will be selected, but you can change that or switch to any other supported theme here.
 
 .. note::
 
@@ -128,7 +128,7 @@ The folder must exist, it will not be created when browsed to.
 
   | :guilabel:`Allow global process hooking` Default: ``Disabled``
 
-This option enables the functionality allowing capturing of programs that aren't launched directly from RenderDoc, but are launched from somewhere else.
+This option enables the functionality allowing capturing of programs that aren't launched directly from NoobDawn, but are launched from somewhere else.
 
 This option **can be dangerous** which is why you have to deliberately enable it here. Be careful when using this and only do so when necessary - more details can be found in the :ref:`global process hook <global-process-hook>` details.
 
@@ -136,7 +136,7 @@ This option **can be dangerous** which is why you have to deliberately enable it
 
   | :guilabel:`Enable process injection (restart required)` Default: ``Disabled``
 
-On windows only RenderDoc is able to inject into running processes. By default this is disabled since it is almost never the right thing to do and can easily break, so you are strongly recommended to instead launch your program from RenderDoc's launch process panel.
+On windows only NoobDawn is able to inject into running processes. By default this is disabled since it is almost never the right thing to do and can easily break, so you are strongly recommended to instead launch your program from NoobDawn's launch process panel.
 
 Injecting into processes can be unreliable and should only be used as a last resort when no other methods succeed, it should not be used as a primary method of launching applications.
 
@@ -144,28 +144,28 @@ Injecting into processes can be unreliable and should only be used as a last res
 
   | :guilabel:`Allow periodic anonymous update checks` Default: ``Enabled``
 
-Every couple of days RenderDoc will send a single web request to a secure server to see if a new version is available and let you know about it. The only information transmitted is the version of RenderDoc that is running.
+Every couple of days NoobDawn will send a single web request to a secure server to see if a new version is available and let you know about it. The only information transmitted is the version of NoobDawn that is running.
 
-If you would prefer RenderDoc does not ever contact an external server, disable this checkbox. If you do this it's recommended that you manually check for updates as new versions will be made available regularly with bugfixes.
+If you would prefer NoobDawn does not ever contact an external server, disable this checkbox. If you do this it's recommended that you manually check for updates as new versions will be made available regularly with bugfixes.
 
 ---------------
 
   | :guilabel:`Always replay captures locally` Default: ``Disabled``
 
-Normally, when RenderDoc begins to load a capture file that was created on a different type of machine, it will prompt you to ask if you really want to replay it locally (and perhaps get different results or even failed loading), or if you'd like to choose a different :doc:`replay context <../how/how_network_capture_replay>` to replay it remotely on the type of machine it was recorded.
+Normally, when NoobDawn begins to load a capture file that was created on a different type of machine, it will prompt you to ask if you really want to replay it locally (and perhaps get different results or even failed loading), or if you'd like to choose a different :doc:`replay context <../how/how_network_capture_replay>` to replay it remotely on the type of machine it was recorded.
 
-In that prompt you can choose to always replay captures locally, which enables this option. If enabled, RenderDoc will always just load the capture locally.
+In that prompt you can choose to always replay captures locally, which enables this option. If enabled, NoobDawn will always just load the capture locally.
 
 ---------------
 
   | :guilabel:`Anonymous Analytics`
 
-When you first run a build of RenderDoc that's analytics-enabled, RenderDoc will prompt you for your preference.
+When you first run a build of NoobDawn that's analytics-enabled, NoobDawn will prompt you for your preference.
 
 You have three alternatives:
 
-* *Gather anonymous low-detail statistics and submit automatically*. This will gather analytics in the background and submit the anonymous report automatically each month to RenderDoc's secure server.
-* *Gather anonymous low-detail statistics, but manually verify before submitting*. This will gather analytics in the background but prompt the user each month to verify the contents of the report before submitting the anonymous report to RenderDoc's secure server.
+* *Gather anonymous low-detail statistics and submit automatically*. This will gather analytics in the background and submit the anonymous report automatically each month to NoobDawn's secure server.
+* *Gather anonymous low-detail statistics, but manually verify before submitting*. This will gather analytics in the background but prompt the user each month to verify the contents of the report before submitting the anonymous report to NoobDawn's secure server.
 * *Do not gather or submit any statistics*. This will disable all statistics gathering completely.
 
 This option allows you to change modes at any time, although note that if you previously had statistics disabled the program must be restarted to enable gathering.
@@ -246,7 +246,7 @@ This option tries to make the disassembly of shaders easier to read by substitut
 
 Here you can configure external tools that convert between shader representations, including compilers from a high-level language like HLSL/GLSL to a bytecode, as well as disassemblers from bytecode back to high-level language.
 
-Some built-in tools are supported such as SPIRV-Cross, glslang, spirv-dis and spirv-as. For these tools if they can be auto-detected they will already be present, and they may be distributed with RenderDoc builds in case a version isn't installed on the system.
+Some built-in tools are supported such as SPIRV-Cross, glslang, spirv-dis and spirv-as. For these tools if they can be auto-detected they will already be present, and they may be distributed with NoobDawn builds in case a version isn't installed on the system.
 
 Other custom tools can be configured, but for those the command line arguments must be configured. The command line arguments will have certain substitutions made to customise to the needs of the compile:
 
@@ -275,7 +275,7 @@ Seconds through to nanoseconds are supported.
 
   | :guilabel:`Add fake markers if none present` Default: ``Enable``
 
-If a capture is found to contain no markers whatsoever, RenderDoc will generate some default markers based on grouping actions by the different output targets that they are drawing to. Roughly forming 'passes' of different types.
+If a capture is found to contain no markers whatsoever, NoobDawn will generate some default markers based on grouping actions by the different output targets that they are drawing to. Roughly forming 'passes' of different types.
 
 You can disable this option here if you want to view a pure list of actions with no annotations.
 
@@ -315,9 +315,9 @@ Android options
 
   | :guilabel:`Android SDK root path` Default: ``Empty``
 
-RenderDoc requires some android tools from the android SDK to be able to function. In most cases it's able to locate the tools automatically without any configuration needed, but if not this option allows you to manually locate the SDK root.
+NoobDawn requires some android tools from the android SDK to be able to function. In most cases it's able to locate the tools automatically without any configuration needed, but if not this option allows you to manually locate the SDK root.
 
-By default it will try to auto-locate those tools by looking in different environment variables like ``ANDROID_HOME`` and ``ANDROID_SDK``, or else searching the default executable path. If it fails completely it will try to use the tools bundled with RenderDoc's installation.
+By default it will try to auto-locate those tools by looking in different environment variables like ``ANDROID_HOME`` and ``ANDROID_SDK``, or else searching the default executable path. If it fails completely it will try to use the tools bundled with NoobDawn's installation.
 
 This setting, if present, will override all other search paths and be looked in first.
 
@@ -325,7 +325,7 @@ This setting, if present, will override all other search paths and be looked in 
 
   | :guilabel:`Java JDK root path` Default: ``Empty``
 
-RenderDoc may require tools from the Java JDK in some rare circumstances. In most cases it's able to locate the tools automatically without any configuration needed, but if not this option allows you to manually locate the JDK root.
+NoobDawn may require tools from the Java JDK in some rare circumstances. In most cases it's able to locate the tools automatically without any configuration needed, but if not this option allows you to manually locate the JDK root.
 
 By default it will try to auto-locate the tools by looking in ``JAVA_HOME`` or else searching the default executable path.
 
@@ -335,6 +335,6 @@ This setting, if present, will override all other search paths and be looked in 
 
   | :guilabel:`Max Connection Timeout` Default: ``30 seconds``
 
-Some Android programs take a long time to start up before they begin rendering. This setting allows you to define a timeout before RenderDoc will consider the execution and connection to have failed.
+Some Android programs take a long time to start up before they begin rendering. This setting allows you to define a timeout before NoobDawn will consider the execution and connection to have failed.
 
 This only applies to running Android programs.

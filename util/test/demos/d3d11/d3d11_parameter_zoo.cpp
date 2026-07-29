@@ -88,7 +88,7 @@ float4 main(v2f IN) : SV_Target0
         D3D11_FILL_SOLID, D3D11_CULL_NONE, FALSE, 0, 0.00, 0.00, FALSE, TRUE, FALSE, FALSE,
     };
 
-    // this is expected to alias a renderdoc-internal state
+    // this is expected to alias a noobdawn-internal state
     ID3D11RasterizerStatePtr rastStateObj;
     dev->CreateRasterizerState(&rastDesc, &rastStateObj);
     SetDebugName(rastStateObj, "RastState");
@@ -166,7 +166,7 @@ float4 main(v2f IN) : SV_Target0
 
       // set the ctxstate, so it only exists in the context's memory (which we don't track)
       ctx1->SwapDeviceContextState(ctxstate, NULL);
-      // release our resource, renderdoc will destroy it now
+      // release our resource, noobdawn will destroy it now
       ctxstate = NULL;
 
       // repeatedly toggle between the states and re-destroy ctxstate

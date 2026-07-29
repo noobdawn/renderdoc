@@ -28,7 +28,7 @@ else:
 sys.path.insert(0, os.path.abspath(binpath + '/Development/pymodules'))
 sys.path.insert(0, os.path.abspath(binpath + '/Release/pymodules'))
 
-# Add the build paths to PATH so renderdoc.dll can be located
+# Add the build paths to PATH so noobdawn.dll can be located
 os.environ["PATH"] += os.pathsep + os.path.abspath(binpath + '/Development/')
 os.environ["PATH"] += os.pathsep + os.path.abspath(binpath + '/Release/')
 
@@ -39,14 +39,14 @@ if sys.platform == 'win32' and sys.version_info[1] >= 8:
 # path to module libraries for linux
 sys.path.insert(0, os.path.abspath(os.path.join(docsdir, '../build/lib')))
 
-import renderdoc
-import qrenderdoc
+import noobdawn
+import qnoobdawn
 
 if __name__ == '__main__':
-    print(f"Generating stubs from {renderdoc.__file__} and {qrenderdoc.__file__}")
+    print(f"Generating stubs from {noobdawn.__file__} and {qnoobdawn.__file__}")
 
 from stubs_generation.helpers import generator3
 
 if __name__ == '__main__':
-    generator3.main(['renderdoc', '-d', destpath])
-    generator3.main(['qrenderdoc', '-d', destpath])
+    generator3.main(['noobdawn', '-d', destpath])
+    generator3.main(['qnoobdawn', '-d', destpath])

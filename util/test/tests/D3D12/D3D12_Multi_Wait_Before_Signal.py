@@ -1,4 +1,4 @@
-import renderdoc as rd
+import noobdawn as rd
 import rdtest
 
 class D3D12_Multi_Wait_Before_Signal(rdtest.TestCase):
@@ -8,7 +8,7 @@ class D3D12_Multi_Wait_Before_Signal(rdtest.TestCase):
         # TODO: Enable this if/when rdoc can reorder from the original submission
         # order, which blocks multiple queues with waits that get signalled by
         # later submissions to other queues.
-        return False, 'Renderdoc does not yet adequately reorder capture replay'
+        return False, 'Noobdawn does not yet adequately reorder capture replay'
 
     def check_capture(self):
         draw_marker: rd.ActionDescription = self.find_action("Last draw")

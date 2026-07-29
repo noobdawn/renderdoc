@@ -1,7 +1,7 @@
 Quick Start
 ===========
 
-This document serves as a brief introduction to how to use RenderDoc to capture and analyse your application. It doesn't go into much detail about exactly what functionality is available for digging into things, as this can be found elsewhere. Instead it focuses on just the workflow from start to finish and roughly where to look for different things.
+This document serves as a brief introduction to how to use NoobDawn to capture and analyse your application. It doesn't go into much detail about exactly what functionality is available for digging into things, as this can be found elsewhere. Instead it focuses on just the workflow from start to finish and roughly where to look for different things.
 
 For this tutorial we will be using the ``debugmarker`` sample from `Sascha Willems' Vulkan samples repository <https://github.com/SaschaWillems/Vulkan>`_..
 
@@ -14,38 +14,38 @@ To capture a frame, begin by selecting :guilabel:`File` → :guilabel:`Launch Ap
 
     Launching an executable
 
-The defaults work pretty well in most situations, so you can just either browse to or drag in your exe into the Executable box. If the working directory box is empty then the executable's directory will be used. Enter any command line you may need and click Launch to launch the application with RenderDoc.
+The defaults work pretty well in most situations, so you can just either browse to or drag in your exe into the Executable box. If the working directory box is empty then the executable's directory will be used. Enter any command line you may need and click Launch to launch the application with NoobDawn.
 
 More details of the specific options and their functionality can be found in the details page for the :doc:`../window/capture_attach`.
 
 
 .. note::
 
-    You should choose the build of RenderDoc to match your OS - 64-bit for Windows x64 and vice-versa
+    You should choose the build of NoobDawn to match your OS - 64-bit for Windows x64 and vice-versa
 
-    You can only capture a 64-bit process with a 64-bit build of RenderDoc. A 32-bit process can be captured by either build of RenderDoc.
+    You can only capture a 64-bit process with a 64-bit build of NoobDawn. A 32-bit process can be captured by either build of NoobDawn.
 
-RenderDoc in-app
+NoobDawn in-app
 ----------------
 
-RenderDoc has a fairly minimal in-app overlay, just to indicate that RenderDoc has successfully loaded and is ready to capture a frame.
+NoobDawn has a fairly minimal in-app overlay, just to indicate that NoobDawn has successfully loaded and is ready to capture a frame.
 
 
 When ready, press the Capture Key (:kbd:`F12` or :kbd:`Print Screen`) and the next frame after the keypress will be captured, and this will show up on the overlay to let you know that a frame has been successfully saved.
 
 .. figure:: ../imgs/QuickStart/QuickStart2.png
 
-    The in-application RenderDoc Overlay
+    The in-application NoobDawn Overlay
 
-When the application exits, if you captured a frame it will automatically start to open in the RenderDoc UI. If you didn't capture a frame then nothing will happen and the RenderDoc UI will be back as it was when you clicked Launch.
+When the application exits, if you captured a frame it will automatically start to open in the NoobDawn UI. If you didn't capture a frame then nothing will happen and the NoobDawn UI will be back as it was when you clicked Launch.
 
 
 If you made multiple captures you will see a thumbnail list that allows you to open (in the current instance or a new instance to compare side-by-side), save and delete them as you wish. You can also access this view while the program is still running, see :doc:`../window/capture_connection` for more information on taking multiple frame captures. Note however that for the simple use-case, you don't need to worry about this!
 
-RenderDoc layout
+NoobDawn layout
 ----------------
 
-RenderDoc's layout can be customised fairly heavily so this section will only cover the default layout. We'll go over the windows that are open by default and how each can be used in analysing your program.
+NoobDawn's layout can be customised fairly heavily so this section will only cover the default layout. We'll go over the windows that are open by default and how each can be used in analysing your program.
 
 
 Each of these windows has a section that is much more in depth and gives details about every function and feature, for the more complex windows such as the texture viewer you may well wish to skim these to get an idea of what is available and use them as reference in the future.

@@ -5,10 +5,10 @@ import sys
 script_dir = os.path.realpath(os.path.dirname(__file__))
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-r', '--renderdoc',
-                    help="The location of the renderdoc library to use", type=str)
-parser.add_argument('-p', '--pyrenderdoc',
-                    help="The location of the renderdoc python module to use", type=str)
+parser.add_argument('-r', '--noobdawn',
+                    help="The location of the noobdawn library to use", type=str)
+parser.add_argument('-p', '--pynoobdawn',
+                    help="The location of the noobdawn python module to use", type=str)
 parser.add_argument('-l', '--list',
                     help="Lists the tests available to run", action="store_true")
 parser.add_argument('-t', '--test_include', default=".*",
@@ -46,41 +46,41 @@ parser.add_argument('--internal_vulkan_register', help=argparse.SUPPRESS, action
 parser.add_argument('--internal_remote_server', help=argparse.SUPPRESS, action="store_true", required=False)
 args = parser.parse_args()
 
-custom_pyrenderdoc = None
+custom_pynoobdawn = None
 
-if args.pyrenderdoc is not None:
-    if os.path.isfile(args.pyrenderdoc):
-        custom_pyrenderdoc = os.path.abspath(os.path.dirname(args.pyrenderdoc))
-    elif os.path.isdir(args.pyrenderdoc):
-        custom_pyrenderdoc = os.path.abspath(args.pyrenderdoc)
+if args.pynoobdawn is not None:
+    if os.path.isfile(args.pynoobdawn):
+        custom_pynoobdawn = os.path.abspath(os.path.dirname(args.pynoobdawn))
+    elif os.path.isdir(args.pynoobdawn):
+        custom_pynoobdawn = os.path.abspath(args.pynoobdawn)
     else:
-        raise RuntimeError("'{}' is not a valid path to the pyrenderdoc module".format(args.pyrenderdoc))
+        raise RuntimeError("'{}' is not a valid path to the pynoobdawn module".format(args.pynoobdawn))
 
-if args.renderdoc is not None:
-    if os.path.isfile(args.renderdoc):
-        renderdoc_dirpath = os.path.abspath(os.path.dirname(args.renderdoc))
-    elif os.path.isdir(args.renderdoc):
-        renderdoc_dirpath = os.path.abspath(args.renderdoc)
+if args.noobdawn is not None:
+    if os.path.isfile(args.noobdawn):
+        noobdawn_dirpath = os.path.abspath(os.path.dirname(args.noobdawn))
+    elif os.path.isdir(args.noobdawn):
+        noobdawn_dirpath = os.path.abspath(args.noobdawn)
     else:
-        raise RuntimeError("'{}' is not a valid path to the renderdoc library".format(args.renderdoc))
-    os.environ["PATH"] += os.pathsep + renderdoc_dirpath
+        raise RuntimeError("'{}' is not a valid path to the noobdawn library".format(args.noobdawn))
+    os.environ["PATH"] += os.pathsep + noobdawn_dirpath
     # Python 3.8 doesn't search PATH so add it to the DLL search path
     if sys.platform == 'win32' and sys.version_info[1] >= 8:
-        os.add_dll_directory(renderdoc_dirpath)
+        os.add_dll_directory(noobdawn_dirpath)
 
-    # if the user didn't specify a pyrenderdoc but we do have a renderdoc, try the default location as a backup
-    if custom_pyrenderdoc is None:
+    # if the user didn't specify a pynoobdawn but we do have a noobdawn, try the default location as a backup
+    if custom_pynoobdawn is None:
         if sys.platform == 'win32':
-            custom_pyrenderdoc = os.path.abspath(args.renderdoc) + os.path.sep + "pymodules"
+            custom_pynoobdawn = os.path.abspath(args.noobdawn) + os.path.sep + "pymodules"
         else:
-            custom_pyrenderdoc = os.path.abspath(args.renderdoc)
+            custom_pynoobdawn = os.path.abspath(args.noobdawn)
 
-if custom_pyrenderdoc is not None:
+if custom_pynoobdawn is not None:
     # explicit paths go at the start, implicit paths go at the end
-    if args.pyrenderdoc is not None:
-        sys.path.insert(0, custom_pyrenderdoc)
+    if args.pynoobdawn is not None:
+        sys.path.insert(0, custom_pynoobdawn)
     else:
-        sys.path.append(custom_pyrenderdoc)
+        sys.path.append(custom_pynoobdawn)
 
 sys.path.insert(0, os.path.realpath(os.path.dirname(__file__)))
 
@@ -109,8 +109,8 @@ except (ModuleNotFoundError, ImportError) as ex:
     with open(os.path.join(artifacts_dir, 'output.log.html'), "w") as f:
         f.write("<body><h1>Failed to import rdtest: {}</h1></body>".format(ex))
 
-    print("Couldn't import renderdoc module. Try specifying path to python module with --pyrenderdoc " +
-          "or the path to the native library with --renderdoc")
+    print("Couldn't import noobdawn module. Try specifying path to python module with --pynoobdawn " +
+          "or the path to the native library with --noobdawn")
     print(ex)
 
     sys.exit(1)

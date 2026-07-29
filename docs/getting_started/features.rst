@@ -1,17 +1,17 @@
 Features
 ========
 
-This page documents the current feature set of RenderDoc. This gives an overview of what RenderDoc is capable of, and where it is in its development.
+This page documents the current feature set of NoobDawn. This gives an overview of what NoobDawn is capable of, and where it is in its development.
 
-Currently RenderDoc supports Vulkan, D3D11, D3D12, OpenGL, and OpenGL ES on Windows, Linux, Android, and Nintendo Switch :sup:`TM`. The UI runs in Qt and will work on any desktop platform.
+Currently NoobDawn supports Vulkan, D3D11, D3D12, OpenGL, and OpenGL ES on Windows, Linux, Android, and Nintendo Switch :sup:`TM`. The UI runs in Qt and will work on any desktop platform.
 
-RenderDoc can also double as an image viewer in a simplistic fashion, separate to its functionality as a debugger. Drag in or open any of a variety of image file formats and RenderDoc will display them as if they were the only texture in a capture. This way it can be used as a simple e.g. dds viewer, with support for all sorts of formats, encodings and things typical image viewers don't tend to handle like mips, cubemaps and arrays.
+NoobDawn can also double as an image viewer in a simplistic fashion, separate to its functionality as a debugger. Drag in or open any of a variety of image file formats and NoobDawn will display them as if they were the only texture in a capture. This way it can be used as a simple e.g. dds viewer, with support for all sorts of formats, encodings and things typical image viewers don't tend to handle like mips, cubemaps and arrays.
 
 Current Common Feature set
 --------------------------
 
 * Trimming capture - capture file only contains data necessary for replaying the frame in question, not all textures & buffers ever created in the lifetime of the app.
-* Optional network support. The main way RenderDoc is used is capture & replay on the same machine, but you can also attach over the network, and replay on a remote host.
+* Optional network support. The main way NoobDawn is used is capture & replay on the same machine, but you can also attach over the network, and replay on a remote host.
 * Multiple frame capture with ability to open side-by-side to compare.
 * Event browsing, with API standard tree of markers.
 * Full graphics pipeline state display.
@@ -37,7 +37,7 @@ Current Common Feature set
     * Any object can be renamed, and its name automatically updates everywhere in the UI.
 
 * For each action, a list of all API calls (state/resource setting) is available, with each call optionally having a complete callstack to locate where it came from in-app.
-* Mesh buffer inspection and visualisation before/after vertex shader and at the end of the geometry pipeline (after GS or DS, whichever is later). All views have arcball and flycam controls, Projected data is not limited to the 2D viewport, RenderDoc attempts to unproject to allow viewing in world-space.
+* Mesh buffer inspection and visualisation before/after vertex shader and at the end of the geometry pipeline (after GS or DS, whichever is later). All views have arcball and flycam controls, Projected data is not limited to the 2D viewport, NoobDawn attempts to unproject to allow viewing in world-space.
 * More advanced mesh visualisation such as viewing other components as position (e.g. to render a mesh in UV space), and visual mesh picking from both input and output panes.
 * 'Raw' buffer inspection for buffers. Custom format can be set with HLSL-lite or GLSL-lite syntax.
 * Buffer export to CSV or raw binary blob and texture saving to DDS.
@@ -58,13 +58,13 @@ Current Common Feature set
 * Pixel history support to determine the set of changes of a given pixel.
 * Auto-range fitting to min/max values in texture data, and histogram display.
 * Simple per-action timings and tabular view of GPU counter data.
-* Python scripting console with full documented API, giving complete access to RenderDoc internals, core data structures, and the Qt UI itself.
+* Python scripting console with full documented API, giving complete access to NoobDawn internals, core data structures, and the Qt UI itself.
 * Import and Export of captures
 
     * Captures have an internal in-memory representation containing the full serialised data of all function calls, as well as associated metadata.
-    * This capture representation can be used to export an ``.rdc`` file to another form that's easier for external tools to work with such as ``.xml``.
-    * If the external format contains full expression of data, it can then be imported again back into an ``.rdc`` after modification.
-    * This also allows generation of RenderDoc captures from arbitrary data into a standard format.
+    * This capture representation can be used to export an ``.nbd`` file to another form that's easier for external tools to work with such as ``.xml``.
+    * If the external format contains full expression of data, it can then be imported again back into an ``.nbd`` after modification.
+    * This also allows generation of NoobDawn captures from arbitrary data into a standard format.
 
 Most of these should be intuitive if you've used a graphics debugger before.
 

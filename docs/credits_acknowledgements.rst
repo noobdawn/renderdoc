@@ -1,12 +1,12 @@
 Credits & Acknowledgements
 ==========================
 
-RenderDoc wouldn't have been possible without both the tools and libraries that were used in its construction, as well as the many people who helped and contributed to make it the program it is today.
+NoobDawn wouldn't have been possible without both the tools and libraries that were used in its construction, as well as the many people who helped and contributed to make it the program it is today.
 
 3rd Party Credits
 -----------------
 
-The following libraries and components are incorporated into RenderDoc, listed here in no particular order. Thanks go out to the developers and contributors behind each of these libraries who generously donated their work to other free projects!
+The following libraries and components are incorporated into NoobDawn, listed here in no particular order. Thanks go out to the developers and contributors behind each of these libraries who generously donated their work to other free projects!
 
 * `Google Breakpad <https://chromium.googlesource.com/breakpad/breakpad/>`_ - Copyright 2006 Google Inc, distributed under the New BSD License (3 Clause).
 
@@ -46,11 +46,11 @@ The following libraries and components are incorporated into RenderDoc, listed h
 
 * `Qt <http://www.qt.io/>`_ - Copyright 2015 The Qt Company Ltd, distributed under the GNU Lesser General Public License (LGPL) version 2.1.
 
-  Used for QRenderDoc replay UI program.
+  Used for QNoobDawn replay UI program.
 
 * `cmdline <https://github.com/tanakh/cmdline>`_ - Copyright 2009 Hideyuki Tanaka, distributed under the New BSD License (3 Clause).
 
-  Used for parsing command line arguments to renderdoccmd.
+  Used for parsing command line arguments to noobdawncmd.
 
 * `include-bin <https://github.com/Marqin/include-bin>`_ - Copyright 2016 Eveline Jarosz, distributed under the zlib license.
 
@@ -102,7 +102,7 @@ The following libraries and components are incorporated into RenderDoc, listed h
 
 * `OpenSSL <https://www.openssl.org/>`_ - Copyright (c) 1998-2018 The OpenSSL Project. Copyright (C) 1995-1998 Eric Young. Distributed under the double license of the OpenSSL and SSLeay licenses.
 
-  Used to connect securely to RenderDoc's servers for update checks and bug reports.
+  Used to connect securely to NoobDawn's servers for update checks and bug reports.
 
 * `Microsoft PDB Information <https://github.com/Microsoft/microsoft-pdb/>`_ - Copyright (c) 2015 Microsoft Corporation. Distributed under the MIT License.
 
@@ -132,7 +132,7 @@ The following libraries and components are incorporated into RenderDoc, listed h
 
   Used for calculating DXBC container hash.
 
-* `NVIDIA Nsight Perf SDK <https://developer.nvidia.com/nsight-perf-sdk>`_ - Redistributable portions distributed under the NVIDIA Nsight Perf SDK license available in the RenderDoc source repository or in the SDK.
+* `NVIDIA Nsight Perf SDK <https://developer.nvidia.com/nsight-perf-sdk>`_ - Redistributable portions distributed under the NVIDIA Nsight Perf SDK license available in the NoobDawn source repository or in the SDK.
 
   Provides hardware-specific counters over and above what individual hardware-agnostic graphics APIs are able to provide.
 
@@ -149,7 +149,7 @@ Thanks
 
 Screenshots in this documentation are from `Sascha Willems' Vulkan demos <https://github.com/SaschaWillems/Vulkan>`_.
 
-There have been many people who have helped in the creation of RenderDoc. Whether testing, providing feedback, or contributing artwork and design critique everyone listed here and many more besides have been invaluable in taking RenderDoc from an idea on paper to its current state. Greets fly out to the following people, listed in no particular order.
+There have been many people who have helped in the creation of NoobDawn. Whether testing, providing feedback, or contributing artwork and design critique everyone listed here and many more besides have been invaluable in taking NoobDawn from an idea on paper to its current state. Greets fly out to the following people, listed in no particular order.
 
 * Chris Bunner, Charlie Cole, James Chilvers, Andrew Khan, Benjamin Hill, Jake Turner, Alex Weighell and the rest of the Crytek UK R&D team.
 * Colin Bonstead, Marco Corbetta, Pascal Eggert, Marcel Hatam, Sascha Hoba, Theodor Mader, Mathieu Pinard, Chris Raine, Nicolas Schulz, Tiago Sousa, Sean Tracy, Carsten Wenzel, and everyone else at the rest of the Crytek Studios.
@@ -209,14 +209,14 @@ There have been many people who have helped in the creation of RenderDoc. Whethe
 Contributors
 ------------
 
-The following list highlights notable open source contributions. Many other people have contributed individual bug fixes and tweaks, which can be seen `on github <https://github.com/baldurk/renderdoc/graphs/contributors>`_ !
+The following list highlights notable open source contributions. Many other people have contributed individual bug fixes and tweaks, which can be seen `on github <https://github.com/baldurk/noobdawn/graphs/contributors>`_ !
 
 * Michael Vance - Implemented a sophisticated frame statistics system for D3D11 around binding and draw API calls.
 * Matthäus G. Chajdas - Converted this documentation from sandcastle to sphinx.
 * Michael Rennie, Peter Gal, and Janos Pantos at Samsung - Added support for Android platform capture as well as Vulkan and OpenGL ES support.
 * Adrian Bucur - Added custom SPIR-V disassembler support.
 * James Fulop - Updated the vertex picking algorithm.
-* Balazs Torok - Implemented the RenderDoc in-application overlay for D3D9.
+* Balazs Torok - Implemented the NoobDawn in-application overlay for D3D9.
 * Steve Karolewics - Implemented DXBC shader debugging support for D3D12.
 * Aliya Pazylbekova - Implemented pixel history support for Vulkan.
 * Orson Baines, Zi Ming He, John Kattukudiyil, Ting Cai, Tony Tascioglu - Implemented pixel history support for OpenGL.

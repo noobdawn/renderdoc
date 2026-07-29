@@ -1,7 +1,7 @@
 How do I annotate a capture?
 ============================
 
-RenderDoc allows annotation of captures in multiple ways. Your application can call built-in debug functions in graphics APIs as well as custom RenderDoc APIs. You can also add extra annotations after opening the capture.
+NoobDawn allows annotation of captures in multiple ways. Your application can call built-in debug functions in graphics APIs as well as custom NoobDawn APIs. You can also add extra annotations after opening the capture.
 
 All of the UI modifications can be saved with a capture. Pressing :kbd:`Ctrl-S` or :guilabel:`File` → :guilabel:`Save` will save the capture with any changes that have been made to it in the UI. If you haven't already saved a temporary capture, or the capture is on a remote context, this will need to you save it to a local path.
 
@@ -11,7 +11,7 @@ Application-provided data
 Rich custom annotations
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-RenderDoc's :doc:`../in_application_api` provides mechanisms for annotating both objects and commands with rich structured annotations, which can be used by the application for including complex custom data for additional context and debug information beyond what is provided via baseline graphics APIs.
+NoobDawn's :doc:`../in_application_api` provides mechanisms for annotating both objects and commands with rich structured annotations, which can be used by the application for including complex custom data for additional context and debug information beyond what is provided via baseline graphics APIs.
 
 The specific implementation details of how to pass this information along can be found in the documentation for the :doc:`../in_application_api`, via the :cpp:func:`SetObjectAnnotation` and :cpp:func:`SetCommandAnnotation` functions. The exact details may vary slightly by graphics API.
 
@@ -74,7 +74,7 @@ Example code for D3D12:
 
   // queue-level markers can be provided similarly.
 
-Example code for OpenGL using the ``KHR_debug`` extension. Many other extensions exist in GL to provide markers and will be made available by RenderDoc too.
+Example code for OpenGL using the ``KHR_debug`` extension. Many other extensions exist in GL to provide markers and will be made available by NoobDawn too.
 
 .. highlight:: c++
 .. code:: c++
@@ -124,7 +124,7 @@ Again the exact method varies by API, as given in the examples below.
 
 .. note::
 
-  RenderDoc does not support names that change within a capture. A resource only has one name, which is the most recent one set.
+  NoobDawn does not support names that change within a capture. A resource only has one name, which is the most recent one set.
 
 Example code for D3D11 using the ``SetPrivateData`` function:
 
@@ -163,7 +163,7 @@ In OpenGL this can be done with ``GL_KHR_debug`` with the function ``glObjectLab
   // apply the name, -1 means NULL terminated
   glObjectLabel(GL_TEXTURE, tex2d, -1, "Example Texture");
 
-In Vulkan you can enable the ``VK_EXT_debug_utils`` extension, which is provided by RenderDoc, and use the ``vkSetDebugUtilsObjectNameEXT`` function.
+In Vulkan you can enable the ``VK_EXT_debug_utils`` extension, which is provided by NoobDawn, and use the ``vkSetDebugUtilsObjectNameEXT`` function.
 
 .. highlight:: c++
 .. code:: c++
@@ -180,13 +180,13 @@ In Vulkan you can enable the ``VK_EXT_debug_utils`` extension, which is provided
   nameInfo.pObjectName = "Off-screen color framebuffer";
   vkSetDebugUtilsObjectNameEXT(device, &nameInfo);
 
-On D3D12 there is a RenderDoc extension provided with this interface, queried from an ``ID3D12DescriptorHeap``:
+On D3D12 there is a NoobDawn extension provided with this interface, queried from an ``ID3D12DescriptorHeap``:
 
 .. highlight:: c++
 .. code:: c++
 
   MIDL_INTERFACE("52528c37-bfd9-4bbb-99ff-fdb7188619ce")
-  IRenderDocDescriptorNamer : public IUnknown
+  INoobDawnDescriptorNamer : public IUnknown
   {
   public:
     virtual HRESULT STDMETHODCALLTYPE SetName(UINT DescriptorIndex, LPCSTR Name) = 0;

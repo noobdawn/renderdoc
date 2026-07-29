@@ -6,17 +6,17 @@ mkdir -p "${REPO_ROOT}/dist"
 pushd "${REPO_ROOT}"
 
 # Build 32-bit Release
-MSYS2_ARG_CONV_EXCL="*" msbuild.exe /nologo /m /fl4 /flp4':Verbosity=minimal;Encoding=ASCII;logfile=dist/build32.log' renderdoc.sln /t:Rebuild /p:'Configuration=Release;Platform=x86'
+MSYS2_ARG_CONV_EXCL="*" msbuild.exe /nologo /m /fl4 /flp4':Verbosity=minimal;Encoding=ASCII;logfile=dist/build32.log' noobdawn.sln /t:Rebuild /p:'Configuration=Release;Platform=x86'
 
-if [ ! -f ./Win32/Release/renderdoc.dll ] || [ ! -f ./Win32/Release/qrenderdoc.exe ] || [ ! -f ./Win32/Release/renderdoccmd.exe ] ; then
+if [ ! -f ./Win32/Release/noobdawn.dll ] || [ ! -f ./Win32/Release/qnoobdawn.exe ] || [ ! -f ./Win32/Release/noobdawncmd.exe ] ; then
 	echo "Failed to build 32-bit release mode.";
 	exit 1;
 fi
 
 # Build 64-bit Release
-MSYS2_ARG_CONV_EXCL="*" msbuild.exe /nologo /m /fl4 /flp4':Verbosity=minimal;Encoding=ASCII;logfile=dist/build64.log' renderdoc.sln /t:Rebuild /p:'Configuration=Release;Platform=x64'
+MSYS2_ARG_CONV_EXCL="*" msbuild.exe /nologo /m /fl4 /flp4':Verbosity=minimal;Encoding=ASCII;logfile=dist/build64.log' noobdawn.sln /t:Rebuild /p:'Configuration=Release;Platform=x64'
 
-if [ ! -f ./x64/Release/renderdoc.dll ] || [ ! -f ./x64/Release/qrenderdoc.exe ] || [ ! -f ./x64/Release/renderdoccmd.exe ] ; then
+if [ ! -f ./x64/Release/noobdawn.dll ] || [ ! -f ./x64/Release/qnoobdawn.exe ] || [ ! -f ./x64/Release/noobdawncmd.exe ] ; then
 	echo "Failed to build 64-bit release mode.";
 	exit 1;
 fi
@@ -29,7 +29,7 @@ pushd docs
 popd; # docs
 
 # if we didn't produce a chm file, bail out even if sphinx didn't return an error code above
-if [ ! -f ./Documentation/htmlhelp/renderdoc.chm ]; then
+if [ ! -f ./Documentation/htmlhelp/noobdawn.chm ]; then
 	echo "Didn't auto-build chm file. Missing HTML Help Workshop?"
 
 	if [[ "$STRICT" == "yes" ]]; then

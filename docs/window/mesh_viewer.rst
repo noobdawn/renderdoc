@@ -31,7 +31,7 @@ Opening the options |cog| you can configure various things about the mesh viewer
 
 For intermediate or input vertex data you can select the axis configuration, by default Y-up and left-handed. Common options are presented directly, or you can select a custom mapping to configure a different convention.
 
-For data output to the rasterizer RenderDoc attempts to guess the projection matrix and unprojects the output data to display it in view space.
+For data output to the rasterizer NoobDawn attempts to guess the projection matrix and unprojects the output data to display it in view space.
 
 You can configure the projection matrix that your vertex pipeline uses. By default estimates are made from the generated output data to give a best-guess unprojection, but this can be inaccurate especially regarding near and far planes. The FOV can not be determined so this defaults to 90 and can be customised from there.
 

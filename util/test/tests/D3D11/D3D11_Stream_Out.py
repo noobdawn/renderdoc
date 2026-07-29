@@ -1,6 +1,6 @@
 import rdtest
 import struct
-import renderdoc as rd
+import noobdawn as rd
 
 
 class D3D11_Stream_Out(rdtest.TestCase):

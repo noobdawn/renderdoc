@@ -15,7 +15,7 @@ build-*/
 /package/
 util/buildscripts/support
 Resources/*.png
-qrenderdoc/Makefile*
+qnoobdawn/Makefile*
 *.exe
 *.aps
 *.ilk
@@ -41,10 +41,10 @@ obj/
 *.orig
 symsrv.yes
 ipch/
-renderdoc/driver/vulkan/renderdoc_capture.json
-renderdocui/3rdparty/ironpython/pythonlibs.zip
-qrenderdoc/generated/
-qrenderdoc/3rdparty/pyside
+noobdawn/driver/vulkan/noobdawn_capture.json
+noobdawnui/3rdparty/ironpython/pythonlibs.zip
+qnoobdawn/generated/
+qnoobdawn/3rdparty/pyside
 .DS_Store
 plugins-*/
 __pycache__

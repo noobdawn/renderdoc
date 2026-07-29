@@ -51,7 +51,7 @@ The annotations are provided via the :doc:`../in_application_api` as the :cpp:fu
 These can be wrapped in helper functions as desired to make it easier to integrate with an application's codebase.
 
 .. tip::
-   To explicitly remove annotations, you can set a value with ``valueType`` equal to ``eRENDERDOC_Empty`` and ``value`` equal to ``NULL``. This will delete the annotation at that path and all children.
+   To explicitly remove annotations, you can set a value with ``valueType`` equal to ``eNOOBDAWN_Empty`` and ``value`` equal to ``NULL``. This will delete the annotation at that path and all children.
 
 Annotations can be set on objects at any time. The latest contents of these annotations are saved when the capture ends and do not vary depending on the current event. This means that any modifications to object annotations during a capture will be shown, but selecting different events will not change the annotations on an object. If you need annotations that vary by event, you can use command annotations.
 
@@ -70,12 +70,12 @@ As a simple example of adding an annotation to an object on D3D11, assuming an `
   void AnnotateImage(ID3D11Device *dev, ID3D11Texture2D *tex, ID3D11Buffer *buf)
   {
     // using the RDAnnotationHelper to minimise typing for simple scalar values
-    rdoc->SetObjectAnnotation(dev, tex, "custom.texture_flags", eRENDERDOC_Int32, 0, RDAnnotationHelper(16));
+    rdoc->SetObjectAnnotation(dev, tex, "custom.texture_flags", eNOOBDAWN_Int32, 0, RDAnnotationHelper(16));
 
     // referring to an object, using the temporary value structure
-    RENDERDOC_AnnotationValue val;
+    NOOBDAWN_AnnotationValue val;
     val.apiObject = (void *)buf;
-    rdoc->SetObjectAnnotation(dev, tex, "custom.associated_buffer", eRENDERDOC_APIObject, 0, &val);
+    rdoc->SetObjectAnnotation(dev, tex, "custom.associated_buffer", eNOOBDAWN_APIObject, 0, &val);
   }
 
 And similarly an example of adding a command annotation on Vulkan:
@@ -85,11 +85,11 @@ And similarly an example of adding a command annotation on Vulkan:
 
   void AnnotateCommand(VkInstance inst, VkCommandBuffer cmd)
   {
-    void *dev = RENDERDOC_DEVICEPOINTER_FROM_VKINSTANCE(inst);
-    rdoc->SetCommandAnnotation(dev, cmd, "draw_mesh.my_property", eRENDERDOC_Int32, 0,
+    void *dev = NOOBDAWN_DEVICEPOINTER_FROM_VKINSTANCE(inst);
+    rdoc->SetCommandAnnotation(dev, cmd, "draw_mesh.my_property", eNOOBDAWN_Int32, 0,
                                RDAnnotationHelper(200));
                                
-    rdoc->SetCommandAnnotation(dev, cmd, "draw_mesh.source_name", eRENDERDOC_String, 0,
+    rdoc->SetCommandAnnotation(dev, cmd, "draw_mesh.source_name", eNOOBDAWN_String, 0,
                                RDAnnotationHelper("Default_Model.file"));
   }
 
@@ -118,6 +118,6 @@ This function can be used to filter the visible events, based on their annotatio
 Python access
 -------------
 
-Annotations on commands can be accessed via :py:attr:`renderdoc.APIEvent.annotations`, which is an optional :py:class:`~renderdoc.SDObject` object that can be accessed recursively. Helper functions like :py:meth:`~renderdoc.SDObject.FindChildByKeyPath` can be used to speed up accessing a specific annotation.
+Annotations on commands can be accessed via :py:attr:`noobdawn.APIEvent.annotations`, which is an optional :py:class:`~noobdawn.SDObject` object that can be accessed recursively. Helper functions like :py:meth:`~noobdawn.SDObject.FindChildByKeyPath` can be used to speed up accessing a specific annotation.
 
-Annotations on objects are available in a similar way through :py:attr:`renderdoc.ResourceDescription.annotations`.
+Annotations on objects are available in a similar way through :py:attr:`noobdawn.ResourceDescription.annotations`.

@@ -50,32 +50,32 @@ RD_TEST(GL_Annotations, OpenGLGraphicsTest)
       RDGLObjectHelper img(GL_TEXTURE, tex);
       RDGLObjectHelper buf(GL_BUFFER, DefaultTriVB);
 
-      rdoc->SetObjectAnnotation(d, img, "basic.bool", eRENDERDOC_Bool, 0, RDAnnotationHelper(true));
-      rdoc->SetObjectAnnotation(d, img, "basic.int32", eRENDERDOC_Int32, 0, RDAnnotationHelper(-3));
-      rdoc->SetObjectAnnotation(d, img, "basic.int64", eRENDERDOC_Int64, 0,
+      rdoc->SetObjectAnnotation(d, img, "basic.bool", eNOOBDAWN_Bool, 0, RDAnnotationHelper(true));
+      rdoc->SetObjectAnnotation(d, img, "basic.int32", eNOOBDAWN_Int32, 0, RDAnnotationHelper(-3));
+      rdoc->SetObjectAnnotation(d, img, "basic.int64", eNOOBDAWN_Int64, 0,
                                 RDAnnotationHelper((int64_t)-3000000000000LL));
-      rdoc->SetObjectAnnotation(d, img, "basic.uint32", eRENDERDOC_UInt32, 0, RDAnnotationHelper(3));
-      rdoc->SetObjectAnnotation(d, img, "basic.uint64", eRENDERDOC_UInt64, 0,
+      rdoc->SetObjectAnnotation(d, img, "basic.uint32", eNOOBDAWN_UInt32, 0, RDAnnotationHelper(3));
+      rdoc->SetObjectAnnotation(d, img, "basic.uint64", eNOOBDAWN_UInt64, 0,
                                 RDAnnotationHelper((uint64_t)3000000000000LL));
-      rdoc->SetObjectAnnotation(d, img, "basic.float", eRENDERDOC_Float, 0,
+      rdoc->SetObjectAnnotation(d, img, "basic.float", eNOOBDAWN_Float, 0,
                                 RDAnnotationHelper(3.25f));
-      rdoc->SetObjectAnnotation(d, img, "basic.double", eRENDERDOC_Double, 0,
+      rdoc->SetObjectAnnotation(d, img, "basic.double", eNOOBDAWN_Double, 0,
                                 RDAnnotationHelper(3.25000000001));
-      rdoc->SetObjectAnnotation(d, img, "basic.string", eRENDERDOC_String, 0,
+      rdoc->SetObjectAnnotation(d, img, "basic.string", eNOOBDAWN_String, 0,
                                 RDAnnotationHelper("Hello, World!"));
 
-      RENDERDOC_AnnotationValue val;
-      val.apiObject = (void *)(RENDERDOC_GLResourceReference *)buf;
-      rdoc->SetObjectAnnotation(d, img, "basic.object", eRENDERDOC_APIObject, 0, &val);
+      NOOBDAWN_AnnotationValue val;
+      val.apiObject = (void *)(NOOBDAWN_GLResourceReference *)buf;
+      rdoc->SetObjectAnnotation(d, img, "basic.object", eNOOBDAWN_APIObject, 0, &val);
 
-      rdoc->SetObjectAnnotation(d, img, "basic.object.__offset", eRENDERDOC_UInt32, 0,
+      rdoc->SetObjectAnnotation(d, img, "basic.object.__offset", eNOOBDAWN_UInt32, 0,
                                 RDAnnotationHelper(64));
-      rdoc->SetObjectAnnotation(d, img, "basic.object.__size", eRENDERDOC_UInt32, 0,
+      rdoc->SetObjectAnnotation(d, img, "basic.object.__size", eNOOBDAWN_UInt32, 0,
                                 RDAnnotationHelper(32));
-      rdoc->SetObjectAnnotation(d, img, "basic.object.__rd_format", eRENDERDOC_String, 0,
+      rdoc->SetObjectAnnotation(d, img, "basic.object.__rd_format", eNOOBDAWN_String, 0,
                                 RDAnnotationHelper("float4 vertex_data;"));
 
-      rdoc->SetObjectAnnotation(d, buf, "__rd_format", eRENDERDOC_String, 0,
+      rdoc->SetObjectAnnotation(d, buf, "__rd_format", eNOOBDAWN_String, 0,
                                 RDAnnotationHelper("float3 pos;\n"
                                                    "float4 col;\n"
                                                    "float2 uv;\n"));
@@ -85,26 +85,26 @@ RD_TEST(GL_Annotations, OpenGLGraphicsTest)
       val.vector.float32[1] = 2.2f;
       val.vector.float32[2] = 3.3f;
       val.vector.float32[3] = 4.4f;    // should be ignored
-      rdoc->SetObjectAnnotation(d, img, "basic.vec3", eRENDERDOC_Float, 3, &val);
+      rdoc->SetObjectAnnotation(d, img, "basic.vec3", eNOOBDAWN_Float, 3, &val);
 
-      rdoc->SetObjectAnnotation(d, img, "deep.nested.path.to.annotation", eRENDERDOC_Int32, 0,
+      rdoc->SetObjectAnnotation(d, img, "deep.nested.path.to.annotation", eNOOBDAWN_Int32, 0,
                                 RDAnnotationHelper(-4));
-      rdoc->SetObjectAnnotation(d, img, "deep.nested.path.to.annotation2", eRENDERDOC_Int32, 0,
+      rdoc->SetObjectAnnotation(d, img, "deep.nested.path.to.annotation2", eNOOBDAWN_Int32, 0,
                                 RDAnnotationHelper(-5));
-      rdoc->SetObjectAnnotation(d, img, "deep.alternate.path.to.annotation", eRENDERDOC_Int32, 0,
+      rdoc->SetObjectAnnotation(d, img, "deep.alternate.path.to.annotation", eNOOBDAWN_Int32, 0,
                                 RDAnnotationHelper(-6));
 
       // deleted paths should not stay around
-      rdoc->SetObjectAnnotation(d, img, "deleteme", eRENDERDOC_Int32, 0, RDAnnotationHelper(-7));
-      rdoc->SetObjectAnnotation(d, img, "deleteme", eRENDERDOC_Empty, 0, NULL);
+      rdoc->SetObjectAnnotation(d, img, "deleteme", eNOOBDAWN_Int32, 0, RDAnnotationHelper(-7));
+      rdoc->SetObjectAnnotation(d, img, "deleteme", eNOOBDAWN_Empty, 0, NULL);
 
-      rdoc->SetObjectAnnotation(d, img, "path.deleted.by.parent", eRENDERDOC_Int32, 0,
+      rdoc->SetObjectAnnotation(d, img, "path.deleted.by.parent", eNOOBDAWN_Int32, 0,
                                 RDAnnotationHelper(-8));
-      rdoc->SetObjectAnnotation(d, img, "path.deleted.by.parent2", eRENDERDOC_Int32, 0,
+      rdoc->SetObjectAnnotation(d, img, "path.deleted.by.parent2", eNOOBDAWN_Int32, 0,
                                 RDAnnotationHelper(-9));
 
       // this will delete all children. `path` will still exist, but will be empty
-      rdoc->SetObjectAnnotation(d, img, "path.deleted", eRENDERDOC_Empty, 0, NULL);
+      rdoc->SetObjectAnnotation(d, img, "path.deleted", eNOOBDAWN_Empty, 0, NULL);
     }
 
     while(Running())
@@ -113,19 +113,19 @@ RD_TEST(GL_Annotations, OpenGLGraphicsTest)
       {
         // queue annotations don't exist in GL, but we set these to share the same test code.
         if(curFrame == 2)
-          rdoc->SetCommandAnnotation(d, NULL, "queue.too_old", eRENDERDOC_Int32, 0,
+          rdoc->SetCommandAnnotation(d, NULL, "queue.too_old", eNOOBDAWN_Int32, 0,
                                      RDAnnotationHelper(1000));
 
-        rdoc->SetCommandAnnotation(d, NULL, "queue.value", eRENDERDOC_Int32, 0,
+        rdoc->SetCommandAnnotation(d, NULL, "queue.value", eNOOBDAWN_Int32, 0,
                                    RDAnnotationHelper(1000));
 
-        rdoc->SetCommandAnnotation(d, NULL, "command.overwritten", eRENDERDOC_Int32, 0,
+        rdoc->SetCommandAnnotation(d, NULL, "command.overwritten", eNOOBDAWN_Int32, 0,
                                    RDAnnotationHelper(9999));
 
-        rdoc->SetCommandAnnotation(d, NULL, "command.inherited", eRENDERDOC_Int32, 0,
+        rdoc->SetCommandAnnotation(d, NULL, "command.inherited", eNOOBDAWN_Int32, 0,
                                    RDAnnotationHelper(1234));
 
-        rdoc->SetCommandAnnotation(d, NULL, "command.deleted", eRENDERDOC_Int32, 0,
+        rdoc->SetCommandAnnotation(d, NULL, "command.deleted", eNOOBDAWN_Int32, 0,
                                    RDAnnotationHelper(50));
       }
 
@@ -133,16 +133,16 @@ RD_TEST(GL_Annotations, OpenGLGraphicsTest)
 
       if(rdoc)
       {
-        rdoc->SetCommandAnnotation(d, NULL, "new.value", eRENDERDOC_Int32, 0,
+        rdoc->SetCommandAnnotation(d, NULL, "new.value", eNOOBDAWN_Int32, 0,
                                    RDAnnotationHelper(2000));
 
-        rdoc->SetCommandAnnotation(d, NULL, "command.overwritten", eRENDERDOC_Int32, 0,
+        rdoc->SetCommandAnnotation(d, NULL, "command.overwritten", eNOOBDAWN_Int32, 0,
                                    RDAnnotationHelper(-3333));
 
-        rdoc->SetCommandAnnotation(d, NULL, "command.new", eRENDERDOC_Int32, 0,
+        rdoc->SetCommandAnnotation(d, NULL, "command.new", eNOOBDAWN_Int32, 0,
                                    RDAnnotationHelper(3333));
 
-        rdoc->SetCommandAnnotation(d, NULL, "command.deleted", eRENDERDOC_Empty, 0, NULL);
+        rdoc->SetCommandAnnotation(d, NULL, "command.deleted", eNOOBDAWN_Empty, 0, NULL);
       }
 
       setMarker("Initial");
@@ -152,7 +152,7 @@ RD_TEST(GL_Annotations, OpenGLGraphicsTest)
       glBindTexture(GL_TEXTURE_2D, tex);
 
       if(rdoc)
-        rdoc->SetCommandAnnotation(d, NULL, "command.new", eRENDERDOC_Float, 0,
+        rdoc->SetCommandAnnotation(d, NULL, "command.new", eNOOBDAWN_Float, 0,
                                    RDAnnotationHelper(1.75f));
 
       glBindVertexArray(DefaultTriVAO);
@@ -164,8 +164,8 @@ RD_TEST(GL_Annotations, OpenGLGraphicsTest)
       // deleting a value is fine if it's re-added before the next event
       if(rdoc)
       {
-        rdoc->SetCommandAnnotation(d, NULL, "new.value", eRENDERDOC_Empty, 0, NULL);
-        rdoc->SetCommandAnnotation(d, NULL, "new.value", eRENDERDOC_Int32, 0,
+        rdoc->SetCommandAnnotation(d, NULL, "new.value", eNOOBDAWN_Empty, 0, NULL);
+        rdoc->SetCommandAnnotation(d, NULL, "new.value", eNOOBDAWN_Int32, 0,
                                    RDAnnotationHelper(4000));
       }
 
