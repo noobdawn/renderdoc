@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Development|Win32">
+      <Configuration>Development</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Development|x64">
+      <Configuration>Development</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <ProjectGuid>{7B5E2C10-1A2B-4C3D-9E4F-5A6B7C8D9E0F}</ProjectGuid>
+    <Keyword>MakeFileProj</Keyword>
+    <RootNamespace>deploy</RootNamespace>
+    <ProjectName>deploy</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Development|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Development|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Development|x64'">
+    <NMakeBuildCommandLine>call "$(SolutionDir)deploy.bat" x64 Development</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>call "$(SolutionDir)deploy.bat" x64 Development</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>rem nothing to clean</NMakeCleanCommandLine>
+    <NMakeOutput>$(SolutionDir)dist\Development\qnoobdawn.exe</NMakeOutput>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Development|Win32'">
+    <NMakeBuildCommandLine>call "$(SolutionDir)deploy.bat" Win32 Development</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>call "$(SolutionDir)deploy.bat" Win32 Development</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>rem nothing to clean</NMakeCleanCommandLine>
+    <NMakeOutput>$(SolutionDir)dist\Development\x86\noobdawncmd.exe</NMakeOutput>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <NMakeBuildCommandLine>call "$(SolutionDir)deploy.bat" x64 Release</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>call "$(SolutionDir)deploy.bat" x64 Release</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>rem nothing to clean</NMakeCleanCommandLine>
+    <NMakeOutput>$(SolutionDir)dist\Release\qnoobdawn.exe</NMakeOutput>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <NMakeBuildCommandLine>call "$(SolutionDir)deploy.bat" Win32 Release</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine>call "$(SolutionDir)deploy.bat" Win32 Release</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine>rem nothing to clean</NMakeCleanCommandLine>
+    <NMakeOutput>$(SolutionDir)dist\Release\x86\noobdawncmd.exe</NMakeOutput>
+  </PropertyGroup>
+  <ItemDefinitionGroup />
+  <ItemGroup />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
