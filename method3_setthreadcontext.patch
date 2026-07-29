@@ -1,0 +1,377 @@
+diff --git a/noobdawn/os/win32/win32_process.cpp b/noobdawn/os/win32/win32_process.cpp
+index 3453f8b..441b713 100644
+--- a/noobdawn/os/win32/win32_process.cpp
++++ b/noobdawn/os/win32/win32_process.cpp
+@@ -249,7 +249,281 @@ extern "C" __declspec(dllexport) void __cdecl INTERNAL_ApplyEnvMods(void *ignore
+   Process::ApplyEnvironmentModification();
+ }
+ 
+-void InjectDLL(HANDLE hProcess, nbdwstr libName)
++// Thread-context (SetThreadContext) based remote call, avoiding CreateRemoteThread entirely.
++//
++// A small stub is written into the target process which calls func(param), sets a completion
++// flag, then spins in place. An existing thread in the target is suspended, its instruction
++// pointer is redirected at the stub, and once the flag is set the thread's original context
++// (and original suspend count) is restored, so the thread resumes exactly where it was.
++// No new thread is ever created in the target process.
++
++// finds an existing thread in the target process. outTid receives the thread id.
++static HANDLE FindTargetThread(DWORD pid, DWORD &outTid, DWORD skipTid)
++{
++  HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
++
++  if(hSnap == INVALID_HANDLE_VALUE)
++    return NULL;
++
++  THREADENTRY32 te32;
++  NBDEraseEl(te32);
++  te32.dwSize = sizeof(THREADENTRY32);
++
++  HANDLE ret = NULL;
++
++  if(Thread32First(hSnap, &te32))
++  {
++    do
++    {
++      if(te32.th32OwnerProcessID != pid || te32.th32ThreadID == skipTid)
++        continue;
++
++      ret = OpenThread(THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT | THREAD_SET_CONTEXT |
++                           THREAD_QUERY_INFORMATION,
++                       FALSE, te32.th32ThreadID);
++      if(ret)
++      {
++        outTid = te32.th32ThreadID;
++        break;
++      }
++    } while(Thread32Next(hSnap, &te32));
++  }
++
++  CloseHandle(hSnap);
++  return ret;
++}
++
++// builds the stub + flag + parameter block into buf. Layout:
++//   [0, stubSize)         stub code
++//   stubSize              completion flag byte
++//   stubSize + 8          parameter data
++// returns total size of the block.
++static size_t BuildThreadContextStub(byte *buf, size_t bufSize, uintptr_t remoteBase,
++                                     uintptr_t func, const void *param, size_t paramSize,
++                                     size_t &outStubSize, size_t &outFlagOff, size_t &outParamOff)
++{
++#if ENABLED(RDOC_X64)
++  // 48 83 E4 F0             and rsp, -16
++  // 48 83 EC 20             sub rsp, 0x20          (shadow space, guaranteed alignment)
++  // 48 B9 <param>           mov rcx, paramAddr
++  // 48 B8 <func>            mov rax, func
++  // FF D0                   call rax
++  // 48 B8 <flag>            mov rax, flagAddr
++  // C6 00 01                mov byte [rax], 1
++  // EB FE                   jmp $                  (spin until context is restored)
++  static const size_t stubSize = 45;
++  const size_t flagOff = stubSize;
++  const size_t paramOff = stubSize + 8;
++
++  if(bufSize < paramOff + paramSize)
++    return 0;
++
++  uintptr_t flagAddr = remoteBase + flagOff;
++  uintptr_t paramAddr = remoteBase + paramOff;
++
++  byte *s = buf;
++  size_t o = 0;
++  s[o++] = 0x48; s[o++] = 0x83; s[o++] = 0xE4; s[o++] = 0xF0;
++  s[o++] = 0x48; s[o++] = 0x83; s[o++] = 0xEC; s[o++] = 0x20;
++  s[o++] = 0x48; s[o++] = 0xB9;
++  memcpy(s + o, &paramAddr, 8); o += 8;
++  s[o++] = 0x48; s[o++] = 0xB8;
++  memcpy(s + o, &func, 8); o += 8;
++  s[o++] = 0xFF; s[o++] = 0xD0;
++  s[o++] = 0x48; s[o++] = 0xB8;
++  memcpy(s + o, &flagAddr, 8); o += 8;
++  s[o++] = 0xC6; s[o++] = 0x00; s[o++] = 0x01;
++  s[o++] = 0xEB; s[o++] = 0xFE;
++  NBDASSERT(o == stubSize, o, stubSize);
++#else
++  // 68 <param>              push paramAddr
++  // B8 <func>               mov eax, func
++  // FF D0                   call eax
++  // 83 C4 04                add esp, 4
++  // B8 <flag>               mov eax, flagAddr
++  // C6 00 01                mov byte [eax], 1
++  // EB FE                   jmp $
++  static const size_t stubSize = 25;
++  const size_t flagOff = stubSize;
++  const size_t paramOff = stubSize + 8;
++
++  if(bufSize < paramOff + paramSize)
++    return 0;
++
++  uint32_t flagAddr = (uint32_t)(remoteBase + flagOff);
++  uint32_t paramAddr = (uint32_t)(remoteBase + paramOff);
++  uint32_t func32 = (uint32_t)func;
++
++  byte *s = buf;
++  size_t o = 0;
++  s[o++] = 0x68;
++  memcpy(s + o, &paramAddr, 4); o += 4;
++  s[o++] = 0xB8;
++  memcpy(s + o, &func32, 4); o += 4;
++  s[o++] = 0xFF; s[o++] = 0xD0;
++  s[o++] = 0x83; s[o++] = 0xC4; s[o++] = 0x04;
++  s[o++] = 0xB8;
++  memcpy(s + o, &flagAddr, 4); o += 4;
++  s[o++] = 0xC6; s[o++] = 0x00; s[o++] = 0x01;
++  s[o++] = 0xEB; s[o++] = 0xFE;
++  NBDASSERT(o == stubSize, o, stubSize);
++#endif
++
++  buf[flagOff] = 0;
++
++  if(param && paramSize > 0)
++    memcpy(buf + paramOff, param, paramSize);
++
++  outStubSize = stubSize;
++  outFlagOff = flagOff;
++  outParamOff = paramOff;
++  return paramOff + paramSize;
++}
++
++// Executes func(param) inside the target process by hijacking an existing thread's context.
++// If readBack is non-NULL, the parameter block is read back after completion.
++// Returns true on success. Does not create any thread in the target process.
++static bool ThreadContextRemoteCall(HANDLE hProcess, DWORD pid, uintptr_t func, const void *param,
++                                    size_t paramSize, void *readBack)
++{
++  // try up to 8 threads - a hijacked thread holding the loader lock can deadlock LoadLibrary,
++  // so on timeout we restore it and move on to the next one.
++  DWORD skipTid = 0;
++
++  for(int attempt = 0; attempt < 8; attempt++)
++  {
++    DWORD tid = 0;
++    HANDLE hThread = FindTargetThread(pid, tid, skipTid);
++
++    if(hThread == NULL)
++      break;
++
++    // prepare the remote block: stub + flag + parameters in a single allocation
++    size_t bufSize = 256 + paramSize;
++    byte *buf = new byte[bufSize];
++    memset(buf, 0, bufSize);
++
++    uintptr_t remoteMem =
++        (uintptr_t)VirtualAllocEx(hProcess, NULL, bufSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
++
++    if(remoteMem == 0)
++    {
++      NBDERR("Couldn't allocate remote memory for thread-context call: %u", GetLastError());
++      delete[] buf;
++      CloseHandle(hThread);
++      return false;
++    }
++
++    size_t stubSize = 0, flagOff = 0, paramOff = 0;
++    size_t totalSize =
++        BuildThreadContextStub(buf, bufSize, remoteMem, func, param, paramSize, stubSize, flagOff,
++                               paramOff);
++
++    BOOL success = totalSize > 0 &&
++                   WriteProcessMemory(hProcess, (void *)remoteMem, buf, totalSize, NULL);
++
++    bool callDone = false;
++
++    if(success)
++    {
++      DWORD origSuspend = SuspendThread(hThread);
++
++      if(origSuspend != (DWORD)-1)
++      {
++        CONTEXT ctx;
++        NBDEraseEl(ctx);
++        ctx.ContextFlags = CONTEXT_FULL;
++
++        if(GetThreadContext(hThread, &ctx))
++        {
++          CONTEXT origCtx = ctx;
++
++#if ENABLED(RDOC_X64)
++          ctx.Rip = remoteMem;
++#else
++          ctx.Eip = (DWORD)remoteMem;
++#endif
++
++          if(SetThreadContext(hThread, &ctx))
++          {
++            // resume until the thread is actually running (it may have had a non-zero
++            // suspend count, e.g. a CREATE_SUSPENDED main thread)
++            DWORD prev;
++            do
++            {
++              prev = ResumeThread(hThread);
++            } while(prev != (DWORD)-1 && prev > 1);
++
++            // poll the completion flag (10s timeout - LoadLibrary of a large DLL can be slow
++            // on first attempt)
++            for(int i = 0; i < 2000 && !callDone; i++)
++            {
++              byte flag = 0;
++              ReadProcessMemory(hProcess, (void *)(remoteMem + flagOff), &flag, 1, NULL);
++              callDone = (flag != 0);
++              if(!callDone)
++                Sleep(5);
++            }
++
++            // stop the thread (it's spinning in the stub), restore the original context,
++            // then restore the original suspend count
++            SuspendThread(hThread);
++            SetThreadContext(hThread, &origCtx);
++
++            for(DWORD c = 1; c < origSuspend; c++)
++              SuspendThread(hThread);
++
++            if(origSuspend == 0)
++              ResumeThread(hThread);
++          }
++          else
++          {
++            NBDERR("SetThreadContext failed on thread %u: %u", tid, GetLastError());
++            ResumeThread(hThread);
++          }
++        }
++        else
++        {
++          NBDERR("GetThreadContext failed on thread %u: %u", tid, GetLastError());
++          ResumeThread(hThread);
++        }
++      }
++      else
++      {
++        NBDERR("SuspendThread failed on thread %u: %u", tid, GetLastError());
++      }
++    }
++    else
++    {
++      NBDERR("Couldn't write remote memory %p for thread-context call: %u", (void *)remoteMem,
++             GetLastError());
++    }
++
++    if(callDone && readBack)
++    {
++      ReadProcessMemory(hProcess, (void *)(remoteMem + paramOff), readBack, paramSize, NULL);
++    }
++
++    delete[] buf;
++    VirtualFreeEx(hProcess, (void *)remoteMem, 0, MEM_RELEASE);
++
++    if(callDone)
++    {
++      CloseHandle(hThread);
++      return true;
++    }
++
++    // restore balance for the ResumeThread that put the thread back to its original count
++    // was handled above; nothing left to do but try the next thread
++    skipTid = tid;
++    CloseHandle(hThread);
++    NBDWARN("Thread-context call timed out on thread %u, trying next thread", tid);
++  }
++
++  return false;
++}
++
++void InjectDLL(HANDLE hProcess, DWORD pid, nbdwstr libName)
+ {
+   wchar_t dllPath[MAX_PATH + 1] = {0};
+   wcscpy_s(dllPath, libName.c_str());
+@@ -262,6 +536,13 @@ void InjectDLL(HANDLE hProcess, nbdwstr libName)
+     return;
+   }
+ 
++  uintptr_t loadLibraryW = (uintptr_t)GetProcAddress(kernel32, "LoadLibraryW");
++
++  if(ThreadContextRemoteCall(hProcess, pid, loadLibraryW, dllPath, sizeof(dllPath), NULL))
++    return;
++
++  NBDWARN("Falling back to CreateRemoteThread injection for '%ls'", libName.c_str());
++
+   void *remoteMem =
+       VirtualAllocEx(hProcess, NULL, sizeof(dllPath), MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+   if(remoteMem)
+@@ -398,7 +679,7 @@ uintptr_t FindRemoteDLL(DWORD pid, nbdstr libName)
+   return ret;
+ }
+ 
+-void InjectFunctionCall(HANDLE hProcess, uintptr_t noobdawn_remote, const char *funcName,
++void InjectFunctionCall(HANDLE hProcess, DWORD pid, uintptr_t noobdawn_remote, const char *funcName,
+                         void *data, const size_t dataLen)
+ {
+   if(dataLen == 0)
+@@ -418,6 +699,11 @@ void InjectFunctionCall(HANDLE hProcess, uintptr_t noobdawn_remote, const char *
+   // in the remote module (which might be loaded at a different base address
+   uintptr_t func_remote = func_local + noobdawn_remote - (uintptr_t)noobdawn_local;
+ 
++  if(ThreadContextRemoteCall(hProcess, pid, func_remote, data, dataLen, data))
++    return;
++
++  NBDWARN("Falling back to CreateRemoteThread for call to %s", funcName);
++
+   void *remoteMem = VirtualAllocEx(hProcess, NULL, dataLen, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+   SIZE_T numWritten;
+   WriteProcessMemory(hProcess, remoteMem, data, dataLen, &numWritten);
+@@ -970,7 +1256,7 @@ nbdpair<RDResult, uint32_t> Process::InjectIntoProcess(uint32_t pid,
+     return {ResultCode::Succeeded, (uint32_t)exitCode};
+   }
+ 
+-  InjectDLL(hProcess, noobdawnPath);
++  InjectDLL(hProcess, pid, noobdawnPath);
+ 
+   const char *rdoc_dll = STRINGIZE(RDOC_BASE_NAME);
+ 
+@@ -991,18 +1277,18 @@ nbdpair<RDResult, uint32_t> Process::InjectIntoProcess(uint32_t pid,
+     // safe to cast away the const as we know these functions don't modify the parameters
+ 
+     if(!capturefile.empty())
+-      InjectFunctionCall(hProcess, loc, "INTERNAL_SetCaptureFile", (void *)capturefile.c_str(),
++      InjectFunctionCall(hProcess, pid, loc, "INTERNAL_SetCaptureFile", (void *)capturefile.c_str(),
+                          capturefile.size() + 1);
+ 
+     nbdstr debugLogfile = NBDGETLOGFILE();
+ 
+-    InjectFunctionCall(hProcess, loc, "INTERNAL_SetDebugLogFile", (void *)debugLogfile.c_str(),
++    InjectFunctionCall(hProcess, pid, loc, "INTERNAL_SetDebugLogFile", (void *)debugLogfile.c_str(),
+                        debugLogfile.size() + 1);
+ 
+-    InjectFunctionCall(hProcess, loc, "INTERNAL_SetCaptureOptions", (CaptureOptions *)&opts,
++    InjectFunctionCall(hProcess, pid, loc, "INTERNAL_SetCaptureOptions", (CaptureOptions *)&opts,
+                        sizeof(CaptureOptions));
+ 
+-    InjectFunctionCall(hProcess, loc, "INTERNAL_GetTargetControlIdent", &result.second,
++    InjectFunctionCall(hProcess, pid, loc, "INTERNAL_GetTargetControlIdent", &result.second,
+                        sizeof(result.second));
+ 
+     if(!env.empty())
+@@ -1017,17 +1303,17 @@ nbdpair<RDResult, uint32_t> Process::InjectIntoProcess(uint32_t pid,
+         if(name == "")
+           break;
+ 
+-        InjectFunctionCall(hProcess, loc, "INTERNAL_EnvModName", (void *)name.c_str(),
++        InjectFunctionCall(hProcess, pid, loc, "INTERNAL_EnvModName", (void *)name.c_str(),
+                            name.size() + 1);
+-        InjectFunctionCall(hProcess, loc, "INTERNAL_EnvModValue", (void *)value.c_str(),
++        InjectFunctionCall(hProcess, pid, loc, "INTERNAL_EnvModValue", (void *)value.c_str(),
+                            value.size() + 1);
+-        InjectFunctionCall(hProcess, loc, "INTERNAL_EnvSep", &sep, sizeof(sep));
+-        InjectFunctionCall(hProcess, loc, "INTERNAL_EnvMod", &mod, sizeof(mod));
++        InjectFunctionCall(hProcess, pid, loc, "INTERNAL_EnvSep", &sep, sizeof(sep));
++        InjectFunctionCall(hProcess, pid, loc, "INTERNAL_EnvMod", &mod, sizeof(mod));
+       }
+ 
+       // parameter is unused
+       void *dummy = NULL;
+-      InjectFunctionCall(hProcess, loc, "INTERNAL_ApplyEnvMods", &dummy, sizeof(dummy));
++      InjectFunctionCall(hProcess, pid, loc, "INTERNAL_ApplyEnvMods", &dummy, sizeof(dummy));
+     }
+   }
+ 

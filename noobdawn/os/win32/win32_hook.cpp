@@ -43,6 +43,45 @@
 std::map<void **, void *> s_InstalledHooks;
 Threading::CriticalSection installedLock;
 
+// [NBD-DIAG] temporary diagnostics for investigating protected targets where graphics hooks
+// never trigger. All diag lines are prefixed with [NBD-DIAG] for easy filtering.
+static bool DiagLogOnce(const nbdstr &key)
+{
+  static Threading::CriticalSection diaglock;
+  static std::set<nbdstr> seen;
+  SCOPED_LOCK(diaglock);
+  if(seen.find(key) != seen.end())
+    return false;
+  seen.insert(key);
+  return true;
+}
+
+static bool IsGraphicsDLLName(const nbdstr &lower)
+{
+  const char *s = lower.c_str();
+  return strstr(s, "d3d") || strstr(s, "dxgi") || strstr(s, "vulkan") || strstr(s, "opengl") ||
+         strstr(s, "egl") || strstr(s, "gles") || strstr(s, "nvapi") || strstr(s, "nvogl") ||
+         strstr(s, "atiogl") || strstr(s, "amdvlk") || strstr(s, "igvk") || strstr(s, "igd") ||
+         strstr(s, "d3dcompiler");
+}
+
+static nbdstr CachedModuleBasenameLower(HMODULE mod)
+{
+  static Threading::CriticalSection modnamelock;
+  static std::map<HMODULE, nbdstr> cache;
+  SCOPED_LOCK(modnamelock);
+  auto it = cache.find(mod);
+  if(it != cache.end())
+    return it->second;
+
+  char path[MAX_PATH] = {};
+  GetModuleFileNameA(mod, path, MAX_PATH - 1);
+  const char *slash = strrchr(path, '\\');
+  nbdstr base = strlower(nbdstr(slash ? slash + 1 : path));
+  cache[mod] = base;
+  return base;
+}
+
 bool ApplyHook(FunctionHook &hook, void **IATentry, bool &already)
 {
   DWORD oldProtection = PAGE_EXECUTE;
@@ -82,6 +121,18 @@ bool ApplyHook(FunctionHook &hook, void **IATentry, bool &already)
   return true;
 }
 
+// [NBD-DIAG] EAT (export address table) hooking state. Instead of only patching callers'
+// import tables, we additionally rewrite the exports of key graphics DLLs at the source, so
+// that ANY resolution path (static import, GetProcAddress, LdrGetProcedureAddress, delay-load
+// helper, or a protector's private export walker) yields our wrapper. This is essential for
+// packed/protected targets whose import directory we cannot walk.
+struct EATEntry
+{
+  DWORD *slot;
+  DWORD originalRVA;
+  DWORD hookRVA;
+};
+
 struct DllHookset
 {
   HMODULE module = NULL;
@@ -94,6 +145,12 @@ struct DllHookset
   nbdarray<nbdstr> OrdinalNames;
   nbdarray<FunctionLoadCallback> Callbacks;
   Threading::CriticalSection ordinallock;
+
+  // [NBD-DIAG] EAT hook state
+  bool eatAttempted = false;
+  void *eatStubPage = NULL;
+  size_t eatStubUsed = 0;
+  nbdarray<EATEntry> eatEntries;
 
   void FetchOrdinalNames()
   {
@@ -146,6 +203,36 @@ struct DllHookset
   }
 };
 
+// [NBD-DIAG] only core graphics API DLLs get EAT hooked. System modules (kernel32 etc.) are
+// deliberately excluded: redirecting their exports process-wide would change behaviour for
+// modules that RenderDoc intentionally excludes from hooking.
+static bool IsEATHookTarget(const nbdstr &dllName)
+{
+  nbdstr lower = strlower(dllName);
+  return lower == "d3d9.dll" || lower == "d3d11.dll" || lower == "d3d12.dll" ||
+         lower == "dxgi.dll" || lower == "opengl32.dll" || lower == "vulkan-1.dll" ||
+         lower == "libegl.dll" || lower == "libglesv2.dll";
+}
+
+// allocate an RWX page above the module so that 32-bit EAT RVAs (module base relative) can
+// reach the stubs
+static void *AllocStubAbove(HMODULE module)
+{
+  uintptr_t base = (uintptr_t)module;
+
+  for(uintptr_t addr = (base + 0x100000) & ~uintptr_t(0xFFFF); addr < base + 0xFFF00000;
+      addr += 0x10000)
+  {
+    void *p = VirtualAlloc((LPVOID)addr, 0x1000, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    if(p)
+      return p;
+  }
+
+  return NULL;
+}
+
+static void ApplyEATHooksToHookset(DllHookset &hookset, const nbdstr &dllName);
+
 struct CachedHookData
 {
   bool hookAll = true;
@@ -174,6 +261,10 @@ struct CachedHookData
       }
       lowername[i] = 0;
     }
+
+    // [NBD-DIAG] temporary diagnostic: log each module we ever scan (deduped)
+    if(DiagLogOnce(nbdstr("MOD:") + lowername))
+      NBDLOG("[NBD-DIAG] Module seen: %s", modName);
 
 #if ENABLED(VERBOSE_DEBUG_HOOK)
     NBDDEBUG("=== ApplyHooks(%s, %p)", modName, module);
@@ -212,6 +303,12 @@ struct CachedHookData
           }
 
           it->second.FetchOrdinalNames();
+
+          // [NBD-DIAG] temporary diagnostic: confirm when a hooked DLL is seen loaded
+          NBDLOG("[NBD-DIAG] Hooked DLL present: %s @ 0x%p", it->first.c_str(), module);
+
+          // [NBD-DIAG] apply EAT hooks for graphics DLLs
+          ApplyEATHooksToHookset(it->second, it->first);
         }
         else if(it->second.module != module)
         {
@@ -434,6 +531,11 @@ struct CachedHookData
                       FreeLibrary(refcountModHandle);
                       return;
                     }
+
+                    // [NBD-DIAG] temporary diagnostic
+                    if(applied && !already)
+                      NBDLOG("[NBD-DIAG] IAT hook: %s imports %s!%s (ordinal)", modName, dllName,
+                             importName);
                   }
                 }
               }
@@ -497,6 +599,10 @@ struct CachedHookData
               FreeLibrary(refcountModHandle);
               return;
             }
+
+            // [NBD-DIAG] temporary diagnostic
+            if(applied && !already)
+              NBDLOG("[NBD-DIAG] IAT hook: %s imports %s!%s", modName, dllName, importName);
           }
 
           origFirst++;
@@ -511,6 +617,13 @@ struct CachedHookData
           NBDDEBUG("!! Invalid IAT found for %s! %u %u", dllName, importDesc->OriginalFirstThunk,
                    importDesc->FirstThunk);
 #endif
+
+          // [NBD-DIAG] temporary diagnostic: a hooked DLL is imported but with no ILT, so we
+          // cannot resolve import names and will not hook this module's IAT. Packers/protectors
+          // sometimes zero the ILT, so this is an important clue.
+          if(DiagLogOnce(nbdstr("OFT:") + modName + ":" + dllName))
+            NBDLOG("[NBD-DIAG] %s imports %s but OriginalFirstThunk is 0 - cannot hook its IAT!",
+                   modName, dllName);
         }
       }
 
@@ -522,6 +635,162 @@ struct CachedHookData
 };
 
 static CachedHookData *s_HookData = NULL;
+
+// [NBD-DIAG] apply EAT hooks for graphics DLLs, and verify/re-apply them on later passes.
+// The wrapper functions are reached through a small absolute-jump stub allocated above the
+// target module; the EAT entry is then repointed at that stub.
+static void ApplyEATHooksToHookset(DllHookset &hookset, const nbdstr &dllName)
+{
+  if(!IsEATHookTarget(dllName))
+    return;
+
+  HMODULE module = hookset.module;
+  if(module == NULL)
+    return;
+
+  SCOPED_LOCK(s_HookData->lock);
+
+  // verification pass: if a protection module restored or redirected our EAT entries,
+  // hammer them back in
+  if(hookset.eatAttempted)
+  {
+    for(EATEntry &e : hookset.eatEntries)
+    {
+      if(*e.slot != e.hookRVA)
+      {
+        NBDLOG("[NBD-DIAG] EAT hook: %s slot 0x%p changed externally (0x%x != 0x%x) - re-applying",
+               dllName.c_str(), e.slot, *e.slot, e.hookRVA);
+
+        DWORD oldProt = 0;
+        if(VirtualProtect(e.slot, sizeof(DWORD), PAGE_READWRITE, &oldProt))
+        {
+          *e.slot = e.hookRVA;
+          VirtualProtect(e.slot, sizeof(DWORD), oldProt, &oldProt);
+        }
+      }
+    }
+    return;
+  }
+
+  hookset.eatAttempted = true;
+
+  byte *base = (byte *)module;
+  PIMAGE_DOS_HEADER dosheader = (PIMAGE_DOS_HEADER)base;
+  if(dosheader->e_magic != IMAGE_DOS_SIGNATURE)
+    return;
+
+  byte *PE00 = base + dosheader->e_lfanew;
+  PIMAGE_FILE_HEADER fileHeader = (PIMAGE_FILE_HEADER)(PE00 + 4);
+  PIMAGE_OPTIONAL_HEADER optHeader =
+      (PIMAGE_OPTIONAL_HEADER)((BYTE *)fileHeader + sizeof(IMAGE_FILE_HEADER));
+
+  DWORD exportRVA = optHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
+  DWORD exportSize = optHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size;
+  if(exportRVA == 0)
+    return;
+
+  IMAGE_EXPORT_DIRECTORY *exportDesc = (IMAGE_EXPORT_DIRECTORY *)(base + exportRVA);
+  DWORD *functions = (DWORD *)(base + exportDesc->AddressOfFunctions);
+  DWORD *names = (DWORD *)(base + exportDesc->AddressOfNames);
+  WORD *ordinals = (WORD *)(base + exportDesc->AddressOfNameOrdinals);
+
+  for(FunctionHook &hook : hookset.FunctionHooks)
+  {
+    DWORD *slot = NULL;
+
+    for(DWORD i = 0; i < exportDesc->NumberOfNames; i++)
+    {
+      const char *name = (const char *)(base + names[i]);
+      if(!strcmp(name, hook.function.c_str()))
+      {
+        slot = &functions[ordinals[i]];
+        break;
+      }
+    }
+
+    if(slot == NULL)
+      continue;
+
+    DWORD originalRVA = *slot;
+
+    // a function RVA pointing inside the export directory means this is a forwarder - skip it
+    if(originalRVA >= exportRVA && originalRVA < exportRVA + exportSize)
+    {
+      NBDLOG("[NBD-DIAG] EAT hook: %s!%s is forwarded, skipping", dllName.c_str(),
+             hook.function.c_str());
+      continue;
+    }
+
+    if(hookset.eatStubPage == NULL)
+    {
+      hookset.eatStubPage = AllocStubAbove(module);
+
+      if(hookset.eatStubPage == NULL)
+      {
+        NBDERR("[NBD-DIAG] EAT hook: couldn't allocate stub page above %s", dllName.c_str());
+        return;
+      }
+    }
+
+    if(hookset.eatStubUsed + 16 > 0x1000)
+    {
+      NBDERR("[NBD-DIAG] EAT hook: stub page exhausted for %s", dllName.c_str());
+      return;
+    }
+
+    byte *stub = (byte *)hookset.eatStubPage + hookset.eatStubUsed;
+    void *hookFunc = hook.hook;
+
+#if ENABLED(RDOC_X64)
+    // mov rax, hookFunc ; jmp rax
+    stub[0] = 0x48;
+    stub[1] = 0xB8;
+    memcpy(stub + 2, &hookFunc, 8);
+    stub[10] = 0xFF;
+    stub[11] = 0xE0;
+    hookset.eatStubUsed += 16;
+#else
+    // mov eax, hookFunc ; jmp eax
+    stub[0] = 0xB8;
+    memcpy(stub + 1, &hookFunc, 4);
+    stub[5] = 0xFF;
+    stub[6] = 0xE0;
+    hookset.eatStubUsed += 8;
+#endif
+
+    FlushInstructionCache(GetCurrentProcess(), stub, 16);
+
+    uintptr_t stubOffset = (uintptr_t)stub - (uintptr_t)module;
+    if(stubOffset >= 0xFFFFFFFF)
+    {
+      NBDERR("[NBD-DIAG] EAT hook: stub 0x%p out of RVA range of %s", stub, dllName.c_str());
+      continue;
+    }
+
+    DWORD hookRVA = (DWORD)stubOffset;
+
+    DWORD oldProt = 0;
+    if(!VirtualProtect(slot, sizeof(DWORD), PAGE_READWRITE, &oldProt))
+    {
+      NBDERR("[NBD-DIAG] EAT hook: couldn't make %s EAT slot 0x%p writeable", dllName.c_str(),
+             slot);
+      continue;
+    }
+
+    *slot = hookRVA;
+
+    VirtualProtect(slot, sizeof(DWORD), oldProt, &oldProt);
+
+    EATEntry e;
+    e.slot = slot;
+    e.originalRVA = originalRVA;
+    e.hookRVA = hookRVA;
+    hookset.eatEntries.push_back(e);
+
+    NBDLOG("[NBD-DIAG] EAT hook: %s!%s RVA 0x%x -> 0x%x (stub 0x%p)", dllName.c_str(),
+           hook.function.c_str(), originalRVA, hookRVA, stub);
+  }
+}
 
 #ifdef UNICODE
 #undef MODULEENTRY32
@@ -587,6 +856,9 @@ static void HookAllModules()
   if(!s_HookData->hookAll)
     return;
 
+  // [NBD-DIAG] temporary diagnostic
+  NBDLOG("[NBD-DIAG] HookAllModules pass");
+
   ForAllModules(
       [](const MODULEENTRY32 &me32) { s_HookData->ApplyHooks(me32.szModule, me32.hModule); });
 
@@ -614,6 +886,9 @@ static void HookAllModules()
           *hook.orig = GetProcAddress(it->second.module, hook.function.c_str());
       }
     }
+
+    // [NBD-DIAG] apply (or verify/re-apply) EAT hooks for graphics DLLs on every pass
+    ApplyEATHooksToHookset(it->second, it->first);
 
     nbdarray<FunctionLoadCallback> callbacks;
     // don't call callbacks next time
@@ -683,6 +958,10 @@ HMODULE WINAPI Hooked_LoadLibraryExA(LPCSTR lpLibFileName, HANDLE fileHandle, DW
 
   DWORD err = GetLastError();
 
+  // [NBD-DIAG] temporary diagnostic
+  if(DiagLogOnce(nbdstr("LL:") + lpLibFileName))
+    NBDLOG("[NBD-DIAG] LoadLibrary: %s -> 0x%p (flags 0x%x)", lpLibFileName, mod, flags);
+
   if(dohook && mod && !IsAPISet(lpLibFileName))
     HookAllModules();
 
@@ -739,6 +1018,13 @@ HMODULE WINAPI Hooked_LoadLibraryExW(LPCWSTR lpLibFileName, HANDLE fileHandle, D
 
   DWORD err = GetLastError();
 
+  // [NBD-DIAG] temporary diagnostic
+  {
+    nbdstr utf8name = StringFormat::Wide2UTF8(lpLibFileName);
+    if(DiagLogOnce(nbdstr("LL:") + utf8name))
+      NBDLOG("[NBD-DIAG] LoadLibrary: %s -> 0x%p (flags 0x%x)", utf8name.c_str(), mod, flags);
+  }
+
   if(dohook && mod && !IsAPISet(lpLibFileName))
     HookAllModules();
 
@@ -781,6 +1067,10 @@ FARPROC WINAPI Hooked_GetProcAddress(HMODULE mod, const LPCSTR func)
       it->second.module = GetModuleHandleA(it->first.c_str());
       if(it->second.module)
       {
+        // [NBD-DIAG] temporary diagnostic
+        NBDLOG("[NBD-DIAG] Hooked DLL present (lazy): %s @ 0x%p", it->first.c_str(),
+               it->second.module);
+
         // fetch all function hooks here, since we want to fill out the original function pointer
         // even in case nothing imports from that function (which means it would not get filled
         // out through FunctionHook::ApplyHook)
@@ -791,6 +1081,9 @@ FARPROC WINAPI Hooked_GetProcAddress(HMODULE mod, const LPCSTR func)
         }
 
         it->second.FetchOrdinalNames();
+
+        // [NBD-DIAG] apply EAT hooks for graphics DLLs
+        ApplyEATHooksToHookset(it->second, it->first);
       }
     }
 
@@ -862,6 +1155,11 @@ FARPROC WINAPI Hooked_GetProcAddress(HMODULE mod, const LPCSTR func)
         if(realfunc == NULL)
           return NULL;
 
+        // [NBD-DIAG] temporary diagnostic
+        if(DiagLogOnce(it->first + "!" + searchFunc))
+          NBDLOG("[NBD-DIAG] GPA redirect: %s!%s -> 0x%p", it->first.c_str(), searchFunc,
+                 (void *)found->hook);
+
         return (FARPROC)found->hook;
       }
     }
@@ -870,6 +1168,37 @@ FARPROC WINAPI Hooked_GetProcAddress(HMODULE mod, const LPCSTR func)
 #if ENABLED(VERBOSE_DEBUG_HOOK)
   NBDDEBUG("No matching hook found, returning original");
 #endif
+
+  // [NBD-DIAG] temporary diagnostic: log passthroughs on graphics-related DLLs, to reveal the
+  // game resolving graphics entry points without hitting our redirection.
+  {
+    nbdstr base = CachedModuleBasenameLower(mod);
+    if(IsGraphicsDLLName(base))
+    {
+      if(OrdinalAsString((void *)func))
+      {
+        uint32_t ord = (uint32_t)(uintptr_t)(func)&0xffff;
+        // manual decimal conversion to avoid pulling in <stdio.h> here
+        char ordbuf[8] = {};
+        char *p = ordbuf + 6;
+        *p = '\0';
+        for(uint32_t o = ord;; o /= 10)
+        {
+          *--p = char('0' + (o % 10));
+          if(o < 10)
+            break;
+        }
+        nbdstr ordstr = p;
+        if(DiagLogOnce(base + "!" + ordstr))
+          NBDLOG("[NBD-DIAG] GPA passthrough: %s!%s", base.c_str(), ordstr.c_str());
+      }
+      else
+      {
+        if(DiagLogOnce(base + "!" + func))
+          NBDLOG("[NBD-DIAG] GPA passthrough: %s!%s", base.c_str(), func);
+      }
+    }
+  }
 
   SetLastError(S_OK);
 
@@ -958,6 +1287,18 @@ void LibraryHooks::EndHookRegistration()
   for(auto it = s_HookData->DllHooks.begin(); it != s_HookData->DllHooks.end(); ++it)
     std::sort(it->second.FunctionHooks.begin(), it->second.FunctionHooks.end());
 
+  // [NBD-DIAG] Eagerly load the core graphics DLLs so that EAT hooks are applied
+  // deterministically at registration time, before any target code can resolve their exports.
+  // A packed target can load and resolve e.g. d3d11.dll through its own unobserved path;
+  // without eager loading we might only notice the DLL after the target already cached the
+  // real function pointers.
+  for(const char *dll :
+      {"d3d9.dll", "d3d11.dll", "d3d12.dll", "dxgi.dll", "opengl32.dll", "vulkan-1.dll"})
+  {
+    if(GetModuleHandleA(dll) == NULL)
+      LoadLibraryA(dll);
+  }
+
 #if ENABLED(VERBOSE_DEBUG_HOOK)
   NBDDEBUG("Applying hooks");
 #endif
@@ -990,6 +1331,31 @@ void LibraryHooks::ReplayInitialise()
 void LibraryHooks::RemoveHooks()
 {
   LibraryHooks::RemoveHookCallbacks();
+
+  // [NBD-DIAG] restore EAT entries and free stub pages
+  if(s_HookData)
+  {
+    for(auto it = s_HookData->DllHooks.begin(); it != s_HookData->DllHooks.end(); ++it)
+    {
+      for(EATEntry &e : it->second.eatEntries)
+      {
+        DWORD oldProt = 0;
+        if(VirtualProtect(e.slot, sizeof(DWORD), PAGE_READWRITE, &oldProt))
+        {
+          *e.slot = e.originalRVA;
+          VirtualProtect(e.slot, sizeof(DWORD), oldProt, &oldProt);
+        }
+      }
+      it->second.eatEntries.clear();
+
+      if(it->second.eatStubPage)
+      {
+        VirtualFree(it->second.eatStubPage, 0, MEM_RELEASE);
+        it->second.eatStubPage = NULL;
+        it->second.eatStubUsed = 0;
+      }
+    }
+  }
 
   for(auto it = s_InstalledHooks.begin(); it != s_InstalledHooks.end(); ++it)
   {
@@ -1051,6 +1417,9 @@ void Win32_ManualHookModule(nbdstr modName, HMODULE module)
     if(hook.orig)
       *hook.orig = GetProcAddress(module, hook.function.c_str());
   }
+
+  // [NBD-DIAG] apply EAT hooks for graphics DLLs
+  ApplyEATHooksToHookset(s_HookData->DllHooks[modName], modName);
 
   s_HookData->ApplyHooks(modName.c_str(), module);
 }
