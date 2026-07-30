@@ -43,10 +43,17 @@
 std::map<void **, void *> s_InstalledHooks;
 Threading::CriticalSection installedLock;
 
+// when false (the default), all of the breakACE behaviour below is disabled and the original
+// hooking logic runs unchanged. Set via Win32_CaptureOptionsUpdated() from the capture options.
+static bool s_BreakACE = false;
+
 // [NBD-DIAG] temporary diagnostics for investigating protected targets where graphics hooks
 // never trigger. All diag lines are prefixed with [NBD-DIAG] for easy filtering.
 static bool DiagLogOnce(const nbdstr &key)
 {
+  if(!s_BreakACE)
+    return false;
+
   static Threading::CriticalSection diaglock;
   static std::set<nbdstr> seen;
   SCOPED_LOCK(diaglock);
@@ -305,7 +312,8 @@ struct CachedHookData
           it->second.FetchOrdinalNames();
 
           // [NBD-DIAG] temporary diagnostic: confirm when a hooked DLL is seen loaded
-          NBDLOG("[NBD-DIAG] Hooked DLL present: %s @ 0x%p", it->first.c_str(), module);
+          if(s_BreakACE)
+            NBDLOG("[NBD-DIAG] Hooked DLL present: %s @ 0x%p", it->first.c_str(), module);
 
           // [NBD-DIAG] apply EAT hooks for graphics DLLs
           ApplyEATHooksToHookset(it->second, it->first);
@@ -533,7 +541,7 @@ struct CachedHookData
                     }
 
                     // [NBD-DIAG] temporary diagnostic
-                    if(applied && !already)
+                    if(s_BreakACE && applied && !already)
                       NBDLOG("[NBD-DIAG] IAT hook: %s imports %s!%s (ordinal)", modName, dllName,
                              importName);
                   }
@@ -601,7 +609,7 @@ struct CachedHookData
             }
 
             // [NBD-DIAG] temporary diagnostic
-            if(applied && !already)
+            if(s_BreakACE && applied && !already)
               NBDLOG("[NBD-DIAG] IAT hook: %s imports %s!%s", modName, dllName, importName);
           }
 
@@ -641,6 +649,9 @@ static CachedHookData *s_HookData = NULL;
 // target module; the EAT entry is then repointed at that stub.
 static void ApplyEATHooksToHookset(DllHookset &hookset, const nbdstr &dllName)
 {
+  if(!s_BreakACE)
+    return;
+
   if(!IsEATHookTarget(dllName))
     return;
 
@@ -857,7 +868,8 @@ static void HookAllModules()
     return;
 
   // [NBD-DIAG] temporary diagnostic
-  NBDLOG("[NBD-DIAG] HookAllModules pass");
+  if(s_BreakACE)
+    NBDLOG("[NBD-DIAG] HookAllModules pass");
 
   ForAllModules(
       [](const MODULEENTRY32 &me32) { s_HookData->ApplyHooks(me32.szModule, me32.hModule); });
@@ -1068,8 +1080,9 @@ FARPROC WINAPI Hooked_GetProcAddress(HMODULE mod, const LPCSTR func)
       if(it->second.module)
       {
         // [NBD-DIAG] temporary diagnostic
-        NBDLOG("[NBD-DIAG] Hooked DLL present (lazy): %s @ 0x%p", it->first.c_str(),
-               it->second.module);
+        if(s_BreakACE)
+          NBDLOG("[NBD-DIAG] Hooked DLL present (lazy): %s @ 0x%p", it->first.c_str(),
+                 it->second.module);
 
         // fetch all function hooks here, since we want to fill out the original function pointer
         // even in case nothing imports from that function (which means it would not get filled
@@ -1287,18 +1300,6 @@ void LibraryHooks::EndHookRegistration()
   for(auto it = s_HookData->DllHooks.begin(); it != s_HookData->DllHooks.end(); ++it)
     std::sort(it->second.FunctionHooks.begin(), it->second.FunctionHooks.end());
 
-  // [NBD-DIAG] Eagerly load the core graphics DLLs so that EAT hooks are applied
-  // deterministically at registration time, before any target code can resolve their exports.
-  // A packed target can load and resolve e.g. d3d11.dll through its own unobserved path;
-  // without eager loading we might only notice the DLL after the target already cached the
-  // real function pointers.
-  for(const char *dll :
-      {"d3d9.dll", "d3d11.dll", "d3d12.dll", "dxgi.dll", "opengl32.dll", "vulkan-1.dll"})
-  {
-    if(GetModuleHandleA(dll) == NULL)
-      LoadLibraryA(dll);
-  }
-
 #if ENABLED(VERBOSE_DEBUG_HOOK)
   NBDDEBUG("Applying hooks");
 #endif
@@ -1317,6 +1318,32 @@ void LibraryHooks::EndHookRegistration()
 
     s_HookData->missedOrdinals = false;
   }
+}
+
+// called from NoobDawn::SetCaptureOptions() to apply the breakACE option to this layer.
+// The option arrives after hook registration, so the eager loading below happens here rather
+// than in EndHookRegistration().
+void Win32_CaptureOptionsUpdated(bool breakACE)
+{
+  s_BreakACE = breakACE;
+
+  if(!breakACE || s_HookData == NULL)
+    return;
+
+  // Eagerly load the core graphics DLLs so that EAT hooks are applied deterministically,
+  // before any target code can resolve their exports. A packed target can load and resolve
+  // e.g. d3d11.dll through its own unobserved path; without eager loading we might only
+  // notice the DLL after the target already cached the real function pointers.
+  for(const char *dll :
+      {"d3d9.dll", "d3d11.dll", "d3d12.dll", "dxgi.dll", "opengl32.dll", "vulkan-1.dll"})
+  {
+    if(GetModuleHandleA(dll) == NULL)
+      LoadLibraryA(dll);
+  }
+
+  // apply EAT hooks for graphics DLLs that were already loaded before the option arrived
+  for(auto it = s_HookData->DllHooks.begin(); it != s_HookData->DllHooks.end(); ++it)
+    ApplyEATHooksToHookset(it->second, it->first);
 }
 
 void LibraryHooks::Refresh()

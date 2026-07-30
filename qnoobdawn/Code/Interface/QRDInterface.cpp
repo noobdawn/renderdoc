@@ -103,6 +103,7 @@ CaptureSettings::operator QVariant() const
   opts[lit("delayForDebugger")] = options.delayForDebugger;
   opts[lit("verifyBufferAccess")] = options.verifyBufferAccess;
   opts[lit("hookIntoChildren")] = options.hookIntoChildren;
+  opts[lit("breakACE")] = options.breakACE;
   opts[lit("refAllResources")] = options.refAllResources;
   opts[lit("captureAllCmdLists")] = options.captureAllCmdLists;
   opts[lit("debugOutputMute")] = options.debugOutputMute;
@@ -147,6 +148,7 @@ CaptureSettings::CaptureSettings(const QVariant &v)
   else
     options.verifyBufferAccess = opts[lit("verifyMapWrites")].toBool();
   options.hookIntoChildren = opts[lit("hookIntoChildren")].toBool();
+  options.breakACE = opts[lit("breakACE")].toBool();
   options.refAllResources = opts[lit("refAllResources")].toBool();
   options.captureAllCmdLists = opts[lit("captureAllCmdLists")].toBool();
   options.debugOutputMute = opts[lit("debugOutputMute")].toBool();

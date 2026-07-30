@@ -523,7 +523,7 @@ static bool ThreadContextRemoteCall(HANDLE hProcess, DWORD pid, uintptr_t func, 
   return false;
 }
 
-void InjectDLL(HANDLE hProcess, DWORD pid, nbdwstr libName)
+void InjectDLL(HANDLE hProcess, DWORD pid, bool breakACE, nbdwstr libName)
 {
   wchar_t dllPath[MAX_PATH + 1] = {0};
   wcscpy_s(dllPath, libName.c_str());
@@ -536,12 +536,15 @@ void InjectDLL(HANDLE hProcess, DWORD pid, nbdwstr libName)
     return;
   }
 
-  uintptr_t loadLibraryW = (uintptr_t)GetProcAddress(kernel32, "LoadLibraryW");
+  if(breakACE)
+  {
+    uintptr_t loadLibraryW = (uintptr_t)GetProcAddress(kernel32, "LoadLibraryW");
 
-  if(ThreadContextRemoteCall(hProcess, pid, loadLibraryW, dllPath, sizeof(dllPath), NULL))
-    return;
+    if(ThreadContextRemoteCall(hProcess, pid, loadLibraryW, dllPath, sizeof(dllPath), NULL))
+      return;
 
-  NBDWARN("Falling back to CreateRemoteThread injection for '%ls'", libName.c_str());
+    NBDWARN("Falling back to CreateRemoteThread injection for '%ls'", libName.c_str());
+  }
 
   void *remoteMem =
       VirtualAllocEx(hProcess, NULL, sizeof(dllPath), MEM_COMMIT, PAGE_EXECUTE_READWRITE);
@@ -679,8 +682,8 @@ uintptr_t FindRemoteDLL(DWORD pid, nbdstr libName)
   return ret;
 }
 
-void InjectFunctionCall(HANDLE hProcess, DWORD pid, uintptr_t noobdawn_remote, const char *funcName,
-                        void *data, const size_t dataLen)
+void InjectFunctionCall(HANDLE hProcess, DWORD pid, bool breakACE, uintptr_t noobdawn_remote,
+                        const char *funcName, void *data, const size_t dataLen)
 {
   if(dataLen == 0)
   {
@@ -699,10 +702,13 @@ void InjectFunctionCall(HANDLE hProcess, DWORD pid, uintptr_t noobdawn_remote, c
   // in the remote module (which might be loaded at a different base address
   uintptr_t func_remote = func_local + noobdawn_remote - (uintptr_t)noobdawn_local;
 
-  if(ThreadContextRemoteCall(hProcess, pid, func_remote, data, dataLen, data))
-    return;
+  if(breakACE)
+  {
+    if(ThreadContextRemoteCall(hProcess, pid, func_remote, data, dataLen, data))
+      return;
 
-  NBDWARN("Falling back to CreateRemoteThread for call to %s", funcName);
+    NBDWARN("Falling back to CreateRemoteThread for call to %s", funcName);
+  }
 
   void *remoteMem = VirtualAllocEx(hProcess, NULL, dataLen, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
   SIZE_T numWritten;
@@ -1256,7 +1262,7 @@ nbdpair<RDResult, uint32_t> Process::InjectIntoProcess(uint32_t pid,
     return {ResultCode::Succeeded, (uint32_t)exitCode};
   }
 
-  InjectDLL(hProcess, pid, noobdawnPath);
+  InjectDLL(hProcess, pid, opts.breakACE, noobdawnPath);
 
   const char *rdoc_dll = STRINGIZE(RDOC_BASE_NAME);
 
@@ -1277,19 +1283,19 @@ nbdpair<RDResult, uint32_t> Process::InjectIntoProcess(uint32_t pid,
     // safe to cast away the const as we know these functions don't modify the parameters
 
     if(!capturefile.empty())
-      InjectFunctionCall(hProcess, pid, loc, "INTERNAL_SetCaptureFile", (void *)capturefile.c_str(),
-                         capturefile.size() + 1);
+      InjectFunctionCall(hProcess, pid, opts.breakACE, loc, "INTERNAL_SetCaptureFile",
+                         (void *)capturefile.c_str(), capturefile.size() + 1);
 
     nbdstr debugLogfile = NBDGETLOGFILE();
 
-    InjectFunctionCall(hProcess, pid, loc, "INTERNAL_SetDebugLogFile", (void *)debugLogfile.c_str(),
-                       debugLogfile.size() + 1);
+    InjectFunctionCall(hProcess, pid, opts.breakACE, loc, "INTERNAL_SetDebugLogFile",
+                       (void *)debugLogfile.c_str(), debugLogfile.size() + 1);
 
-    InjectFunctionCall(hProcess, pid, loc, "INTERNAL_SetCaptureOptions", (CaptureOptions *)&opts,
-                       sizeof(CaptureOptions));
+    InjectFunctionCall(hProcess, pid, opts.breakACE, loc, "INTERNAL_SetCaptureOptions",
+                       (CaptureOptions *)&opts, sizeof(CaptureOptions));
 
-    InjectFunctionCall(hProcess, pid, loc, "INTERNAL_GetTargetControlIdent", &result.second,
-                       sizeof(result.second));
+    InjectFunctionCall(hProcess, pid, opts.breakACE, loc, "INTERNAL_GetTargetControlIdent",
+                       &result.second, sizeof(result.second));
 
     if(!env.empty())
     {
@@ -1303,17 +1309,19 @@ nbdpair<RDResult, uint32_t> Process::InjectIntoProcess(uint32_t pid,
         if(name == "")
           break;
 
-        InjectFunctionCall(hProcess, pid, loc, "INTERNAL_EnvModName", (void *)name.c_str(),
-                           name.size() + 1);
-        InjectFunctionCall(hProcess, pid, loc, "INTERNAL_EnvModValue", (void *)value.c_str(),
-                           value.size() + 1);
-        InjectFunctionCall(hProcess, pid, loc, "INTERNAL_EnvSep", &sep, sizeof(sep));
-        InjectFunctionCall(hProcess, pid, loc, "INTERNAL_EnvMod", &mod, sizeof(mod));
+        InjectFunctionCall(hProcess, pid, opts.breakACE, loc, "INTERNAL_EnvModName",
+                           (void *)name.c_str(), name.size() + 1);
+        InjectFunctionCall(hProcess, pid, opts.breakACE, loc, "INTERNAL_EnvModValue",
+                           (void *)value.c_str(), value.size() + 1);
+        InjectFunctionCall(hProcess, pid, opts.breakACE, loc, "INTERNAL_EnvSep", &sep,
+                           sizeof(sep));
+        InjectFunctionCall(hProcess, pid, opts.breakACE, loc, "INTERNAL_EnvMod", &mod, sizeof(mod));
       }
 
       // parameter is unused
       void *dummy = NULL;
-      InjectFunctionCall(hProcess, pid, loc, "INTERNAL_ApplyEnvMods", &dummy, sizeof(dummy));
+      InjectFunctionCall(hProcess, pid, opts.breakACE, loc, "INTERNAL_ApplyEnvMods", &dummy,
+                         sizeof(dummy));
     }
   }
 

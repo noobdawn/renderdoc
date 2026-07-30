@@ -232,6 +232,12 @@ typedef enum NOOBDAWN_CaptureOption
   //
   // Default - 0 Megabytes
   eNOOBDAWN_Option_SoftMemoryLimit = 13,
+
+  // Use alternative injection and hooking behaviour for protected targets, see
+  // CaptureOptions::breakACE.
+  //
+  // Default - disabled
+  eNOOBDAWN_Option_BreakACE = 14,
 } NOOBDAWN_CaptureOption;
 
 // Sets an option that controls how NoobDawn behaves on capture.

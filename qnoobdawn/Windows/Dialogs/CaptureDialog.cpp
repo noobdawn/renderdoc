@@ -921,6 +921,7 @@ void CaptureDialog::SetSettings(CaptureSettings settings)
   ui->AllowFullscreen->setChecked(settings.options.allowFullscreen);
   ui->AllowVSync->setChecked(settings.options.allowVSync);
   ui->HookIntoChildren->setChecked(settings.options.hookIntoChildren);
+  ui->BreakACE->setChecked(settings.options.breakACE);
   ui->CaptureCallstacks->setChecked(settings.options.captureCallstacks);
   ui->CaptureCallstacksOnlyActions->setChecked(settings.options.captureCallstacksOnlyActions);
   ui->APIValidation->setChecked(settings.options.apiValidation);
@@ -970,6 +971,7 @@ CaptureSettings CaptureDialog::Settings()
   ret.options.allowFullscreen = ui->AllowFullscreen->isChecked();
   ret.options.allowVSync = ui->AllowVSync->isChecked();
   ret.options.hookIntoChildren = ui->HookIntoChildren->isChecked();
+  ret.options.breakACE = ui->BreakACE->isChecked();
   ret.options.captureCallstacks = ui->CaptureCallstacks->isChecked();
   ret.options.captureCallstacksOnlyActions = ui->CaptureCallstacksOnlyActions->isChecked();
   ret.options.apiValidation = ui->APIValidation->isChecked();

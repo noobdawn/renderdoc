@@ -49,6 +49,11 @@
 
 extern "C" const nbdstr VulkanLayerJSONBasename = STRINGIZE(RDOC_BASE_NAME);
 
+#if ENABLED(RDOC_WIN32)
+// defined in win32_hook.cpp, applies the breakACE option to the win32 hooking layer
+void Win32_CaptureOptionsUpdated(bool breakACE);
+#endif
+
 RDOC_DEBUG_CONFIG(bool, Capture_Debug_SnapshotDiagnosticLog, false,
                   "Snapshot the diagnostic log at capture time and embed in the capture.");
 
@@ -2131,6 +2136,10 @@ void NoobDawn::SetCaptureOptions(const CaptureOptions &opts)
   m_Options = opts;
 
   LibraryHooks::OptionsUpdated();
+
+#if ENABLED(RDOC_WIN32)
+  Win32_CaptureOptionsUpdated(opts.breakACE);
+#endif
 }
 
 void NoobDawn::SetCaptureFileTemplate(const nbdstr &pathtemplate)

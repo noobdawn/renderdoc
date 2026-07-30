@@ -1645,6 +1645,9 @@ int noobdawncmd(GlobalEnvironment &env, std::vector<std::string> &argv)
               "initialise buffers to invalid value if uninitialised.");
       cmd.add("opt-hook-children", 0,
               "Capturing Option: Hooks any system API calls that create child processes.");
+      cmd.add("opt-break-ace", 0,
+              "Capturing Option: Use alternative injection and hooking behaviour for protected "
+              "targets.");
       cmd.add("opt-ref-all-resources", 0,
               "Capturing Option: Include all live resources, not just those used by a frame.");
       cmd.add("opt-capture-all-cmd-lists", 0,
@@ -1677,6 +1680,8 @@ int noobdawncmd(GlobalEnvironment &env, std::vector<std::string> &argv)
         opts.verifyBufferAccess = true;
       if(cmd.exist("opt-hook-children"))
         opts.hookIntoChildren = true;
+      if(cmd.exist("opt-break-ace"))
+        opts.breakACE = true;
       if(cmd.exist("opt-ref-all-resources"))
         opts.refAllResources = true;
       if(cmd.exist("opt-capture-all-cmd-lists"))

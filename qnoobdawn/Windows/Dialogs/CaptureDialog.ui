@@ -500,6 +500,16 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="BreakACE">
+        <property name="toolTip">
+         <string>Use alternative injection and hooking behaviour for protected targets - enable only when injection or hooking fails with the default behaviour</string>
+        </property>
+        <property name="text">
+         <string>break ACE</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QCheckBox" name="RefAllResources">
         <property name="toolTip">
          <string>Consider all resources to be included, even if unused in the capture frame</string>

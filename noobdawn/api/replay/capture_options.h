@@ -186,6 +186,24 @@ Default - disabled
 )");
   bool hookIntoChildren;
 
+  DOCUMENT(R"(Use alternative injection and hooking behaviour intended for targets where
+the default behaviour is defeated, e.g. processes protected by anti-cheat or packing.
+
+When enabled, injection happens by redirecting an existing thread's context instead of
+creating a remote thread, and graphics DLLs are hooked at their export address tables
+in addition to callers' import tables, so that function resolution paths that cannot be
+observed (e.g. inside a packed executable) still reach the hooks.
+
+Default - disabled
+
+``True`` - Use the alternative injection and export table hooking.
+
+``False`` - Use the standard injection and import table hooking.
+
+:type: bool
+)");
+  bool breakACE;
+
   DOCUMENT(R"(By default NoobDawn only includes resources in the final logfile necessary
 for that frame, this allows you to override that behaviour.
 
