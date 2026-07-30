@@ -235,8 +235,8 @@ public:
 
     nbdarray<EnvironmentModification> env;
 
-    ExecuteResult res = NOOBDAWN_ExecuteAndInject(
-        conv(executable), conv(workingDir), conv(cmdLine), env, conv(logFile), opts, wait_for_exit);
+    ExecuteResult res = NOOBDAWN_ExecuteAndInject(conv(executable), conv(workingDir), conv(cmdLine),
+                                                   env, conv(logFile), opts, "", wait_for_exit);
 
     if(res.result.code != ResultCode::Succeeded)
     {
@@ -307,7 +307,8 @@ public:
 
     nbdarray<EnvironmentModification> env;
 
-    ExecuteResult res = NOOBDAWN_InjectIntoProcess(PID, env, conv(captureFile), opts, wait_for_exit);
+    ExecuteResult res =
+        NOOBDAWN_InjectIntoProcess(PID, env, conv(captureFile), opts, "", wait_for_exit);
 
     if(res.result.code != ResultCode::Succeeded)
     {
@@ -916,6 +917,7 @@ private:
   std::string debuglog;
   uint32_t pid;
   std::string capfile;
+  std::string blacklist;
 
 public:
   CapAltBitCommand() : Command() {}
@@ -925,6 +927,7 @@ public:
     parser.add<std::string>("capfile", 0, "");
     parser.add<std::string>("debuglog", 0, "");
     parser.add<std::string>("capopts", 0, "");
+    parser.add<std::string>("capbl", 0, "");
     parser.stop_at_rest(true);
   }
   virtual const char *Description() { return "Internal use only!"; }
@@ -1012,6 +1015,7 @@ public:
     debuglog = parser.get<std::string>("debuglog");
     pid = parser.get<uint32_t>("pid");
     capfile = parser.get<std::string>("capfile");
+    blacklist = parser.get<std::string>("capbl");
 
     return true;
   }
@@ -1019,7 +1023,8 @@ public:
   {
     NOOBDAWN_SetDebugLogFile(conv(debuglog));
 
-    ExecuteResult result = NOOBDAWN_InjectIntoProcess(pid, env, conv(capfile), cmdopts, false);
+    ExecuteResult result =
+        NOOBDAWN_InjectIntoProcess(pid, env, conv(capfile), cmdopts, conv(blacklist), false);
 
     if(result.result.OK())
       return result.ident;

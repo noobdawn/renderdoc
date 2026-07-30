@@ -110,6 +110,7 @@ public:
 
   void OnCaptureTrigger(const QString &exe, const QString &workingDir, const QString &cmdLine,
                         const nbdarray<EnvironmentModification> &env, CaptureOptions opts,
+                        const nbdstr &blacklist,
                         std::function<void(LiveCapture *)> callback);
   void OnInjectTrigger(uint32_t PID, const nbdarray<EnvironmentModification> &env,
                        const QString &name, CaptureOptions opts,

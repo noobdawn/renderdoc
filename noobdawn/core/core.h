@@ -494,7 +494,9 @@ public:
   void EnableVendorExtensions(VendorExtensions ext);
 
   void SetCaptureOptions(const CaptureOptions &opts);
+  void SetBlacklist(const nbdstr &blacklist) { m_Blacklist = blacklist; }
   const CaptureOptions &GetCaptureOptions() const { return m_Options; }
+  const nbdstr &GetBlacklist() const { return m_Blacklist; }
   void RecreateCrashHandler();
   void UnloadCrashHandler();
   void RegisterMemoryRegion(void *mem, size_t size);
@@ -697,6 +699,7 @@ private:
   nbdstr m_CaptureTitle;
   nbdstr m_CurrentLogFile;
   CaptureOptions m_Options;
+  nbdstr m_Blacklist;
   uint32_t m_Overlay;
 
   nbdarray<uint32_t> m_QueuedFrameCaptures;

@@ -776,6 +776,7 @@ private:
   std::string capfile;
   std::string debuglog;
   std::string opts;
+  std::string blacklist;
 
 public:
   GlobalHookCommand() {}
@@ -785,6 +786,7 @@ public:
     parser.add<std::string>("capfile", 0, "");
     parser.add<std::string>("debuglog", 0, "");
     parser.add<std::string>("capopts", 0, "");
+    parser.add<std::string>("capbl", 0, "");
   }
   virtual const char *Description() { return "Internal use only!"; }
   virtual bool IsInternalOnly() { return true; }
@@ -795,6 +797,7 @@ public:
     capfile = parser.get<std::string>("capfile");
     debuglog = parser.get<std::string>("debuglog");
     opts = parser.get<std::string>("capopts");
+    blacklist = parser.get<std::string>("capbl");
     return true;
   }
   virtual int Execute(const CaptureOptions &)
@@ -862,6 +865,7 @@ public:
         wcsncpy_s(shimdata->rdocpath, rdocpath, _TRUNCATE);
         strncpy_s(shimdata->capfile, capfile.c_str(), _TRUNCATE);
         strncpy_s(shimdata->debuglog, debuglog.c_str(), _TRUNCATE);
+        strncpy_s(shimdata->blacklist, blacklist.c_str(), _TRUNCATE);
         memcpy(shimdata->opts, &cmdopts, sizeof(CaptureOptions));
 
         static_assert(sizeof(CaptureOptions) <= sizeof(shimdata->opts),

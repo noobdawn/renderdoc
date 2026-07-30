@@ -366,10 +366,10 @@ extern "C" NOOBDAWN_API void NOOBDAWN_CC NOOBDAWN_UnregisterMemoryRegion(void *b
 extern "C" NOOBDAWN_API ExecuteResult NOOBDAWN_CC
 NOOBDAWN_ExecuteAndInject(const nbdstr &app, const nbdstr &workingDir, const nbdstr &cmdLine,
                            const nbdarray<EnvironmentModification> &env, const nbdstr &capturefile,
-                           const CaptureOptions &opts, bool waitForExit)
+                           const CaptureOptions &opts, const nbdstr &blacklist, bool waitForExit)
 {
   nbdpair<RDResult, uint32_t> status = Process::LaunchAndInjectIntoProcess(
-      app, workingDir, cmdLine, env, capturefile, opts, waitForExit != 0);
+      app, workingDir, cmdLine, env, capturefile, opts, blacklist, waitForExit != 0);
 
   ExecuteResult ret;
   ret.result = status.first;
@@ -405,10 +405,11 @@ extern "C" NOOBDAWN_API bool NOOBDAWN_CC NOOBDAWN_CanGlobalHook()
 
 extern "C" NOOBDAWN_API ExecuteResult NOOBDAWN_CC
 NOOBDAWN_InjectIntoProcess(uint32_t pid, const nbdarray<EnvironmentModification> &env,
-                            const nbdstr &capturefile, const CaptureOptions &opts, bool waitForExit)
+                            const nbdstr &capturefile, const CaptureOptions &opts,
+                            const nbdstr &blacklist, bool waitForExit)
 {
   nbdpair<RDResult, uint32_t> status =
-      Process::InjectIntoProcess(pid, env, capturefile, opts, waitForExit != 0);
+      Process::InjectIntoProcess(pid, env, capturefile, opts, blacklist, waitForExit != 0);
 
   ExecuteResult ret;
   ret.result = status.first;

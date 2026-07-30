@@ -710,12 +710,14 @@ void MainWindow::LoadFromFilename(const QString &filename, bool temporary)
 void MainWindow::OnCaptureTrigger(const QString &exe, const QString &workingDir,
                                   const QString &cmdLine,
                                   const nbdarray<EnvironmentModification> &env, CaptureOptions opts,
+                                  const nbdstr &blacklist,
                                   std::function<void(LiveCapture *)> callback)
 {
   if(!PromptCloseCapture())
     return;
 
-  LambdaThread *th = new LambdaThread([this, exe, workingDir, cmdLine, env, opts, callback]() {
+  LambdaThread *th =
+      new LambdaThread([this, exe, workingDir, cmdLine, env, opts, blacklist, callback]() {
     if(isUnshareableDeviceInUse())
     {
       RDDialog::warning(this, tr("NoobDawn is already capturing an app on this device"),
@@ -728,7 +730,8 @@ void MainWindow::OnCaptureTrigger(const QString &exe, const QString &workingDir,
     QString capturefile = m_Ctx.TempCaptureFilename(QFileInfo(exe).baseName());
 
     ExecuteResult ret =
-        m_Ctx.Replay().ExecuteAndInject(exe, workingDir, cmdLine, env, capturefile, opts);
+        m_Ctx.Replay().ExecuteAndInject(exe, workingDir, cmdLine, env, capturefile, opts,
+                                        blacklist);
 
     GUIInvoke::call(this, [this, exe, ret, callback]() {
       if(ret.result.code == ResultCode::JDWPFailure)
@@ -787,7 +790,7 @@ void MainWindow::OnInjectTrigger(uint32_t PID, const nbdarray<EnvironmentModific
   LambdaThread *th = new LambdaThread([this, PID, env, name, opts, callback]() {
     QString capturefile = m_Ctx.TempCaptureFilename(name);
 
-    ExecuteResult ret = NOOBDAWN_InjectIntoProcess(PID, env, capturefile, opts, false);
+    ExecuteResult ret = NOOBDAWN_InjectIntoProcess(PID, env, capturefile, opts, "", false);
 
     GUIInvoke::call(this, [this, PID, ret, callback]() {
       if(ret.result.code != ResultCode::Succeeded)

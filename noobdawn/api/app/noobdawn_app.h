@@ -238,6 +238,14 @@ typedef enum NOOBDAWN_CaptureOption
   //
   // Default - disabled
   eNOOBDAWN_Option_BreakACE = 14,
+
+  // If the process name of the child process is on the blacklist, it will not attempt to hook.
+  //
+  // Default - disabled
+  //
+  // 1 - Hooks into spawned child processes which is not in the blacklist
+  // 0 - Hooks into all the spawned child processes
+  eNOOBDAWN_Option_EnableBlacklist = 15,
 } NOOBDAWN_CaptureOption;
 
 // Sets an option that controls how NoobDawn behaves on capture.

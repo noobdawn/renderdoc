@@ -671,7 +671,8 @@ static pid_t RunProcess(nbdstr appName, nbdstr workDir, const nbdstr &cmdLine, c
 nbdpair<RDResult, uint32_t> Process::InjectIntoProcess(uint32_t pid,
                                                        const nbdarray<EnvironmentModification> &env,
                                                        const nbdstr &logfile,
-                                                       const CaptureOptions &opts, bool waitForExit)
+                                                       const CaptureOptions &opts,
+                                                       const nbdstr &blacklist, bool waitForExit)
 {
   NBDUNIMPLEMENTED("Injecting into already running processes on linux");
   return {
@@ -908,7 +909,7 @@ void ResetHookingEnvVars()
 nbdpair<RDResult, uint32_t> Process::LaunchAndInjectIntoProcess(
     const nbdstr &app, const nbdstr &workingDir, const nbdstr &cmdLine,
     const nbdarray<EnvironmentModification> &envList, const nbdstr &capturefile,
-    const CaptureOptions &opts, bool waitForExit)
+    const CaptureOptions &opts, const nbdstr &blacklist, bool waitForExit)
 {
   if(app.empty())
   {

@@ -912,7 +912,7 @@ static void ActiveRemoteClientThread(ClientThread *threadData,
       if(threadData->allowExecution)
       {
         nbdtie(res, ident) =
-            Process::LaunchAndInjectIntoProcess(app, workingDir, cmdLine, env, "", opts, false);
+            Process::LaunchAndInjectIntoProcess(app, workingDir, cmdLine, env, "", opts, "", false);
       }
       else
       {
@@ -1631,7 +1631,7 @@ nbdarray<PathEntry> RemoteServer::ListFolder(const nbdstr &path)
 ExecuteResult RemoteServer::ExecuteAndInject(const nbdstr &app, const nbdstr &workingDir,
                                              const nbdstr &cmdline,
                                              const nbdarray<EnvironmentModification> &env,
-                                             const CaptureOptions &opts)
+                                             const CaptureOptions &opts, const nbdstr &blacklist)
 {
   {
     WRITE_DATA_SCOPE();

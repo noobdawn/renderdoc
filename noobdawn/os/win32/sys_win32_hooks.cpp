@@ -301,7 +301,7 @@ private:
       // inherit logfile and capture options
       nbdpair<RDResult, uint32_t> res = Process::InjectIntoProcess(
           lpProcessInformation->dwProcessId, {}, NoobDawn::Inst().GetCaptureFileTemplate(),
-          NoobDawn::Inst().GetCaptureOptions(), false);
+          NoobDawn::Inst().GetCaptureOptions(), NoobDawn::Inst().GetBlacklist(), false);
 
       if(res.first == ResultCode::Succeeded)
         NoobDawn::Inst().AddChildProcess((uint32_t)lpProcessInformation->dwProcessId, res.second);
@@ -329,6 +329,21 @@ private:
     if(!NoobDawn::Inst().GetCaptureOptions().hookIntoChildren)
       return false;
 
+    // processes that must never be injected into, to avoid infinite recursion.
+    // if the blacklist option is enabled, user-supplied process names are added.
+    nbdarray<nbdstr> blacklist = {"noobdawncmd.exe", "qnoobdawn.exe"};
+    if(NoobDawn::Inst().GetCaptureOptions().enableBlacklist)
+    {
+      nbdstr blackstr = NoobDawn::Inst().GetBlacklist();
+      nbdarray<nbdstr> customList;
+      split(blackstr, customList, ';');
+      for(const nbdstr &black : customList)
+      {
+        if(!black.trimmed().empty())
+          blacklist.push_back(strlower(black.trimmed()));
+      }
+    }
+
     bool inject = true;
 
     // sanity check to make sure we're not going to go into an infinity loop injecting into
@@ -337,18 +352,28 @@ private:
     {
       nbdstr app = strlower(StringFormat::Wide2UTF8(lpApplicationName));
 
-      if(app.contains("noobdawncmd.exe") || app.contains("qnoobdawn.exe"))
+      for(const nbdstr &black : blacklist)
       {
-        inject = false;
+        if(app.contains(black))
+        {
+          NBDDEBUG("%s contains %s (blacklist)", app.c_str(), black.c_str());
+          inject = false;
+          break;
+        }
       }
     }
     if(lpCommandLine)
     {
       nbdstr cmd = strlower(StringFormat::Wide2UTF8(lpCommandLine));
 
-      if(cmd.contains("noobdawncmd.exe") || cmd.contains("qnoobdawn.exe"))
+      for(const nbdstr &black : blacklist)
       {
-        inject = false;
+        if(cmd.contains(black))
+        {
+          NBDDEBUG("%s contains %s (blacklist)", cmd.c_str(), black.c_str());
+          inject = false;
+          break;
+        }
       }
     }
 

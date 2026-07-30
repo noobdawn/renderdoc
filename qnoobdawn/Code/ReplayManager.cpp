@@ -404,18 +404,20 @@ void ReplayManager::ReopenCaptureFile(const QString &path)
 ExecuteResult ReplayManager::ExecuteAndInject(const nbdstr &exe, const nbdstr &workingDir,
                                               const nbdstr &cmdLine,
                                               const nbdarray<EnvironmentModification> &env,
-                                              const nbdstr &capturefile, CaptureOptions opts)
+                                              const nbdstr &capturefile, CaptureOptions opts,
+                                              const nbdstr &blacklist)
 {
   ExecuteResult ret;
 
   if(m_Remote)
   {
     QMutexLocker autolock(&m_RemoteLock);
-    ret = m_Remote->ExecuteAndInject(exe, workingDir, cmdLine, env, opts);
+    ret = m_Remote->ExecuteAndInject(exe, workingDir, cmdLine, env, opts, "");
   }
   else
   {
-    ret = NOOBDAWN_ExecuteAndInject(exe, workingDir, cmdLine, env, capturefile, opts, false);
+    ret = NOOBDAWN_ExecuteAndInject(exe, workingDir, cmdLine, env, capturefile, opts, blacklist,
+                                    false);
   }
 
   return ret;

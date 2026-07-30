@@ -88,6 +88,7 @@ CaptureSettings::operator QVariant() const
   ret[lit("executable")] = executable;
   ret[lit("workingDir")] = workingDir;
   ret[lit("commandLine")] = commandLine;
+  ret[lit("blacklist")] = blacklist;
 
   QVariantList env;
   for(int i = 0; i < environment.count(); i++)
@@ -104,6 +105,7 @@ CaptureSettings::operator QVariant() const
   opts[lit("verifyBufferAccess")] = options.verifyBufferAccess;
   opts[lit("hookIntoChildren")] = options.hookIntoChildren;
   opts[lit("breakACE")] = options.breakACE;
+  opts[lit("enableBlacklist")] = options.enableBlacklist;
   opts[lit("refAllResources")] = options.refAllResources;
   opts[lit("captureAllCmdLists")] = options.captureAllCmdLists;
   opts[lit("debugOutputMute")] = options.debugOutputMute;
@@ -126,6 +128,7 @@ CaptureSettings::CaptureSettings(const QVariant &v)
   executable = data[lit("executable")].toString();
   workingDir = data[lit("workingDir")].toString();
   commandLine = data[lit("commandLine")].toString();
+  blacklist = data[lit("blacklist")].toString();
 
   QVariantList env = data[lit("environment")].toList();
   for(int i = 0; i < env.size(); i++)
@@ -149,6 +152,7 @@ CaptureSettings::CaptureSettings(const QVariant &v)
     options.verifyBufferAccess = opts[lit("verifyMapWrites")].toBool();
   options.hookIntoChildren = opts[lit("hookIntoChildren")].toBool();
   options.breakACE = opts[lit("breakACE")].toBool();
+  options.enableBlacklist = opts[lit("enableBlacklist")].toBool();
   options.refAllResources = opts[lit("refAllResources")].toBool();
   options.captureAllCmdLists = opts[lit("captureAllCmdLists")].toBool();
   options.debugOutputMute = opts[lit("debugOutputMute")].toBool();

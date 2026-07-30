@@ -204,6 +204,12 @@ extern "C" __declspec(dllexport) void __cdecl INTERNAL_SetCaptureOptions(Capture
     NoobDawn::Inst().SetCaptureOptions(*opts);
 }
 
+extern "C" __declspec(dllexport) void __cdecl INTERNAL_SetBlacklist(const char *blacklist)
+{
+  if(blacklist)
+    NoobDawn::Inst().SetBlacklist(blacklist);
+}
+
 extern "C" __declspec(dllexport) void __cdecl INTERNAL_SetCaptureFile(const char *capfile)
 {
   if(capfile)
@@ -866,7 +872,8 @@ static PROCESS_INFORMATION RunProcess(const nbdstr &app, const nbdstr &workingDi
 nbdpair<RDResult, uint32_t> Process::InjectIntoProcess(uint32_t pid,
                                                        const nbdarray<EnvironmentModification> &env,
                                                        const nbdstr &capturefile,
-                                                       const CaptureOptions &opts, bool waitForExit)
+                                                       const CaptureOptions &opts,
+                                                       const nbdstr &blacklist, bool waitForExit)
 {
   nbdwstr wcapturefile = StringFormat::UTF82Wide(capturefile);
 
@@ -1130,10 +1137,11 @@ nbdpair<RDResult, uint32_t> Process::InjectIntoProcess(uint32_t pid,
     nbdstr debugLogfile = NBDGETLOGFILE();
     nbdwstr wdebugLogfile = StringFormat::UTF82Wide(debugLogfile);
 
-    _snwprintf_s(
-        paramsAlloc, 2047, 2047,
-        L"\"%ls\" capaltbit --pid=%u --capfile=\"%ls\" --debuglog=\"%ls\" --capopts=\"%hs\"",
-        noobdawnPath, pid, wcapturefile.c_str(), wdebugLogfile.c_str(), optstr.c_str());
+    _snwprintf_s(paramsAlloc, 2047, 2047,
+                 L"\"%ls\" capaltbit --pid=%u --capfile=\"%ls\" --debuglog=\"%ls\" "
+                 L"--capopts=\"%hs\" --capbl=\"%hs\"",
+                 noobdawnPath, pid, wcapturefile.c_str(), wdebugLogfile.c_str(), optstr.c_str(),
+                 blacklist.c_str());
 
     NBDDEBUG("params %ls", paramsAlloc);
 
@@ -1297,6 +1305,9 @@ nbdpair<RDResult, uint32_t> Process::InjectIntoProcess(uint32_t pid,
     InjectFunctionCall(hProcess, pid, opts.breakACE, loc, "INTERNAL_GetTargetControlIdent",
                        &result.second, sizeof(result.second));
 
+    InjectFunctionCall(hProcess, pid, opts.breakACE, loc, "INTERNAL_SetBlacklist",
+                       (void *)blacklist.c_str(), blacklist.size() + 1);
+
     if(!env.empty())
     {
       for(const EnvironmentModification &e : env)
@@ -1422,7 +1433,7 @@ uint32_t Process::LaunchScript(const nbdstr &script, const nbdstr &workingDir,
 nbdpair<RDResult, uint32_t> Process::LaunchAndInjectIntoProcess(
     const nbdstr &app, const nbdstr &workingDir, const nbdstr &cmdLine,
     const nbdarray<EnvironmentModification> &env, const nbdstr &capturefile,
-    const CaptureOptions &opts, bool waitForExit)
+    const CaptureOptions &opts, const nbdstr &blacklist, bool waitForExit)
 {
   void *func =
       GetProcAddress(GetModuleHandleA(STRINGIZE(RDOC_BASE_NAME) ".dll"), "INTERNAL_SetCaptureFile");
@@ -1457,7 +1468,8 @@ nbdpair<RDResult, uint32_t> Process::LaunchAndInjectIntoProcess(
     return {result, 0};
   }
 
-  nbdpair<RDResult, uint32_t> ret = InjectIntoProcess(pi.dwProcessId, {}, capturefile, opts, false);
+  nbdpair<RDResult, uint32_t> ret =
+      InjectIntoProcess(pi.dwProcessId, {}, capturefile, opts, blacklist, false);
 
   CloseHandle(pi.hProcess);
   ResumeThread(pi.hThread);

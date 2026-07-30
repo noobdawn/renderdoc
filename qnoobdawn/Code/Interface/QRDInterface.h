@@ -132,6 +132,11 @@ struct CaptureSettings
 :type: str
 )");
   nbdstr commandLine;
+  DOCUMENT(R"(The process names which should not be hooked into.
+
+:type: str
+)");
+  nbdstr blacklist;
   DOCUMENT(R"(The environment changes to apply.
 
 :type: List[noobdawn.EnvironmentModification]
@@ -1588,6 +1593,7 @@ This happens either locally, or on the remote server, depending on whether a con
   running the program.
 :param str capturefile: The location to save any captures, if running locally.
 :param noobdawn.CaptureOptions opts: The capture options to use when injecting into the program.
+:param str blacklist: The process names that should not be hooked into, separated by semicolons.
 :return: The :class:`~noobdawn.ExecuteResult` indicating both the status of the operation (success
   or failure) and any reason for failure, or else the ident where the new application is listening
   for target control if everything succeeded.
@@ -1596,7 +1602,8 @@ This happens either locally, or on the remote server, depending on whether a con
   virtual ExecuteResult ExecuteAndInject(const nbdstr &exe, const nbdstr &workingDir,
                                          const nbdstr &cmdLine,
                                          const nbdarray<EnvironmentModification> &env,
-                                         const nbdstr &capturefile, CaptureOptions opts) = 0;
+                                         const nbdstr &capturefile, CaptureOptions opts,
+                                         const nbdstr &blacklist) = 0;
 
   DOCUMENT(R"(Retrieve a list of drivers that the current remote server supports.
 

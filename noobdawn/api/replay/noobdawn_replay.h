@@ -1488,7 +1488,7 @@ This happens on the remote system, so all paths are relative to the remote files
   virtual ExecuteResult ExecuteAndInject(const nbdstr &app, const nbdstr &workingDir,
                                          const nbdstr &cmdLine,
                                          const nbdarray<EnvironmentModification> &env,
-                                         const CaptureOptions &opts) = 0;
+                                         const CaptureOptions &opts, const nbdstr &blacklist) = 0;
 
   DOCUMENT(R"(Take ownership over a capture file.
 
@@ -2106,7 +2106,7 @@ DOCUMENT(R"(Launch an application and inject into it to allow capturing.
 extern "C" NOOBDAWN_API ExecuteResult NOOBDAWN_CC
 NOOBDAWN_ExecuteAndInject(const nbdstr &app, const nbdstr &workingDir, const nbdstr &cmdLine,
                            const nbdarray<EnvironmentModification> &env, const nbdstr &capturefile,
-                           const CaptureOptions &opts, bool waitForExit);
+                           const CaptureOptions &opts, const nbdstr &blacklist, bool waitForExit);
 
 DOCUMENT(R"(Where supported by operating system and permissions, inject into a running process.
 
@@ -2123,7 +2123,8 @@ DOCUMENT(R"(Where supported by operating system and permissions, inject into a r
 )");
 extern "C" NOOBDAWN_API ExecuteResult NOOBDAWN_CC
 NOOBDAWN_InjectIntoProcess(uint32_t pid, const nbdarray<EnvironmentModification> &env,
-                            const nbdstr &capturefile, const CaptureOptions &opts, bool waitForExit);
+                            const nbdstr &capturefile, const CaptureOptions &opts,
+                            const nbdstr &blacklist, bool waitForExit);
 
 DOCUMENT(R"(When debugging NoobDawn it can be useful to capture itself by doing a side-build with a
 temporary name. This function checks to see if a given self-hosted DLL is available.

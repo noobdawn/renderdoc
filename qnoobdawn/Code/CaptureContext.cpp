@@ -2322,8 +2322,9 @@ ICaptureDialog *CaptureContext::GetCaptureDialog()
       *this,
       [this](const QString &exe, const QString &workingDir, const QString &cmdLine,
              const nbdarray<EnvironmentModification> &env, CaptureOptions opts,
-             std::function<void(LiveCapture *)> callback) {
-        return m_MainWindow->OnCaptureTrigger(exe, workingDir, cmdLine, env, opts, callback);
+             const nbdstr &blacklist, std::function<void(LiveCapture *)> callback) {
+        return m_MainWindow->OnCaptureTrigger(exe, workingDir, cmdLine, env, opts, blacklist,
+                                              callback);
       },
       [this](uint32_t PID, const nbdarray<EnvironmentModification> &env, const QString &name,
              CaptureOptions opts, std::function<void(LiveCapture *)> callback) {

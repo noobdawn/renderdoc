@@ -914,7 +914,8 @@ struct AndroidRemoteServer : public RemoteServer
   virtual ExecuteResult ExecuteAndInject(const nbdstr &packageAndActivity, const nbdstr &,
                                          const nbdstr &intentArgs,
                                          const nbdarray<EnvironmentModification> &env,
-                                         const CaptureOptions &opts) override;
+                                         const CaptureOptions &opts,
+                                         const nbdstr &blacklist) override;
 
 private:
   void ResetAndroidSettings() { Android::ResetCaptureSettings(m_deviceID); }
@@ -1340,7 +1341,8 @@ void AndroidRemoteServer::ShutdownConnection()
 ExecuteResult AndroidRemoteServer::ExecuteAndInject(const nbdstr &packageAndActivity,
                                                     const nbdstr &, const nbdstr &intentArgs,
                                                     const nbdarray<EnvironmentModification> &env,
-                                                    const CaptureOptions &opts)
+                                                    const CaptureOptions &opts,
+                                                    const nbdstr &blacklist)
 {
   LazilyStartLogcatThread();
 

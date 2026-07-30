@@ -45,6 +45,7 @@ class CaptureDialog : public QFrame, public ICaptureDialog
 public:
   typedef std::function<void(const QString &exe, const QString &workingDir, const QString &cmdLine,
                              const nbdarray<EnvironmentModification> &env, CaptureOptions opts,
+                             const nbdstr &blacklist,
                              std::function<void(LiveCapture *)> callback)>
       OnCaptureMethod;
   typedef std::function<void(uint32_t PID, const nbdarray<EnvironmentModification> &env, const QString &name,
@@ -104,6 +105,7 @@ private slots:
   void on_toggleGlobal_clicked();
 
   void on_CaptureCallstacks_toggled(bool checked);
+  void on_HookIntoChildren_toggled(bool checked);
 
   // manual slots
   void vulkanLayerWarn_mouseClick();

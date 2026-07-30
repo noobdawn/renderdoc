@@ -169,6 +169,29 @@
         </property>
        </widget>
       </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="blacklistLabel">
+        <property name="toolTip">
+         <string>Child processes with names on the blacklist will not be hooked into</string>
+        </property>
+        <property name="text">
+         <string>Blacklist</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2" colspan="2">
+       <widget class="RDLineEdit" name="blacklist">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>If the process name of the child process is on the blacklist, it will not attempt to hook.&#10;If multiple process names are added to the blacklist, please use a semicolon as a separator.</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -496,6 +519,16 @@
         </property>
         <property name="text">
          <string>Capture Child Processes</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="EnableBlackList">
+        <property name="toolTip">
+         <string>Enable the process blacklist when capturing child processes - child processes with names on the blacklist will not be hooked into</string>
+        </property>
+        <property name="text">
+         <string>Enable Blacklist</string>
         </property>
        </widget>
       </item>

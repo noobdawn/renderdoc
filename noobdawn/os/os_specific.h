@@ -67,7 +67,7 @@ void StopGlobalHook();
 nbdpair<RDResult, uint32_t> InjectIntoProcess(uint32_t pid,
                                               const nbdarray<EnvironmentModification> &env,
                                               const nbdstr &capturefile, const CaptureOptions &opts,
-                                              bool waitForExit);
+                                              const nbdstr &blacklist, bool waitForExit);
 struct ProcessResult
 {
   nbdstr strStdout, strStderror;
@@ -81,7 +81,8 @@ nbdpair<RDResult, uint32_t> LaunchAndInjectIntoProcess(const nbdstr &app, const 
                                                        const nbdstr &cmdLine,
                                                        const nbdarray<EnvironmentModification> &env,
                                                        const nbdstr &capturefile,
-                                                       const CaptureOptions &opts, bool waitForExit);
+                                                       const CaptureOptions &opts,
+                                                       const nbdstr &blacklist, bool waitForExit);
 bool IsModuleLoaded(const nbdstr &module);
 void *LoadModule(const nbdstr &module);
 void *GetFunctionAddress(void *module, const nbdstr &function);
