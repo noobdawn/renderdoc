@@ -533,12 +533,32 @@
        </widget>
       </item>
       <item>
+       <widget class="QCheckBox" name="WhitelistMode">
+        <property name="toolTip">
+         <string>Invert the process list into a whitelist - only child processes whose names match the list will be hooked into, all others are left alone. Requires Enable Blacklist</string>
+        </property>
+        <property name="text">
+         <string>Whitelist mode</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QCheckBox" name="BreakACE">
         <property name="toolTip">
          <string>Use alternative injection and hooking behaviour for protected targets - enable only when injection or hooking fails with the default behaviour</string>
         </property>
         <property name="text">
          <string>break ACE</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="ExtendedHookScope">
+        <property name="toolTip">
+         <string>Extend the breakACE hooking scope to the low-level kernelbase/ntdll process creation APIs - enable only for launchers that bypass CreateProcess when starting their game</string>
+        </property>
+        <property name="text">
+         <string>Extended hook scope</string>
         </property>
        </widget>
       </item>

@@ -104,7 +104,10 @@ void DoSerialise(SerialiserType &ser, CaptureOptions &el)
   SERIALISE_MEMBER(debugOutputMute);
   SERIALISE_MEMBER(softMemoryLimit);
 
-  SIZE_CHECK(24);
+  // breakACE / extendedHookScope / enableBlacklist / enableWhitelist are deliberately not
+  // serialised - they are injection-time options and changing the capture file format for
+  // them would break compatibility. They do however contribute to sizeof(), hence 28.
+  SIZE_CHECK(28);
 }
 
 template <typename SerialiserType>

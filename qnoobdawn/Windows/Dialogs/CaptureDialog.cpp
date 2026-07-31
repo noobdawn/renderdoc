@@ -923,6 +923,49 @@ void CaptureDialog::on_processList_activated(const QModelIndex &index)
   TriggerCapture();
 }
 
+void CaptureDialog::on_EnableBlackList_toggled(bool checked)
+{
+  updateProcessListUI();
+}
+
+void CaptureDialog::on_WhitelistMode_toggled(bool checked)
+{
+  updateProcessListUI();
+}
+
+// keeps the process list row consistent with the checkbox states: Enable Blacklist is the
+// master switch that unlocks both the list edit and Whitelist mode; Whitelist mode flips
+// the row's wording to match the inverted semantics
+void CaptureDialog::updateProcessListUI()
+{
+  const bool listInUse = ui->EnableBlackList->isChecked();
+  const bool whitelist = listInUse && ui->WhitelistMode->isChecked();
+
+  ui->blacklist->setEnabled(listInUse);
+  ui->WhitelistMode->setEnabled(listInUse);
+
+  if(whitelist)
+  {
+    ui->blacklistLabel->setText(tr("Whitelist"));
+    ui->blacklistLabel->setToolTip(
+        tr("Only child processes with names on the whitelist will be hooked into"));
+    ui->blacklist->setToolTip(
+        tr("Only if the process name of the child process is on the whitelist will it attempt "
+           "to hook.\nIf multiple process names are added to the whitelist, please use a "
+           "semicolon as a separator."));
+  }
+  else
+  {
+    ui->blacklistLabel->setText(tr("Blacklist"));
+    ui->blacklistLabel->setToolTip(
+        tr("Child processes with names on the blacklist will not be hooked into"));
+    ui->blacklist->setToolTip(
+        tr("If the process name of the child process is on the blacklist, it will not attempt "
+           "to hook.\nIf multiple process names are added to the blacklist, please use a "
+           "semicolon as a separator."));
+  }
+}
+
 void CaptureDialog::SetSettings(CaptureSettings settings)
 {
   SetInjectMode(settings.inject);
@@ -938,7 +981,9 @@ void CaptureDialog::SetSettings(CaptureSettings settings)
   ui->AllowVSync->setChecked(settings.options.allowVSync);
   ui->HookIntoChildren->setChecked(settings.options.hookIntoChildren);
   ui->EnableBlackList->setChecked(settings.options.enableBlacklist);
+  ui->WhitelistMode->setChecked(settings.options.enableWhitelist);
   ui->BreakACE->setChecked(settings.options.breakACE);
+  ui->ExtendedHookScope->setChecked(settings.options.extendedHookScope);
   ui->CaptureCallstacks->setChecked(settings.options.captureCallstacks);
   ui->CaptureCallstacksOnlyActions->setChecked(settings.options.captureCallstacksOnlyActions);
   ui->APIValidation->setChecked(settings.options.apiValidation);
@@ -952,6 +997,7 @@ void CaptureDialog::SetSettings(CaptureSettings settings)
   // force flush this state
   on_CaptureCallstacks_toggled(ui->CaptureCallstacks->isChecked());
   on_HookIntoChildren_toggled(ui->HookIntoChildren->isChecked());
+  updateProcessListUI();
 
   if(settings.numQueuedFrames > 0)
   {
@@ -991,7 +1037,9 @@ CaptureSettings CaptureDialog::Settings()
   ret.options.allowVSync = ui->AllowVSync->isChecked();
   ret.options.hookIntoChildren = ui->HookIntoChildren->isChecked();
   ret.options.enableBlacklist = ui->EnableBlackList->isChecked();
+  ret.options.enableWhitelist = ui->WhitelistMode->isChecked();
   ret.options.breakACE = ui->BreakACE->isChecked();
+  ret.options.extendedHookScope = ui->ExtendedHookScope->isChecked();
   ret.options.captureCallstacks = ui->CaptureCallstacks->isChecked();
   ret.options.captureCallstacksOnlyActions = ui->CaptureCallstacksOnlyActions->isChecked();
   ret.options.apiValidation = ui->APIValidation->isChecked();

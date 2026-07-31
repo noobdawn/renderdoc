@@ -45,7 +45,9 @@ int NOOBDAWN_CC SetCaptureOptionU32(NOOBDAWN_CaptureOption opt, uint32_t val)
     case eNOOBDAWN_Option_VerifyBufferAccess: opts.verifyBufferAccess = (val != 0); break;
     case eNOOBDAWN_Option_HookIntoChildren: opts.hookIntoChildren = (val != 0); break;
     case eNOOBDAWN_Option_BreakACE: opts.breakACE = (val != 0); break;
+    case eNOOBDAWN_Option_ExtendedHookScope: opts.extendedHookScope = (val != 0); break;
     case eNOOBDAWN_Option_EnableBlacklist: opts.enableBlacklist = (val != 0); break;
+    case eNOOBDAWN_Option_EnableWhitelist: opts.enableWhitelist = (val != 0); break;
     case eNOOBDAWN_Option_RefAllResources: opts.refAllResources = (val != 0); break;
     case eNOOBDAWN_Option_SaveAllInitials:
       // option is deprecated
@@ -83,7 +85,9 @@ int NOOBDAWN_CC SetCaptureOptionF32(NOOBDAWN_CaptureOption opt, float val)
     case eNOOBDAWN_Option_VerifyBufferAccess: opts.verifyBufferAccess = (val != 0.0f); break;
     case eNOOBDAWN_Option_HookIntoChildren: opts.hookIntoChildren = (val != 0.0f); break;
     case eNOOBDAWN_Option_BreakACE: opts.breakACE = (val != 0.0f); break;
+    case eNOOBDAWN_Option_ExtendedHookScope: opts.extendedHookScope = (val != 0.0f); break;
     case eNOOBDAWN_Option_EnableBlacklist: opts.enableBlacklist = (val != 0.0f); break;
+    case eNOOBDAWN_Option_EnableWhitelist: opts.enableWhitelist = (val != 0.0f); break;
     case eNOOBDAWN_Option_RefAllResources: opts.refAllResources = (val != 0.0f); break;
     case eNOOBDAWN_Option_SaveAllInitials:
       // option is deprecated
@@ -123,8 +127,12 @@ uint32_t NOOBDAWN_CC GetCaptureOptionU32(NOOBDAWN_CaptureOption opt)
       return (NoobDawn::Inst().GetCaptureOptions().hookIntoChildren ? 1 : 0);
     case eNOOBDAWN_Option_BreakACE:
       return (NoobDawn::Inst().GetCaptureOptions().breakACE ? 1 : 0);
+    case eNOOBDAWN_Option_ExtendedHookScope:
+      return (NoobDawn::Inst().GetCaptureOptions().extendedHookScope ? 1 : 0);
     case eNOOBDAWN_Option_EnableBlacklist:
       return (NoobDawn::Inst().GetCaptureOptions().enableBlacklist ? 1 : 0);
+    case eNOOBDAWN_Option_EnableWhitelist:
+      return (NoobDawn::Inst().GetCaptureOptions().enableWhitelist ? 1 : 0);
     case eNOOBDAWN_Option_RefAllResources:
       return (NoobDawn::Inst().GetCaptureOptions().refAllResources ? 1 : 0);
     case eNOOBDAWN_Option_SaveAllInitials:
@@ -166,8 +174,12 @@ float NOOBDAWN_CC GetCaptureOptionF32(NOOBDAWN_CaptureOption opt)
       return (NoobDawn::Inst().GetCaptureOptions().hookIntoChildren ? 1.0f : 0.0f);
     case eNOOBDAWN_Option_BreakACE:
       return (NoobDawn::Inst().GetCaptureOptions().breakACE ? 1.0f : 0.0f);
+    case eNOOBDAWN_Option_ExtendedHookScope:
+      return (NoobDawn::Inst().GetCaptureOptions().extendedHookScope ? 1.0f : 0.0f);
     case eNOOBDAWN_Option_EnableBlacklist:
       return (NoobDawn::Inst().GetCaptureOptions().enableBlacklist ? 1.0f : 0.0f);
+    case eNOOBDAWN_Option_EnableWhitelist:
+      return (NoobDawn::Inst().GetCaptureOptions().enableWhitelist ? 1.0f : 0.0f);
     case eNOOBDAWN_Option_RefAllResources:
       return (NoobDawn::Inst().GetCaptureOptions().refAllResources ? 1.0f : 0.0f);
     case eNOOBDAWN_Option_SaveAllInitials:
@@ -200,7 +212,9 @@ CaptureOptions::CaptureOptions()
   verifyBufferAccess = false;
   hookIntoChildren = false;
   breakACE = false;
+  extendedHookScope = false;
   enableBlacklist = false;
+  enableWhitelist = false;
   refAllResources = false;
   captureAllCmdLists = false;
   debugOutputMute = true;
@@ -227,7 +241,9 @@ TEST_CASE("Check CaptureOptions de/serialise to string", "[serialise]")
       &opts.verifyBufferAccess,
       &opts.hookIntoChildren,
       &opts.breakACE,
+      &opts.extendedHookScope,
       &opts.enableBlacklist,
+      &opts.enableWhitelist,
       &opts.refAllResources,
       &opts.captureAllCmdLists,
       &opts.debugOutputMute,

@@ -246,6 +246,17 @@ typedef enum NOOBDAWN_CaptureOption
   // 1 - Hooks into spawned child processes which is not in the blacklist
   // 0 - Hooks into all the spawned child processes
   eNOOBDAWN_Option_EnableBlacklist = 15,
+
+  // Extend the breakACE hooking scope to the lowest-level process creation APIs, see
+  // CaptureOptions::extendedHookScope.
+  //
+  // Default - disabled
+  eNOOBDAWN_Option_ExtendedHookScope = 16,
+
+  // Invert the child process list into a whitelist, see CaptureOptions::enableWhitelist.
+  //
+  // Default - disabled
+  eNOOBDAWN_Option_EnableWhitelist = 17,
 } NOOBDAWN_CaptureOption;
 
 // Sets an option that controls how NoobDawn behaves on capture.

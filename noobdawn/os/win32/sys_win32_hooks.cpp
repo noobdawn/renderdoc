@@ -25,6 +25,9 @@
 
 #include <winsock2.h>
 #include "core/core.h"
+// after core.h (which pulls in windows.h) - winternl.h needs the windows types for
+// RTL_USER_PROCESS_PARAMETERS / OBJECT_ATTRIBUTES used by the NtCreateUserProcess hook
+#include <winternl.h>
 #include "hooks/hooks.h"
 #include "os/os_specific.h"
 #include "strings/string_utils.h"
@@ -70,6 +73,59 @@ typedef BOOL(WINAPI *PFN_CREATE_PROCESS_WITH_LOGON_W)(LPCWSTR lpUsername, LPCWST
                                                       LPSTARTUPINFOW lpStartupInfo,
                                                       LPPROCESS_INFORMATION lpProcessInformation);
 
+// CreateProcessInternalW is undocumented but stable across Windows versions: kernel32's
+// CreateProcessA/W and advapi32's CreateProcessAsUserW all forward to it. Protected launchers
+// often resolve it directly from kernelbase.dll (GetProcAddress or a private export-table
+// walk) to dodge IAT hooks on the documented entry points, so hooking it catches every
+// in-process process-creation path.
+typedef BOOL(WINAPI *PFN_CREATE_PROCESS_INTERNAL_W)(
+    HANDLE hUserToken, LPCWSTR lpApplicationName, LPWSTR lpCommandLine,
+    LPSECURITY_ATTRIBUTES lpProcessAttributes, LPSECURITY_ATTRIBUTES lpThreadAttributes,
+    BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment,
+    LPCWSTR lpCurrentDirectory, LPSTARTUPINFOW lpStartupInfo,
+    LPPROCESS_INFORMATION lpProcessInformation, PHANDLE hNewToken);
+
+// NtCreateUserProcess is the single chokepoint of all user-mode process creation - even
+// CreateProcessInternalW ends up here. Protected launchers call it directly (resolving from
+// ntdll themselves) to dodge hooks on the documented/kernelside layers entirely.
+// PS_CREATE_INFO / PS_ATTRIBUTE_LIST are opaque to us and passed through untouched.
+typedef NTSTATUS(NTAPI *PFN_NT_CREATE_USER_PROCESS)(
+    PHANDLE ProcessHandle, PHANDLE ThreadHandle, ACCESS_MASK ProcessDesiredAccess,
+    ACCESS_MASK ThreadDesiredAccess, POBJECT_ATTRIBUTES ProcessObjectAttributes,
+    POBJECT_ATTRIBUTES ThreadObjectAttributes, ULONG ProcessFlags, ULONG ThreadFlags,
+    PRTL_USER_PROCESS_PARAMETERS ProcessParameters, PVOID CreateInfo, PVOID AttributeList);
+
+// [NBD-DIAG] child-process injection diagnostics, gated on the same breakACE capture option
+// as the diag logging in win32_hook.cpp (which keeps its own static copy of the flag).
+static bool SysHookDiagEnabled()
+{
+  return NoobDawn::Inst().GetCaptureOptions().breakACE;
+}
+
+// [NBD-DIAG] builds a bounded UTF-8 description of a process about to be created, for logging.
+static nbdstr DescribeChildTarget(LPCWSTR lpApplicationName, LPCWSTR lpCommandLine)
+{
+  nbdstr ret;
+  if(lpApplicationName)
+    ret = StringFormat::Wide2UTF8(lpApplicationName);
+  if(lpCommandLine)
+  {
+    if(!ret.empty())
+      ret += " ";
+    ret += StringFormat::Wide2UTF8(lpCommandLine);
+  }
+  if(ret.length() > 240)
+    ret = ret.substr(0, 240) + "...";
+  return ret;
+}
+
+static nbdstr DescribeChildTarget(LPCSTR lpApplicationName, LPCSTR lpCommandLine)
+{
+  return DescribeChildTarget(
+      lpApplicationName ? StringFormat::UTF82Wide(lpApplicationName).c_str() : NULL,
+      lpCommandLine ? StringFormat::UTF82Wide(lpCommandLine).c_str() : NULL);
+}
+
 class SysHook : LibraryHook
 {
 public:
@@ -85,6 +141,8 @@ public:
 
     // register libraries that we care about. We don't need a callback when they are loaded
     LibraryHooks::RegisterLibraryHook("kernel32.dll", NULL);
+    LibraryHooks::RegisterLibraryHook("kernelbase.dll", NULL);
+    LibraryHooks::RegisterLibraryHook("ntdll.dll", NULL);
     LibraryHooks::RegisterLibraryHook("advapi32.dll", NULL);
     LibraryHooks::RegisterLibraryHook("api-ms-win-core-processthreads-l1-1-0.dll", NULL);
     LibraryHooks::RegisterLibraryHook("api-ms-win-core-processthreads-l1-1-1.dll", NULL);
@@ -95,6 +153,16 @@ public:
     // wish)
     CreateProcessA.Register("kernel32.dll", "CreateProcessA", CreateProcessA_hook);
     CreateProcessW.Register("kernel32.dll", "CreateProcessW", CreateProcessW_hook);
+
+    // the convergence point of all CreateProcess variants. Hooked mainly so that the breakACE
+    // EAT hooking can repoint its export: targets that bypass the kernel32/advapi32 entry
+    // points entirely still funnel through here.
+    CreateProcessInternalW.Register("kernelbase.dll", "CreateProcessInternalW",
+                                    CreateProcessInternalW_hook);
+
+    // the ultimate chokepoint - launchers that bypass kernelbase entirely still have to come
+    // here (unless they hand-roll raw syscalls, which no user-mode hook can catch)
+    NtCreateUserProcess.Register("ntdll.dll", "NtCreateUserProcess", NtCreateUserProcess_hook);
 
     CreateProcessAsUserA.Register("advapi32.dll", "CreateProcessAsUserA", CreateProcessAsUserA_hook);
     CreateProcessAsUserW.Register("advapi32.dll", "CreateProcessAsUserW", CreateProcessAsUserW_hook);
@@ -152,6 +220,10 @@ private:
   HookedFunction<PFN_CREATE_PROCESS_A> CreateProcessA;
   HookedFunction<PFN_CREATE_PROCESS_W> CreateProcessW;
 
+  HookedFunction<PFN_CREATE_PROCESS_INTERNAL_W> CreateProcessInternalW;
+
+  HookedFunction<PFN_NT_CREATE_USER_PROCESS> NtCreateUserProcess;
+
   HookedFunction<PFN_CREATE_PROCESS_A> API110CreateProcessA;
   HookedFunction<PFN_CREATE_PROCESS_W> API110CreateProcessW;
   HookedFunction<PFN_CREATE_PROCESS_A> API111CreateProcessA;
@@ -202,8 +274,8 @@ private:
                        std::function<BOOL(DWORD dwCreationFlags, LPVOID pEnvironment,
                                           LPPROCESS_INFORMATION lpProcessInformation)>
                            realFunc,
-                       DWORD dwCreationFlags, bool inject, LPVOID pEnvironment,
-                       LPPROCESS_INFORMATION lpProcessInformation)
+                       DWORD dwCreationFlags, bool inject, const nbdstr &targetDesc,
+                       LPVOID pEnvironment, LPPROCESS_INFORMATION lpProcessInformation)
   {
     bool recursive = syshooks.CheckRecurse();
 
@@ -294,6 +366,21 @@ private:
     BOOL ret = realFunc(dwCreationFlags, env, lpProcessInformation);
     NBDDEBUG("Called real %s", entryPoint);
 
+    // [NBD-DIAG] log every child process creation that comes through our hooks, so we can see
+    // exactly which processes a protected launcher spawns and what we decided to do with them
+    if(SysHookDiagEnabled())
+    {
+      if(!ret)
+        NBDLOG("[NBD-DIAG] %s failed (GetLastError %u) creating child '%s'", entryPoint,
+               GetLastError(), targetDesc.c_str());
+      else if(inject)
+        NBDLOG("[NBD-DIAG] %s created child pid %u '%s' - injecting", entryPoint,
+               lpProcessInformation->dwProcessId, targetDesc.c_str());
+      else
+        NBDLOG("[NBD-DIAG] %s created child pid %u '%s' - not injecting", entryPoint,
+               lpProcessInformation->dwProcessId, targetDesc.c_str());
+    }
+
     if(ret && inject)
     {
       NBDDEBUG("Intercepting %s", entryPoint);
@@ -303,8 +390,21 @@ private:
           lpProcessInformation->dwProcessId, {}, NoobDawn::Inst().GetCaptureFileTemplate(),
           NoobDawn::Inst().GetCaptureOptions(), NoobDawn::Inst().GetBlacklist(), false);
 
+      // [NBD-DIAG] previously injection failure here was completely silent
       if(res.first == ResultCode::Succeeded)
+      {
         NoobDawn::Inst().AddChildProcess((uint32_t)lpProcessInformation->dwProcessId, res.second);
+
+        if(SysHookDiagEnabled())
+          NBDLOG("[NBD-DIAG] child pid %u injection succeeded (target control ident %u)",
+                 lpProcessInformation->dwProcessId, res.second);
+      }
+      else if(SysHookDiagEnabled())
+      {
+        NBDERR("[NBD-DIAG] child pid %u injection FAILED (code %u): %s",
+               lpProcessInformation->dwProcessId, (uint32_t)res.first.code,
+               res.first.message.c_str());
+      }
     }
 
     if(resume)
@@ -327,7 +427,57 @@ private:
   static bool ShouldInject(LPCWSTR lpApplicationName, LPCWSTR lpCommandLine)
   {
     if(!NoobDawn::Inst().GetCaptureOptions().hookIntoChildren)
+    {
+      // [NBD-DIAG] previously this early-out was silent
+      if(SysHookDiagEnabled())
+        NBDLOG("[NBD-DIAG] ShouldInject: hookIntoChildren is disabled, child '%s' skipped",
+               DescribeChildTarget(lpApplicationName, lpCommandLine).c_str());
       return false;
+    }
+
+    const CaptureOptions &capOpts = NoobDawn::Inst().GetCaptureOptions();
+
+    // whitelist mode: the user-supplied process list is inverted - only children matching one
+    // of its entries get injected. Requires enableBlacklist (the master switch for the list)
+    // so the UI can present it as a modifier of the list rather than an independent mode.
+    if(capOpts.enableBlacklist && capOpts.enableWhitelist)
+    {
+      nbdstr app =
+          lpApplicationName ? strlower(StringFormat::Wide2UTF8(lpApplicationName)) : nbdstr();
+      nbdstr cmd = lpCommandLine ? strlower(StringFormat::Wide2UTF8(lpCommandLine)) : nbdstr();
+
+      // hard exclusions always apply, in both modes - never inject our own tools
+      static const char *hardExcluded[] = {"noobdawncmd.exe", "qnoobdawn.exe"};
+      for(const char *black : hardExcluded)
+      {
+        if((!app.empty() && app.contains(black)) || (!cmd.empty() && cmd.contains(black)))
+          return false;
+      }
+
+      nbdstr whitestr = NoobDawn::Inst().GetBlacklist();
+      nbdarray<nbdstr> whitelist;
+      split(whitestr, whitelist, ';');
+
+      for(const nbdstr &white : whitelist)
+      {
+        nbdstr w = strlower(white.trimmed());
+        if(w.empty())
+          continue;
+
+        if((!app.empty() && app.contains(w)) || (!cmd.empty() && cmd.contains(w)))
+        {
+          if(SysHookDiagEnabled())
+            NBDLOG("[NBD-DIAG] ShouldInject: child '%s' matches whitelist entry '%s' - injecting",
+                   DescribeChildTarget(lpApplicationName, lpCommandLine).c_str(), w.c_str());
+          return true;
+        }
+      }
+
+      if(SysHookDiagEnabled())
+        NBDLOG("[NBD-DIAG] ShouldInject: child '%s' matches no whitelist entry - skipped",
+               DescribeChildTarget(lpApplicationName, lpCommandLine).c_str());
+      return false;
+    }
 
     // processes that must never be injected into, to avoid infinite recursion.
     // if the blacklist option is enabled, user-supplied process names are added.
@@ -357,6 +507,10 @@ private:
         if(app.contains(black))
         {
           NBDDEBUG("%s contains %s (blacklist)", app.c_str(), black.c_str());
+          // [NBD-DIAG] surface blacklist rejections in the normal log
+          if(SysHookDiagEnabled())
+            NBDLOG("[NBD-DIAG] ShouldInject: child '%s' matches blacklist entry '%s' - skipped",
+                   DescribeChildTarget(lpApplicationName, lpCommandLine).c_str(), black.c_str());
           inject = false;
           break;
         }
@@ -371,6 +525,10 @@ private:
         if(cmd.contains(black))
         {
           NBDDEBUG("%s contains %s (blacklist)", cmd.c_str(), black.c_str());
+          // [NBD-DIAG] surface blacklist rejections in the normal log
+          if(SysHookDiagEnabled())
+            NBDLOG("[NBD-DIAG] ShouldInject: child '%s' matches blacklist entry '%s' - skipped",
+                   DescribeChildTarget(lpApplicationName, lpCommandLine).c_str(), black.c_str());
           inject = false;
           break;
         }
@@ -403,7 +561,8 @@ private:
                                            lpThreadAttributes, bInheritHandles, flags, env,
                                            lpCurrentDirectory, lpStartupInfo, pi);
         },
-        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine), lpEnvironment,
+        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine),
+        DescribeChildTarget(lpApplicationName, lpCommandLine), lpEnvironment,
         lpProcessInformation);
   }
 
@@ -424,8 +583,129 @@ private:
                                            lpThreadAttributes, bInheritHandles, flags, env,
                                            lpCurrentDirectory, lpStartupInfo, pi);
         },
-        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine), lpEnvironment,
+        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine),
+        DescribeChildTarget(lpApplicationName, lpCommandLine), lpEnvironment,
         lpProcessInformation);
+  }
+
+  static BOOL WINAPI CreateProcessInternalW_hook(
+      HANDLE hUserToken, LPCWSTR lpApplicationName, LPWSTR lpCommandLine,
+      LPSECURITY_ATTRIBUTES lpProcessAttributes, LPSECURITY_ATTRIBUTES lpThreadAttributes,
+      BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment,
+      LPCWSTR lpCurrentDirectory, LPSTARTUPINFOW lpStartupInfo,
+      LPPROCESS_INFORMATION lpProcessInformation, PHANDLE hNewToken)
+  {
+    // when the extended hook scope option is off this hook is completely transparent - only
+    // the documented CreateProcess variants do child injection then
+    if(!NoobDawn::Inst().GetCaptureOptions().extendedHookScope)
+      return syshooks.CreateProcessInternalW()(
+          hUserToken, lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
+          bInheritHandles, dwCreationFlags, lpEnvironment, lpCurrentDirectory, lpStartupInfo,
+          lpProcessInformation, hNewToken);
+
+    return Hooked_CreateProcess(
+        "CreateProcessInternalW",
+        [=](DWORD flags, LPVOID env, LPPROCESS_INFORMATION pi) {
+          return syshooks.CreateProcessInternalW()(
+              hUserToken, lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
+              bInheritHandles, flags, env, lpCurrentDirectory, lpStartupInfo, pi, hNewToken);
+        },
+        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine),
+        DescribeChildTarget(lpApplicationName, lpCommandLine), lpEnvironment,
+        lpProcessInformation);
+  }
+
+  static NTSTATUS NTAPI NtCreateUserProcess_hook(
+      PHANDLE ProcessHandle, PHANDLE ThreadHandle, ACCESS_MASK ProcessDesiredAccess,
+      ACCESS_MASK ThreadDesiredAccess, POBJECT_ATTRIBUTES ProcessObjectAttributes,
+      POBJECT_ATTRIBUTES ThreadObjectAttributes, ULONG ProcessFlags, ULONG ThreadFlags,
+      PRTL_USER_PROCESS_PARAMETERS ProcessParameters, PVOID CreateInfo, PVOID AttributeList)
+  {
+    // when the extended hook scope option is off this hook is completely transparent
+    if(!NoobDawn::Inst().GetCaptureOptions().extendedHookScope)
+      return syshooks.NtCreateUserProcess()(ProcessHandle, ThreadHandle, ProcessDesiredAccess,
+                                            ThreadDesiredAccess, ProcessObjectAttributes,
+                                            ThreadObjectAttributes, ProcessFlags, ThreadFlags,
+                                            ProcessParameters, CreateInfo, AttributeList);
+
+    // nested hits (CreateProcessW -> CreateProcessInternalW -> here) must pass straight
+    // through: the outermost hooked layer already injected this child, and injecting again
+    // would register it twice
+    if(syshooks.CheckRecurse())
+      return syshooks.NtCreateUserProcess()(ProcessHandle, ThreadHandle, ProcessDesiredAccess,
+                                            ThreadDesiredAccess, ProcessObjectAttributes,
+                                            ThreadObjectAttributes, ProcessFlags, ThreadFlags,
+                                            ProcessParameters, CreateInfo, AttributeList);
+
+    // THREAD_CREATE_FLAGS_CREATE_SUSPENDED - force the initial thread suspended (mirroring
+    // what Hooked_CreateProcess does with CREATE_SUSPENDED) so we can inject before any of
+    // the child's code runs, then resume afterwards
+    const ULONG threadCreateFlagsSuspended = 0x1;
+
+    // the image path lives in the process parameters - direct Nt callers don't have the nice
+    // lpApplicationName/lpCommandLine split that the Win32 APIs give us
+    LPCWSTR imagePath =
+        (ProcessParameters && ProcessParameters->ImagePathName.Buffer)
+            ? ProcessParameters->ImagePathName.Buffer
+            : NULL;
+
+    nbdstr targetDesc = DescribeChildTarget(imagePath, (LPCWSTR)NULL);
+    bool inject = ShouldInject(imagePath, (LPCWSTR)NULL);
+
+    if(SysHookDiagEnabled())
+      NBDLOG("[NBD-DIAG] NtCreateUserProcess: '%s'%s", targetDesc.c_str(),
+             inject ? "" : " (not injecting)");
+
+    bool resume = (ThreadFlags & threadCreateFlagsSuspended) == 0;
+    ThreadFlags |= threadCreateFlagsSuspended;
+
+    NTSTATUS status = syshooks.NtCreateUserProcess()(
+        ProcessHandle, ThreadHandle, ProcessDesiredAccess, ThreadDesiredAccess,
+        ProcessObjectAttributes, ThreadObjectAttributes, ProcessFlags, ThreadFlags,
+        ProcessParameters, CreateInfo, AttributeList);
+
+    if(status >= 0 && ProcessHandle && *ProcessHandle)
+    {
+      DWORD pid = GetProcessId(*ProcessHandle);
+
+      if(SysHookDiagEnabled())
+        NBDLOG("[NBD-DIAG] NtCreateUserProcess created child pid %u '%s'%s", pid,
+               targetDesc.c_str(), inject ? " - injecting" : " - not injecting");
+
+      if(inject && pid != 0)
+      {
+        // inherit logfile and capture options, same as Hooked_CreateProcess
+        nbdpair<RDResult, uint32_t> res = Process::InjectIntoProcess(
+            pid, {}, NoobDawn::Inst().GetCaptureFileTemplate(),
+            NoobDawn::Inst().GetCaptureOptions(), NoobDawn::Inst().GetBlacklist(), false);
+
+        if(res.first == ResultCode::Succeeded)
+        {
+          NoobDawn::Inst().AddChildProcess(pid, res.second);
+
+          if(SysHookDiagEnabled())
+            NBDLOG("[NBD-DIAG] child pid %u injection succeeded (target control ident %u)", pid,
+                   res.second);
+        }
+        else if(SysHookDiagEnabled())
+        {
+          NBDERR("[NBD-DIAG] child pid %u injection FAILED (code %u): %s", pid,
+                 (uint32_t)res.first.code, res.first.message.c_str());
+        }
+      }
+
+      if(resume && ThreadHandle && *ThreadHandle)
+        ResumeThread(*ThreadHandle);
+    }
+    else if(SysHookDiagEnabled())
+    {
+      NBDLOG("[NBD-DIAG] NtCreateUserProcess failed (status 0x%x) for '%s'", (uint32_t)status,
+             targetDesc.c_str());
+    }
+
+    syshooks.EndRecurse();
+
+    return status;
   }
 
   static BOOL WINAPI API110CreateProcessA_hook(
@@ -442,7 +722,8 @@ private:
               lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
               bInheritHandles, flags, env, lpCurrentDirectory, lpStartupInfo, pi);
         },
-        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine), lpEnvironment,
+        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine),
+        DescribeChildTarget(lpApplicationName, lpCommandLine), lpEnvironment,
         lpProcessInformation);
   }
 
@@ -460,7 +741,8 @@ private:
               lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
               bInheritHandles, flags, env, lpCurrentDirectory, lpStartupInfo, pi);
         },
-        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine), lpEnvironment,
+        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine),
+        DescribeChildTarget(lpApplicationName, lpCommandLine), lpEnvironment,
         lpProcessInformation);
   }
 
@@ -478,7 +760,8 @@ private:
               lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
               bInheritHandles, flags, env, lpCurrentDirectory, lpStartupInfo, pi);
         },
-        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine), lpEnvironment,
+        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine),
+        DescribeChildTarget(lpApplicationName, lpCommandLine), lpEnvironment,
         lpProcessInformation);
   }
 
@@ -496,7 +779,8 @@ private:
               lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
               bInheritHandles, flags, env, lpCurrentDirectory, lpStartupInfo, pi);
         },
-        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine), lpEnvironment,
+        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine),
+        DescribeChildTarget(lpApplicationName, lpCommandLine), lpEnvironment,
         lpProcessInformation);
   }
 
@@ -514,7 +798,8 @@ private:
               lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
               bInheritHandles, flags, env, lpCurrentDirectory, lpStartupInfo, pi);
         },
-        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine), lpEnvironment,
+        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine),
+        DescribeChildTarget(lpApplicationName, lpCommandLine), lpEnvironment,
         lpProcessInformation);
   }
 
@@ -532,7 +817,8 @@ private:
               lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
               bInheritHandles, flags, env, lpCurrentDirectory, lpStartupInfo, pi);
         },
-        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine), lpEnvironment,
+        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine),
+        DescribeChildTarget(lpApplicationName, lpCommandLine), lpEnvironment,
         lpProcessInformation);
   }
 
@@ -549,7 +835,8 @@ private:
               hToken, lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
               bInheritHandles, flags, env, lpCurrentDirectory, lpStartupInfo, pi);
         },
-        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine), lpEnvironment,
+        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine),
+        DescribeChildTarget(lpApplicationName, lpCommandLine), lpEnvironment,
         lpProcessInformation);
   }
 
@@ -566,7 +853,8 @@ private:
               hToken, lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
               bInheritHandles, flags, env, lpCurrentDirectory, lpStartupInfo, pi);
         },
-        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine), lpEnvironment,
+        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine),
+        DescribeChildTarget(lpApplicationName, lpCommandLine), lpEnvironment,
         lpProcessInformation);
   }
 
@@ -585,7 +873,8 @@ private:
                                                     lpApplicationName, lpCommandLine, flags, env,
                                                     lpCurrentDirectory, lpStartupInfo, pi);
         },
-        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine), lpEnvironment,
+        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine),
+        DescribeChildTarget(lpApplicationName, lpCommandLine), lpEnvironment,
         lpProcessInformation);
   }
 
@@ -602,7 +891,8 @@ private:
               hToken, lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
               bInheritHandles, flags, env, lpCurrentDirectory, lpStartupInfo, pi);
         },
-        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine), lpEnvironment,
+        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine),
+        DescribeChildTarget(lpApplicationName, lpCommandLine), lpEnvironment,
         lpProcessInformation);
   }
 
@@ -619,7 +909,8 @@ private:
               hToken, lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
               bInheritHandles, flags, env, lpCurrentDirectory, lpStartupInfo, pi);
         },
-        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine), lpEnvironment,
+        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine),
+        DescribeChildTarget(lpApplicationName, lpCommandLine), lpEnvironment,
         lpProcessInformation);
   }
 
@@ -636,7 +927,8 @@ private:
               hToken, lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
               bInheritHandles, flags, env, lpCurrentDirectory, lpStartupInfo, pi);
         },
-        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine), lpEnvironment,
+        dwCreationFlags, ShouldInject(lpApplicationName, lpCommandLine),
+        DescribeChildTarget(lpApplicationName, lpCommandLine), lpEnvironment,
         lpProcessInformation);
   }
 };

@@ -105,7 +105,9 @@ CaptureSettings::operator QVariant() const
   opts[lit("verifyBufferAccess")] = options.verifyBufferAccess;
   opts[lit("hookIntoChildren")] = options.hookIntoChildren;
   opts[lit("breakACE")] = options.breakACE;
+  opts[lit("extendedHookScope")] = options.extendedHookScope;
   opts[lit("enableBlacklist")] = options.enableBlacklist;
+  opts[lit("enableWhitelist")] = options.enableWhitelist;
   opts[lit("refAllResources")] = options.refAllResources;
   opts[lit("captureAllCmdLists")] = options.captureAllCmdLists;
   opts[lit("debugOutputMute")] = options.debugOutputMute;
@@ -152,7 +154,9 @@ CaptureSettings::CaptureSettings(const QVariant &v)
     options.verifyBufferAccess = opts[lit("verifyMapWrites")].toBool();
   options.hookIntoChildren = opts[lit("hookIntoChildren")].toBool();
   options.breakACE = opts[lit("breakACE")].toBool();
+  options.extendedHookScope = opts[lit("extendedHookScope")].toBool();
   options.enableBlacklist = opts[lit("enableBlacklist")].toBool();
+  options.enableWhitelist = opts[lit("enableWhitelist")].toBool();
   options.refAllResources = opts[lit("refAllResources")].toBool();
   options.captureAllCmdLists = opts[lit("captureAllCmdLists")].toBool();
   options.debugOutputMute = opts[lit("debugOutputMute")].toBool();

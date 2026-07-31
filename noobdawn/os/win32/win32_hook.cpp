@@ -47,6 +47,10 @@ Threading::CriticalSection installedLock;
 // hooking logic runs unchanged. Set via Win32_CaptureOptionsUpdated() from the capture options.
 static bool s_BreakACE = false;
 
+// [NBD-DIAG] separately gates the kernelbase/ntdll parts of the EAT hook scope - see
+// CaptureOptions::extendedHookScope
+static bool s_ExtendedHookScope = false;
+
 // [NBD-DIAG] temporary diagnostics for investigating protected targets where graphics hooks
 // never trigger. All diag lines are prefixed with [NBD-DIAG] for easy filtering.
 static bool DiagLogOnce(const nbdstr &key)
@@ -210,12 +214,21 @@ struct DllHookset
   }
 };
 
-// [NBD-DIAG] only core graphics API DLLs get EAT hooked. System modules (kernel32 etc.) are
+// [NBD-DIAG] only core graphics API DLLs plus kernelbase.dll get EAT hooked. kernelbase is
+// included because CreateProcessInternalW is the convergence point of all process creation on
+// Windows, and protected launchers often resolve it directly (GetProcAddress or their own
+// export-table walk) to dodge IAT hooks on kernel32/advapi32. Other system modules are still
 // deliberately excluded: redirecting their exports process-wide would change behaviour for
 // modules that RenderDoc intentionally excludes from hooking.
 static bool IsEATHookTarget(const nbdstr &dllName)
 {
   nbdstr lower = strlower(dllName);
+
+  // kernelbase/ntdll only when the extended hook scope option is on - rewriting exports of
+  // the lowest-level system DLLs is a much bigger behavioural change than graphics DLLs
+  if(lower == "kernelbase.dll" || lower == "ntdll.dll")
+    return s_ExtendedHookScope;
+
   return lower == "d3d9.dll" || lower == "d3d11.dll" || lower == "d3d12.dll" ||
          lower == "dxgi.dll" || lower == "opengl32.dll" || lower == "vulkan-1.dll" ||
          lower == "libegl.dll" || lower == "libglesv2.dll";
@@ -1320,12 +1333,13 @@ void LibraryHooks::EndHookRegistration()
   }
 }
 
-// called from NoobDawn::SetCaptureOptions() to apply the breakACE option to this layer.
-// The option arrives after hook registration, so the eager loading below happens here rather
-// than in EndHookRegistration().
-void Win32_CaptureOptionsUpdated(bool breakACE)
+// called from NoobDawn::SetCaptureOptions() to apply the breakACE/extendedHookScope options
+// to this layer. The options arrive after hook registration, so the eager loading below
+// happens here rather than in EndHookRegistration().
+void Win32_CaptureOptionsUpdated(bool breakACE, bool extendedHookScope)
 {
   s_BreakACE = breakACE;
+  s_ExtendedHookScope = extendedHookScope;
 
   if(!breakACE || s_HookData == NULL)
     return;

@@ -204,6 +204,21 @@ Default - disabled
 )");
   bool breakACE;
 
+  DOCUMENT(R"(When breakACE is enabled, additionally hook the lowest-level process creation
+APIs (kernelbase!CreateProcessInternalW and ntdll!NtCreateUserProcess) and allow export
+table hooking on those system DLLs. This catches launchers that bypass the documented
+process creation APIs when spawning games, at the cost of a wider hooking surface.
+
+Default - disabled
+
+``True`` - Hook the low-level process creation APIs as well.
+
+``False`` - Only hook the documented CreateProcess variants.
+
+:type: bool
+)");
+  bool extendedHookScope;
+
   DOCUMENT(R"(Sometimes attempting to hook child processes can cause some unpredictable
 obstacles for the child processes, even if those child processes are not the target of
 the hook. Adding a blacklist to manage these completely ignorable child processes
@@ -218,6 +233,21 @@ Default - disabled
 :type: bool
 )");
   bool enableBlacklist;
+
+  DOCUMENT(R"(Inverts the child process list into a whitelist. When enabled together with
+enableBlacklist, only child processes whose name matches an entry in the process list
+will be hooked into; all others are left alone. Has no effect unless enableBlacklist
+is also enabled.
+
+Default - disabled
+
+``True`` - Hooks into spawned child processes only if they match the list.
+
+``False`` - The list acts as a blacklist (see enableBlacklist).
+
+:type: bool
+)");
+  bool enableWhitelist;
 
   DOCUMENT(R"(By default NoobDawn only includes resources in the final logfile necessary
 for that frame, this allows you to override that behaviour.

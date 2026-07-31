@@ -106,6 +106,8 @@ private slots:
 
   void on_CaptureCallstacks_toggled(bool checked);
   void on_HookIntoChildren_toggled(bool checked);
+  void on_EnableBlackList_toggled(bool checked);
+  void on_WhitelistMode_toggled(bool checked);
 
   // manual slots
   void vulkanLayerWarn_mouseClick();
@@ -114,6 +116,7 @@ private slots:
 
 private:
   void SetExecutableFilename(const nbdstr &filename, bool remoteSelection);
+  void updateProcessListUI();
 
   Ui::CaptureDialog *ui;
   ICaptureContext &m_Ctx;
